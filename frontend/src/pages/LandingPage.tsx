@@ -1,8 +1,10 @@
 import React from 'react';
 import { LogIn, Square, ArrowRight } from 'lucide-react';
 import '../css/Landing.css';
+import { useNavigate } from 'react-router-dom';
 
 const App: React.FC = () => {
+  const navigate = useNavigate();
   return (
     <div className="app-container">
       {/* Header */}
@@ -13,17 +15,16 @@ const App: React.FC = () => {
         </div>
 
         <nav>
-          <a href="#">Features</a>
-          <a href="#">Dashboard</a>
-          <a href="#">Contact</a>
+          <a href="/features">Features</a>
+          <a href="/dashboard">Dashboard</a>
+          <a href="/contact">Contact</a>
         </nav>
 
         <div className="buttons">
-          <button className="login-btn">
-            <LogIn />
+          <button className="login-btn" onClick={() => navigate('/login')}>
             <span>Login</span>
           </button>
-          <button className="get-started">
+          <button className="get-started" onClick={() => navigate('/signup')}>
             <span>Get Started</span>
             <ArrowRight />
           </button>
@@ -59,13 +60,13 @@ const App: React.FC = () => {
 
           <div className="card-row">
             <div className="card">
-              <p>Total Income</p>
+              <h3>Total Income</h3>
               <h3>₹12,45,000</h3>
               <p className="income">+12% this month</p>
             </div>
 
             <div className="card">
-              <p>GST Due</p>
+              <h3>GST Due</h3>
               <h3 className="gst-due">₹2,34,000</h3>
               <p className="gst-due">Due in 5 days</p>
             </div>
