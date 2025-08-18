@@ -1,0 +1,373 @@
+/* Reset default margin/padding */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  background-color: #f3f4f6;
+  min-height: 100vh;
+  font-family: sans-serif;
+
+  max-width: 100%;
+}
+
+.title {
+  color: #6b7280;
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #6b7280;
+  margin-bottom: 24px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+  margin-bottom: 24px;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tab {
+  padding: 8px 16px;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: #374151;
+}
+
+.active {
+  color: #3b82f6;
+  border-bottom: 2px solid #3b82f6;
+  font-weight: 600;
+}
+
+/* Updated General grid */
+.grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  width: 100%;
+}
+
+.grid > * {
+  width: 100%;
+}
+
+/* Top section: 4 summary boxes + Filing Assistant */
+.topGrid {
+  display: grid;
+  grid-template-columns: 1fr; /* stacked on mobile */
+  gap: 32px;
+  margin-top: 24px;
+}
+
+@media (min-width: 1024px) {
+  .topGrid {
+    grid-template-columns: repeat(5, 1fr); /* 4 cards + assistant */
+  }
+}
+
+/* 2x2 summary grid inside left side */
+.summaryGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  grid-column: span 4; /* occupy 4 fractions of 5 */
+}
+
+/* Filing assistant */
+.uploadCard {
+  background-color: #f9fafb;
+  padding: 24px;
+  min-width: 300px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+
+  /* New additions */
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: inline-block;
+  transform-origin: top left;
+}
+
+/* Full width section (Filing Calendar) */
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+/* Typography */
+.sectionTitle {
+  color: #000;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.sectionSubtitle {
+  padding-bottom: 10px;
+  color: #6b7280;
+  font-size: 1rem;
+  font-weight: 500;
+  width:max-content
+}
+
+.highlightValue {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Forms */
+
+.form {
+  display: flex;
+  flex-direction: column;       /* Single column layout */
+  gap: 16px;                    /* Space between form elements */
+  background-color: #fff;       /* Card background */
+  padding: 24px;                /* Inner spacing */
+  border-radius: 12px;          /* Rounded corners */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Card shadow */
+  margin: 24px auto;            /* Center the form horizontally with top/bottom spacing */
+
+  /* Explicit width */
+  width: 50vw;                  /* 40% of viewport width */
+  min-width: 320px;             /* Minimum width to remain usable on smaller screens */
+  max-width: 480px;             /* Optional max width for large screens */
+}
+
+
+.formGrid {
+  padding-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  color: #6b7280;
+}
+
+.formGroupFull {
+  grid-column: span 2;
+  display: flex;
+  flex-direction: column;
+  color: #6b7280;
+}
+
+.input {
+  margin-top: 4px;
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Buttons */
+.buttonGroup {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.primaryBtn {
+  padding: 8px 16px;
+  background-color: #3b82f6;
+  color: #fff;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.primaryBtn:hover {
+  background-color: #2563eb;
+}
+
+.secondaryBtn {
+  padding: 8px 16px;
+  background-color: #fff;
+  color: #374151;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+}
+
+.secondaryBtn:hover {
+  background-color: #f9fafb;
+}
+
+/* Upload card */
+.dropArea {
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 32px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.uploadIcon {
+  width: 48px;
+  height: 48px;
+  color: #9ca3af;
+  margin-bottom: 8px;
+}
+
+.chooseFileBtn {
+  padding: 8px 16px;
+  background-color: #fff;
+  color: #374151;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.chooseFileBtn:hover {
+  background-color: #f9fafb;
+}
+
+/* Tables */
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;  /* allow horizontal scroll */
+  -webkit-overflow-scrolling: touch; /* smooth scroll on iOS */
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 700px; /* keeps table usable */
+  margin-top: 16px;
+}
+
+.table th,
+.table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.875rem;
+  color: #111827;
+}
+
+.typeBadge {
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.income {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.expense {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+/* Summary boxes */
+.summaryGrid .card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 16px;
+}
+
+.balanceContainer {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap; /* Allows wrapping on smaller screens */
+}
+
+.balanceBox {
+  flex: 1;
+  background-color: #f3f4f6;
+  padding: 24px;
+  border-radius: 12px;
+  text-align: center;
+  min-width: 200px; /* Ensures proper sizing on smaller screens */
+}
+
+.balanceLabel {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.balanceAmount {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.difference {
+  color: #b91c1c; /* Red for difference */
+}
+
+/* Tax Calculation Section */
+.taxCalculation {
+  display: flex;
+  flex-direction: column;
+  width: 40vw;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.taxRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  font-size: 1rem;
+  color: #4b5563; /* subtle text color */
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.taxRow:last-child {
+  border-bottom: none;
+}
+
+.taxRowTotal {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 12px;
+  font-weight: 600;
+  font-size: 1.15rem;
+  color: #111827;
+  border-top: 1px solid #d1d5db;
+}
+
+.taxDeduction {
+  color: #b91c1c; /* red for deductions */
+}

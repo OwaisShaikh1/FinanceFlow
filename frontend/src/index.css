@@ -1,4 +1,6 @@
 :root {
+  display: flex;
+  flex-direction: column;
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -21,14 +23,16 @@ a {
 a:hover {
   color: #535bf2;
 }
-
 body {
   margin: 0;
   display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  flex-direction: column;
+  max-width: 100%;
+  min-height: max-content;
+  background-color: #242424; /* keep your original bg */
+  color: rgba(255, 255, 255, 0.87);
 }
+
 
 h1 {
   font-size: 3.2em;
