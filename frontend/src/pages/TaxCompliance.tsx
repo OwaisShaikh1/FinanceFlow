@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import styles from "../css/Accounting.module.css";
-import GstFilingTab from "./features/GstFilingTab";
-import TdsCalculatorTab from "./features/TdsCalculatorTab";
-import IncomeTaxTab from "./features/IncomeTaxTab";
+import GstFilingTab from "../components/features/GstFilingTab";
+import TdsCalculatorTab from "../components/features/TdsCalculatorTab";
+import IncomeTaxTab from "../components/features/IncomeTaxTab";
 
 interface TaxComplianceProps {
   defaultTab?: "gst" | "tds" | "income-tax";
@@ -31,12 +31,13 @@ const TaxCompliance: React.FC<TaxComplianceProps> = ({ defaultTab = "gst" }) => 
       <h1 className={styles.title}>Tax Compliance</h1>
       <p className={styles.subtitle}>Manage GST, TDS, and Income Tax in one place</p>
 
-      <div className={styles.card} style={{ width: "100%" }}>
+      <div className={styles.card} style={{ width: "100%", padding: "10px" }}>
         {/* Tabs */}
         <div className={styles.tabs}>
           <div
             className={`${styles.tab} ${activeTab === "gst" ? styles.active : ""}`}
             onClick={() => handleTabClick("gst")}
+            
           >
             GST Filing
           </div>

@@ -40,9 +40,23 @@
   overflow: hidden;
 }
 
+.minicard{
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+  margin-bottom: 24px;
+  max-width: 100%;
+  max-height: fit-content;
+  overflow: hidden;
+}
+
 .tabs {
   display: flex;
   border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 16px;
 }
 
 .tab {
@@ -73,26 +87,12 @@
   width: 100%;
 }
 
-/* Top section: 4 summary boxes + Filing Assistant */
-.topGrid {
-  display: grid;
-  grid-template-columns: 1fr; /* stacked on mobile */
-  gap: 32px;
-  margin-top: 24px;
-}
-
-@media (min-width: 1024px) {
-  .topGrid {
-    grid-template-columns: repeat(5, 1fr); /* 4 cards + assistant */
-  }
-}
-
 /* 2x2 summary grid inside left side */
 .summaryGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
-  grid-column: span 4; /* occupy 4 fractions of 5 */
+  grid-column: span 1; /* occupy 4 fractions of 5 */
 }
 
 /* Filing assistant */
@@ -371,3 +371,37 @@
 .taxDeduction {
   color: #b91c1c; /* red for deductions */
 }
+
+.flexWrapper {
+  display: flex;
+  gap: 20px;
+  flex-direction: row; /* default desktop */
+}
+
+@media (max-width: 768px) {
+  .flexWrapper {
+    flex-direction: column; /* stack sidebar on top */
+  }
+
+  .mainContent {
+    flex: 1;
+    width: 100%;
+  }
+}
+
+
+.mainContent {
+  flex: 1; /* take remaining space */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Optional: make sidebar sticky while scrolling */
+.sidebar {
+  flex-shrink: 0;
+  height: calc(100vh - 80px); /* adjust for header */
+  position: sticky;
+  top: 0;
+}
+

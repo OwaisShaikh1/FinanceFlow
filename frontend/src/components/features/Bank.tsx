@@ -9,8 +9,6 @@ const BankReconciliation = () => {
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.title}>Bank Reconciliation</h2>
-      <p className={styles.subtitle}>Match bank transactions with recorded data</p>
 
       <div className={styles.balanceContainer}>
         <div className={styles.balanceBox}>

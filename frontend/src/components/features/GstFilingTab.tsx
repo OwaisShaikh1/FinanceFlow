@@ -3,24 +3,22 @@ import styles from "../../css/Accounting.module.css";
 
 const GstFilingTab = () => {
   return (
-    <div className={styles.card} style={{ width: '98vw' }}>
-      {/* Top Section: Left 2x2 Grid + Right Filing Assistant */}
-      <div className={styles.grid}>
+    <>
         {/* Left 2x2 Summary Grid */}
         <div className={styles.grid}>
-          <div className={styles.card} style={{ minWidth: '200px' }}>
+          <div className={styles.card} style={{ maxWidth:'fitcontent' }}>
             <h4 className={styles.sectionTitle}>GSTR-1 Status</h4>
             <p className={styles.sectionSubtitle}>Last filed: July 2024</p>
           </div>
-          <div className={styles.card} style={{ minWidth: '200px' }}>
+          <div className={styles.card} style={{ maxWidth:'fitcontent' }}>
             <h4 className={styles.sectionTitle}>GSTR-3B Status</h4>
             <p className={styles.sectionSubtitle}>Pending</p>
           </div>
-          <div className={styles.card} style={{ minWidth: '200px' }}>
+          <div className={styles.card} style={{ maxWidth:'fitcontent' }}>
             <h4 className={styles.sectionTitle}>Tax Liability</h4>
             <p className={styles.highlightValue}>₹50,000</p>
           </div>
-          <div className={styles.card} style={{ minWidth: '200px' }}>
+          <div className={styles.card} style={{ maxWidth:'fitcontent' }}>
             <h4 className={styles.sectionTitle}>Credit Available</h4>
             <p className={styles.highlightValue}>₹20,000</p>
           </div>
@@ -44,7 +42,6 @@ const GstFilingTab = () => {
             <button className={styles.secondaryBtn}>File Return</button>
           </div>
         </div>
-      </div>
 
       {/* Bottom Section: Filing Calendar full width */}
       <div className={`${styles.card} ${styles.fullWidth}`}>
@@ -73,7 +70,7 @@ const GstFilingTab = () => {
           </table>
         </div> 
       </div>
-    </div>
+    </>
   );
 };
 

@@ -6,20 +6,20 @@ const TdsCalculatorTab = () => {
     <>
       <div className={styles.grid}>
         {/* 2x2 Summary Grid */}
-        <div className={styles.grid}>
-          <div className={styles.card}>
+        <div className={styles.summaryGrid}>
+          <div className={styles.minicard}>
             <h4 className={styles.sectionTitle}>Total TDS Deducted</h4>
             <p className={styles.highlightValue}>₹45,000</p>
           </div>
-          <div className={styles.card}>
+          <div className={styles.minicard}>
             <h4 className={styles.sectionTitle}>Total TDS Deposited</h4>
             <p className={styles.highlightValue}>₹12,000</p>
           </div>
-          <div className={styles.card}>
+          <div className={styles.minicard}>
             <h4 className={styles.sectionTitle}>Pending Liability</h4>
             <p className={styles.highlightValue}>₹33,000</p>
           </div>
-          <div className={styles.card}>
+          <div className={styles.minicard}>
             <h4 className={styles.sectionTitle}>Next Due Date</h4>
             <p className={styles.sectionSubtitle}>7th Sept 2024</p>
           </div>
