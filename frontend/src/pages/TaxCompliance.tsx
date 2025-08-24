@@ -23,7 +23,7 @@ const TaxCompliance: React.FC<TaxComplianceProps> = ({ defaultTab = "gst" }) => 
   // Handle tab click: update state AND URL
   const handleTabClick = (tab: "gst" | "tds" | "income-tax") => {
     setActiveTab(tab);
-    navigate(`/${tab}`);
+    navigate(`/tax/${tab}`);
   };
 
   return (

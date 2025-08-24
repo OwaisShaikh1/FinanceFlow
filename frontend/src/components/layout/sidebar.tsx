@@ -74,37 +74,50 @@ const Sidebar: React.FC = () => {
   const toggleExpand = (index: number) => setExpandedIndex(expandedIndex === index ? null : index);
 
   return (
-    <div className={`sidebar ${collapsed ? "collapsed" : ""}`}>
-      <div 
-        className="collapse-btn" style={{ width: 'fit-content' }}
-        onClick={toggleCollapse}
-      >
-        <span className="icon">{collapsed ? "☰" : "⟨"}</span>
-      </div>
-      <ul className="sidebar-list">
-        {sidebarData.map((item, index) => (
-          <li key={index}>
-            <div 
-              className="sidebar-item" 
-              onClick={() => item.path ? navigate(item.path) : toggleExpand(index)}
-            >
-              <span className="icon">{item.icon}</span>
-              {!collapsed && <span className="title">{item.title}</span>}
-            </div>
+    <div className="sidebar-wrapper">
+      <button className="collapse-btn" onClick={toggleCollapse}>
+        {collapsed ? "☰" : "⟨"}
+      </button>
+      <div className={`sidebar ${collapsed ? "collapsed" : ""}`}>
+        <ul className="sidebar-list">
+          {sidebarData.map((item, index) => (
+            <li key={index}>
+              <div
+                className="sidebar-item"
+                onClick={() => {
+                  const isMobile = window.innerWidth <= 768;
 
-            {item.subItems && expandedIndex === index && !collapsed && (
-              <ul className="subitem-list">
-                {item.subItems.map((sub, subIndex) => (
-                  <li key={subIndex} className="subitem" onClick={() => navigate(sub.path)}>
-                    {sub.title}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </li>
-        ))}
-      </ul>
+                  if ((isMobile || collapsed) && item.path ) {
+                    // On mobile, always navigate if path exists
+                    navigate(item.path);
+                  } else {
+                    // Desktop behavior
+                    if (item.subItems) {
+                      toggleExpand(index);
+                    } else if (item.path) {
+                      navigate(item.path);
+                    }
+                  }
+                }}
+              >
+                <span className="icon">{item.icon}</span>
+                {!collapsed && <span className="title">{item.title}</span>}
+              </div>
+              {item.subItems && expandedIndex === index && !collapsed && (
+                <ul className="subitem-list">
+                  {item.subItems.map((sub, subIndex) => (
+                    <li key={subIndex} className="subitem" onClick={() => navigate(sub.path)}>
+                      {sub.title}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
+
   );
 };
 

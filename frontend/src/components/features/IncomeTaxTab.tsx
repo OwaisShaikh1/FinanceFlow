@@ -6,23 +6,23 @@ const IncomeTaxTab = () => {
      <>
         <div className={styles.grid} style={{ width: '100%' }}>
           {/* 2x2 Summary Grid */}
-          <div className={styles.grid}>
-            <div className={styles.card}>
+          <div className={styles.summaryGrid}>
+            <div className={styles.minicard}>
               <h4 className={styles.sectionTitle}>Annual Income</h4>
               <p className={styles.highlightValue}>₹18,00,000</p>
               <p className={styles.sectionSubtitle}>FY 2023-24</p>
             </div>
-            <div className={styles.card}>
+            <div className={styles.minicard}>
               <h4 className={styles.sectionTitle}>Tax Liability</h4>
               <p className={styles.highlightValue}>₹1,37,500</p>
               <p className={styles.sectionSubtitle}>Before deductions</p>
             </div>
-            <div className={styles.card}>
+            <div className={styles.minicard}>
               <h4 className={styles.sectionTitle}>Advance Tax Due</h4>
               <p className={styles.highlightValue}>₹34,375</p>
               <p className={styles.sectionSubtitle}>Due Jan 15, 2024</p>
             </div>
-            <div className={styles.card}>
+            <div className={styles.minicard}>
               <h4 className={styles.sectionTitle}>Refund / Tax Due</h4>
               <p className={styles.sectionSubtitle}>Latest AY Status Below</p>
             </div>

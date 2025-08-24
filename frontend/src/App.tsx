@@ -26,20 +26,20 @@ function App() {
             <Route path="/signup" element={<SignForm isSignInDefault={false} />} />
 
             {/* Accounts Tracking */}
-            <Route path="/income" element={<Accounting defaultTab="income" />} />
-            <Route path="/accounts" element={<Accounting defaultTab="accounts" />} />
-            <Route path="/bank" element={<Accounting defaultTab="bank" />} />
+            <Route path="accounting/income-expense" element={<Accounting defaultTab="income-expense" />} />
+            <Route path="accounting/accounts" element={<Accounting defaultTab="accounts" />} />
+            <Route path="accounting/bank" element={<Accounting defaultTab="bank" />} />
 
             {/* Tax Compliance */}
-            <Route path="/gst" element={<TaxCompliance defaultTab="gst" />} />
-            <Route path="/tds" element={<TaxCompliance defaultTab="tds" />} />
-            <Route path="/income-tax" element={<TaxCompliance defaultTab="income-tax" />} />
+            <Route path="tax/gst" element={<TaxCompliance defaultTab="gst" />} />
+            <Route path="tax/tds" element={<TaxCompliance defaultTab="tds" />} />
+            <Route path="tax/income-tax" element={<TaxCompliance defaultTab="income-tax" />} />
 
             <Route path="/features" element={<FeaturesGrid />} />
             <Route path="/dashboard" element={<Dashboard />} />
             
             <Route path="/accounting" element={<Accounting />} />
-            <Route path="/tax-compliance" element={<TaxCompliance />} />
+            <Route path="/tax" element={<TaxCompliance />} />
           </Routes>
         </div>
       </Router>

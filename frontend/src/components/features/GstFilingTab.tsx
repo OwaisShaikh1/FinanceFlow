@@ -4,21 +4,22 @@ import styles from "../../css/Accounting.module.css";
 const GstFilingTab = () => {
   return (
     <>
+      <div className={styles.grid}>
         {/* Left 2x2 Summary Grid */}
-        <div className={styles.grid}>
-          <div className={styles.card} style={{ maxWidth:'fitcontent' }}>
+        <div className={styles.summaryGrid}>
+          <div className={styles.minicard}>
             <h4 className={styles.sectionTitle}>GSTR-1 Status</h4>
             <p className={styles.sectionSubtitle}>Last filed: July 2024</p>
           </div>
-          <div className={styles.card} style={{ maxWidth:'fitcontent' }}>
+          <div className={styles.minicard}>
             <h4 className={styles.sectionTitle}>GSTR-3B Status</h4>
             <p className={styles.sectionSubtitle}>Pending</p>
           </div>
-          <div className={styles.card} style={{ maxWidth:'fitcontent' }}>
+          <div className={styles.minicard}>
             <h4 className={styles.sectionTitle}>Tax Liability</h4>
             <p className={styles.highlightValue}>₹50,000</p>
           </div>
-          <div className={styles.card} style={{ maxWidth:'fitcontent' }}>
+          <div className={styles.minicard}>
             <h4 className={styles.sectionTitle}>Credit Available</h4>
             <p className={styles.highlightValue}>₹20,000</p>
           </div>
@@ -42,6 +43,7 @@ const GstFilingTab = () => {
             <button className={styles.secondaryBtn}>File Return</button>
           </div>
         </div>
+      </div>
 
       {/* Bottom Section: Filing Calendar full width */}
       <div className={`${styles.card} ${styles.fullWidth}`}>

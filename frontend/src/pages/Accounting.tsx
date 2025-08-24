@@ -7,10 +7,10 @@ import IncomeExpenseTracker from '../components/features/IncomeExpenseTracker';
 import Sidebar from '../components/layout/sidebar';
 
 interface AccountingProps {
-  defaultTab?: 'income' | 'accounts' | 'bank';
+  defaultTab?: 'income-expense' | 'accounts' | 'bank';
 }
 
-const Accounting: React.FC<AccountingProps> = ({ defaultTab = 'income' }) => {
+const Accounting: React.FC<AccountingProps> = ({ defaultTab = 'income-expense' }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -22,9 +22,9 @@ const Accounting: React.FC<AccountingProps> = ({ defaultTab = 'income' }) => {
   }, [defaultTab]);
 
   // Handle tab click: update state AND URL
-  const handleTabClick = (tab: 'income' | 'accounts' | 'bank') => {
+  const handleTabClick = (tab: 'income-expense' | 'accounts' | 'bank') => {
     setActiveTab(tab);
-    navigate(`/${tab}`);
+    navigate(`/accounting/${tab}`);
   };
 
   return (
@@ -38,8 +38,8 @@ const Accounting: React.FC<AccountingProps> = ({ defaultTab = 'income' }) => {
         {/* Tabs */}
           <div className={styles.tabs}>
             <div
-              className={`${styles.tab} ${activeTab === 'income' ? styles.active : ''}`}
-              onClick={() => handleTabClick('income')}
+              className={`${styles.tab} ${activeTab === 'income-expense' ? styles.active : ''}`}
+              onClick={() => handleTabClick('income-expense')}
             >
               Income & Expense Tracker
             </div>
@@ -58,12 +58,12 @@ const Accounting: React.FC<AccountingProps> = ({ defaultTab = 'income' }) => {
           </div>
 
           {/* Tab Content */}
-          {activeTab === 'income' && <IncomeExpenseTracker />}
+          {activeTab === 'income-expense' && <IncomeExpenseTracker />}
           {activeTab === 'accounts' && <ChartOfAccounts />}
           {activeTab === 'bank' && <BankReconciliation />}
 
           {/* Recent Transactions */}
-          {activeTab === 'income' && (
+          {activeTab === 'income-expense' && (
             <div className={styles.card}>
               <h2 className={styles.sectionTitle}>Recent Transactions</h2>
               <p className={styles.sectionSubtitle}>Latest income and expense entries</p>
