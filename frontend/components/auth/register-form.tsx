@@ -16,25 +16,71 @@ export function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
 
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault()
+  //   if (!agreedToTerms) {
+  //     alert("Please agree to the terms and conditions")
+  //     return
+  //   }
+
+  //   setIsLoading(true)
+
+  //   // Simulate registration process
+  //   setTimeout(() => {
+  //     setIsLoading(false)
+  //     // Redirect to dashboard after successful registration
+  //     window.location.href = "/dashboard"
+  //   }, 2000)
+  // }
+
+
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!agreedToTerms) {
-      alert("Please agree to the terms and conditions")
-      return
-    }
+  e.preventDefault();
 
-    setIsLoading(true)
-
-    // Simulate registration process
-    setTimeout(() => {
-      setIsLoading(false)
-      // Redirect to dashboard after successful registration
-      window.location.href = "/dashboard"
-    }, 2000)
+  if (!agreedToTerms) {
+    alert("Please agree to the terms and conditions");
+    return;
   }
 
+  setIsLoading(true);
+
+  try {
+    // Collect form data
+    const formData = {
+      name: name,           // Replace with your state variables
+      email: email,
+      password: password,
+      // Add other fields if needed
+    };
+
+    // Send data to Express server
+    const response = await fetch("http://localhost:5000/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      // Registration successful, redirect
+      window.location.href = "/dashboard";
+    } else {
+      alert(result.message || "Registration failed");
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    alert("Something went wrong. Please try again.");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4" >
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="firstName">First Name</Label>
