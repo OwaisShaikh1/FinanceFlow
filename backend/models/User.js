@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
   role: { type: String, default: "user" },
   createdAt: { type: Date, default: Date.now },
   phone: { type: String, required: false },
-  business: { type: mongoose.Schema.Types.ObjectId, ref: "Business", required: false },
+  business: { type: String, ref: "Business", required: false },
 }, {
   collection: "users"
 });
