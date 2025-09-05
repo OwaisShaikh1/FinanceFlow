@@ -20,7 +20,7 @@ const monthlyData = [
   { month: "Dec", income: 215000, expenses: 145000, profit: 70000 },
 ]
 
-export function FinancialChart() {
+export default function FinancialChart() {
   const [chartType, setChartType] = useState<"line" | "bar">("line")
   const [timeRange, setTimeRange] = useState("12months")
 

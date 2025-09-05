@@ -1,34 +1,46 @@
-"use client"
+"use client";
+import { useState } from "react";
+import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import type React from "react"
+interface LoginFormProps {
+  onSubmit: (data: { loginMethod: "email" | "phone"; email?: string; password?: string; phone?: string; role: string }) => void;
+}
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Eye, EyeOff, Mail, Lock, User } from "lucide-react"
-import Link from "next/link"
+export function LoginForm({ onSubmit }: LoginFormProps) {
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginMethod, setLoginMethod] = useState<"email" | "phone">("email");
+  const [role, setRole] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-export function LoginForm() {
-  const [showPassword, setShowPassword] = useState(false)
-  const [loginMethod, setLoginMethod] = useState<"email" | "phone">("email")
-  const [isLoading, setIsLoading] = useState(false)
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    const formData = {
+      loginMethod,
+      email: loginMethod === "email" ? email : undefined,
+      password: loginMethod === "email" ? password : undefined,
+      phone: loginMethod === "phone" ? phone : undefined,
+      role,
+    };
 
-    // Simulate login process
-    setTimeout(() => {
-      setIsLoading(false)
-      // Redirect to dashboard after successful login
-      window.location.href = "/dashboard"
-    }, 2000)
-  }
+    // Save data locally
+    localStorage.setItem("loginData", JSON.stringify(formData));
+
+    onSubmit(formData);
+    setIsLoading(false);
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Login Method */}
       <div className="space-y-2">
         <Label htmlFor="loginMethod">Login Method</Label>
         <Select value={loginMethod} onValueChange={(value: "email" | "phone") => setLoginMethod(value)}>
@@ -42,16 +54,24 @@ export function LoginForm() {
         </Select>
       </div>
 
+      {/* Email / Password */}
       {loginMethod === "email" ? (
         <>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input id="email" type="email" placeholder="Enter your email" className="pl-10" required />
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                className="pl-10"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
           </div>
-
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <div className="relative">
@@ -61,6 +81,8 @@ export function LoginForm() {
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 className="pl-10 pr-10"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
               />
               <Button
@@ -70,11 +92,7 @@ export function LoginForm() {
                 className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                 onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <Eye className="h-4 w-4 text-muted-foreground" />
-                )}
+                {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
               </Button>
             </div>
           </div>
@@ -84,14 +102,23 @@ export function LoginForm() {
           <Label htmlFor="phone">Phone Number</Label>
           <div className="relative">
             <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input id="phone" type="tel" placeholder="+91 98765 43210" className="pl-10" required />
+            <Input
+              id="phone"
+              type="tel"
+              placeholder="+91 98765 43210"
+              className="pl-10"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+            />
           </div>
         </div>
       )}
 
+      {/* Role Selector */}
       <div className="space-y-2">
         <Label htmlFor="role">Role</Label>
-        <Select required>
+        <Select value={role} onValueChange={(val) => setRole(val)} required>
           <SelectTrigger>
             <SelectValue placeholder="Select your role" />
           </SelectTrigger>
@@ -104,21 +131,8 @@ export function LoginForm() {
       </div>
 
       <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? "Signing in..." : loginMethod === "phone" ? "Send OTP" : "Sign In"}
+        {isLoading ? "Processing..." : loginMethod === "phone" ? "Send OTP" : "Sign In"}
       </Button>
-
-      <div className="text-center text-sm">
-        <Link href="/auth/forgot-password" className="text-primary hover:underline">
-          Forgot your password?
-        </Link>
-      </div>
-
-      <div className="text-center text-sm">
-        Don't have an account?{" "}
-        <Link href="/auth/register" className="text-primary hover:underline">
-          Create account
-        </Link>
-      </div>
     </form>
-  )
+  );
 }

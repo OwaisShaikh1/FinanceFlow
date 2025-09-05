@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Plus, FileText, Receipt, Calculator, Users } from "lucide-react"
 import Link from "next/link"
 
-export function QuickActions() {
+export default function QuickActions() {
   const actions = [
     {
       title: "Create Invoice",

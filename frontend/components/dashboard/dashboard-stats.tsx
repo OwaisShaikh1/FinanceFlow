@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TrendingUp, TrendingDown, FileText, AlertTriangle } from "lucide-react"
 
-export function DashboardStats() {
+export default function DashboardStats() {
   const stats = [
     {
       title: "Total Income",

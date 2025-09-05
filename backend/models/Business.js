@@ -1,11 +1,14 @@
-// models/Business.js
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const businessSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  gstin: { type: String, required: true },
-  owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
-}, { timestamps: true });
+const BusinessSchema = new mongoose.Schema(
+  {
+    name: String,
+    gstin: String,
+    address: String,
+    owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    assignedCA: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  },
+  { timestamps: true }
+);
 
-module.exports = mongoose.model("Business", businessSchema);
-
+module.exports = mongoose.model('Business', BusinessSchema);

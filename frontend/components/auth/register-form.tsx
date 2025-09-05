@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,83 +9,86 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Eye, EyeOff, Mail, Lock, User, Building, Phone } from "lucide-react"
 
-export function RegisterForm() {
+interface RegisterFormProps {
+  onSubmit: (data: {
+    firstName: string
+    lastName: string
+    email: string
+    phone: string
+    role: string
+    company: string
+    password: string
+    confirmPassword: string
+  }) => Promise<void>
+}
+
+export function RegisterForm({ onSubmit}: RegisterFormProps) {
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    role: "",
+    company: "",
+    password: "",
+    confirmPassword: "",
+  })
+
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
 
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault()
-  //   if (!agreedToTerms) {
-  //     alert("Please agree to the terms and conditions")
-  //     return
-  //   }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target
+    setFormData((prev) => ({ ...prev, [id]: value }))
+  }
 
-  //   setIsLoading(true)
-
-  //   // Simulate registration process
-  //   setTimeout(() => {
-  //     setIsLoading(false)
-  //     // Redirect to dashboard after successful registration
-  //     window.location.href = "/dashboard"
-  //   }, 2000)
-  // }
-
+  const handleRoleChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, role: value }))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-
-  if (!agreedToTerms) {
-    alert("Please agree to the terms and conditions");
-    return;
-  }
-
-  setIsLoading(true);
-
-  try {
-    // Collect form data
-    const formData = {
-      name: name,           // Replace with your state variables
-      email: email,
-      password: password,
-      // Add other fields if needed
-    };
-
-    // Send data to Express server
-    const response = await fetch("http://localhost:5000/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      // Registration successful, redirect
-      window.location.href = "/dashboard";
-    } else {
-      alert(result.message || "Registration failed");
+    e.preventDefault()
+    if (!agreedToTerms) {
+      alert("Please agree to the terms and conditions")
+      return
     }
-  } catch (error) {
-    console.error("Error:", error);
-    alert("Something went wrong. Please try again.");
-  } finally {
-    setIsLoading(false);
+    if (formData.password !== formData.confirmPassword) {
+      alert("Passwords do not match")
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const { password, confirmPassword, ...safeData } = formData
+      localStorage.setItem("registerData", JSON.stringify(safeData))
+
+      await onSubmit(formData)   // ✅ now calls backend
+    } catch (err) {
+      console.error("Registration failed:", err)
+    } finally {
+      setIsLoading(false)
+    }
   }
-};
+
 
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4" >
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="firstName">First Name</Label>
           <div className="relative">
             <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input id="firstName" placeholder="First name" className="pl-10" required />
+            <Input
+              id="firstName"
+              placeholder="First name"
+              className="pl-10"
+              required
+              value={formData.firstName}
+              onChange={handleChange}
+            />
           </div>
         </div>
 
@@ -94,7 +96,14 @@ export function RegisterForm() {
           <Label htmlFor="lastName">Last Name</Label>
           <div className="relative">
             <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input id="lastName" placeholder="Last name" className="pl-10" required />
+            <Input
+              id="lastName"
+              placeholder="Last name"
+              className="pl-10"
+              required
+              value={formData.lastName}
+              onChange={handleChange}
+            />
           </div>
         </div>
       </div>
@@ -103,7 +112,15 @@ export function RegisterForm() {
         <Label htmlFor="email">Email</Label>
         <div className="relative">
           <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input id="email" type="email" placeholder="Enter your email" className="pl-10" required />
+          <Input
+            id="email"
+            type="email"
+            placeholder="Enter your email"
+            className="pl-10"
+            required
+            value={formData.email}
+            onChange={handleChange}
+          />
         </div>
       </div>
 
@@ -111,13 +128,21 @@ export function RegisterForm() {
         <Label htmlFor="phone">Phone Number</Label>
         <div className="relative">
           <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input id="phone" type="tel" placeholder="+91 98765 43210" className="pl-10" required />
+          <Input
+            id="phone"
+            type="tel"
+            placeholder="+91 98765 43210"
+            className="pl-10"
+            required
+            value={formData.phone}
+            onChange={handleChange}
+          />
         </div>
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="role">Role</Label>
-        <Select required>
+        <Select required value={formData.role} onValueChange={handleRoleChange}>
           <SelectTrigger>
             <SelectValue placeholder="Select your role" />
           </SelectTrigger>
@@ -133,7 +158,14 @@ export function RegisterForm() {
         <Label htmlFor="company">Company/Organization</Label>
         <div className="relative">
           <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input id="company" placeholder="Enter company name" className="pl-10" required />
+          <Input
+            id="company"
+            placeholder="Enter company name"
+            className="pl-10"
+            required
+            value={formData.company}
+            onChange={handleChange}
+          />
         </div>
       </div>
 
@@ -147,6 +179,8 @@ export function RegisterForm() {
             placeholder="Create a password"
             className="pl-10 pr-10"
             required
+            value={formData.password}
+            onChange={handleChange}
           />
           <Button
             type="button"
@@ -174,6 +208,8 @@ export function RegisterForm() {
             placeholder="Confirm your password"
             className="pl-10 pr-10"
             required
+            value={formData.confirmPassword}
+            onChange={handleChange}
           />
           <Button
             type="button"

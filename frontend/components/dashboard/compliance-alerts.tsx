@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { AlertTriangle, Calendar, FileText, Clock } from "lucide-react"
 
-export function ComplianceAlerts() {
+export default function ComplianceAlerts() {
   const alerts = [
     {
       id: 1,

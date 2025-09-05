@@ -1,18 +1,26 @@
-// models/Invoice.js
-const mongoose = require("mongoose");
-const invoiceSchema = new mongoose.Schema({
-  number: { type: String, required: true, unique: true },
-  customerName: { type: String, required: true },
-  items: [
-    {
-      name: String,
-      qty: Number,
-      price: Number,
-      gstRate: { type: Number, default: 0 }
-    }
-  ],
-  business: { type: mongoose.Schema.Types.ObjectId, ref: "Business", required: true },
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
-}, { timestamps: true });
+const mongoose = require('mongoose');
 
-module.exports = mongoose.model("Invoice", invoiceSchema);
+const InvoiceSchema = new mongoose.Schema(
+  {
+    business: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', required: true },
+    number: String,
+    customerName: String,
+    customerGSTIN: String,
+    items: [
+      {
+        name: String,
+        qty: Number,
+        price: Number,
+        gstRate: Number,
+      },
+    ],
+    status: { type: String, enum: ['DRAFT', 'SENT', 'PAID', 'OVERDUE'], default: 'DRAFT' },
+    issueDate: Date,
+    dueDate: Date,
+    pdfUrl: String,
+    ewayBillNo: String,
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model('Invoice', InvoiceSchema);
