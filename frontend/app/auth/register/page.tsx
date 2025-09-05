@@ -43,7 +43,6 @@ export default function RegisterPage() {
     }
 
 
-    console.log("Registration data:", formdata)
   }
 
   return (

@@ -28,6 +28,7 @@ export default function LoginPage() {
         router.push("/dashboard");
       } else {
         setMessage("❌ " + (data.message || "Login failed"));
+        console.log("Login failed:", formData);
       }
     } catch (err) {
       setMessage("⚠️ Error connecting to server");

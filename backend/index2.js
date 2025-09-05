@@ -91,23 +91,22 @@ app.post('/auth/login', async (req, res) => {
 });
 
 app.post('/auth/register', async (req, res) => {
+  console.log("I got this data", req.body) // For debugging
   try {
     const { firstName, lastName, email, phone, password, role, company } = req.body;
 
-    if (!firstName || !lastName || !email || !phone || !password || !role || !company) {
+    if (!firstName || !lastName || !email || !phone || !password || !role) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
     const name = `${firstName} ${lastName}`;
-    const passwordHash = await bcrypt.hash(password, 10);
 
     const user = await User.create({
       name,
       email,
       phone,
-      passwordHash,
+      password,
       role,
-      business: company, // storing company in business field
     });
 
     return res.status(201).json({ id: user._id, message: "User registered successfully" });

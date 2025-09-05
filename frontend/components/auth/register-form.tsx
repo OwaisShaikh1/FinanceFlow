@@ -61,9 +61,6 @@ export function RegisterForm({ onSubmit}: RegisterFormProps) {
 
     setIsLoading(true)
     try {
-      const { password, confirmPassword, ...safeData } = formData
-      localStorage.setItem("registerData", JSON.stringify(safeData))
-
       await onSubmit(formData)   // ✅ now calls backend
     } catch (err) {
       console.error("Registration failed:", err)
