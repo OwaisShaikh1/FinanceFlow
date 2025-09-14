@@ -24,8 +24,9 @@ const upload = multer({ storage });
 // POST /api/transactions
 router.post("/", auth, upload.array("receipts"), async (req, res) => {
   try {
-    const { description, amount, category, coa, date, gstRate, gstInput, type } = req.body;
+    const { description, amount, category, coa, date, gstRate, gstInput, type, paymentMethod } = req.body;
     const amountNum = Number(amount);
+    console.log("Transaction body:", req.body);
 
     // 1. Get user initials (example: "Owais Shaikh" => "OS")
     const userName = req.user.name || "User"; // assume you have req.user from auth
@@ -53,6 +54,7 @@ router.post("/", auth, upload.array("receipts"), async (req, res) => {
       coa: coa || undefined,
       receiptUrl: req.files?.map((f) => `/uploads/${f.filename}`),
       source: "MANUAL",
+      paymentMethod,
       gst: gstRate
         ? {
             rate: Number(gstRate),

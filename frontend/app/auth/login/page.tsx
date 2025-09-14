@@ -23,12 +23,12 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok && data.token) {
-        localStorage.setItem("token", data.token);
-        setMessage("✅ Logged in! Redirecting...");
-        router.push("/dashboard");
+        localStorage.setItem("token", data.token)
+        localStorage.setItem("user", JSON.stringify(data.user))
+        setMessage("✅ Logged in! Redirecting...")
+        router.push("/dashboard")
       } else {
-        setMessage("❌ " + (data.message || "Login failed"));
-        console.log("Login failed:", formData);
+        setMessage("❌ " + (data.message || "Login failed"))
       }
     } catch (err) {
       setMessage("⚠️ Error connecting to server");

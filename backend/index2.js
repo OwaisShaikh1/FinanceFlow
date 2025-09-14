@@ -84,16 +84,33 @@ const upload = multer({ storage });
 app.post('/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    // Find user
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+
+    // Check password
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
+
+    // Generate JWT
     const token = signToken(user);
-    return res.json({ token, role: user.role, business: user.business });
+
+    // Remove sensitive info (like password, __v, etc.)
+    const safeUser = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      business: user.business
+    };
+
+    return res.json({ token, user: safeUser });
   } catch (e) {
     return res.status(400).json({ message: e.message });
   }
 });
+
 
 app.post('/auth/register', async (req, res) => {
   console.log("I got this data", req.body) // For debugging

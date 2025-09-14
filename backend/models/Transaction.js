@@ -5,6 +5,7 @@ const TransactionSchema = new mongoose.Schema(
     id: { type: String, unique: true },
     business: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', required: true },
     type: { type: String, enum: ['income', 'expense'], required: true },
+    paymentMethod: { type: String },
     date: { type: Date, default: Date.now },
     description: String,
     amount: Number,

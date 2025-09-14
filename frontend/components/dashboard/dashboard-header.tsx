@@ -1,3 +1,6 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Bell, Settings, User, LogOut, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
@@ -11,7 +14,35 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 
+type UserType = {
+  name: string
+  role?: string
+  email?: string
+}
+
 export function DashboardHeader() {
+  const [user, setUser] = useState<UserType | null>(null)
+
+  useEffect(() => {
+    // try to load user from localStorage
+    const storedUser = localStorage.getItem("user");
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    console.log(user?.name); // will log the logged-in user's name
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser))
+      } catch (e) {
+        console.error("Invalid user in localStorage", e)
+      }
+    }
+  }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem("user")
+    localStorage.removeItem("token") // if you stored JWT
+    window.location.href = "/login" // redirect
+  }
+
   return (
     <header className="border-b bg-card sticky top-0 z-50">
       <div className="flex items-center justify-between px-6 py-4">
@@ -62,14 +93,14 @@ export function DashboardHeader() {
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="flex items-center gap-2 bg-transparent">
                 <User className="h-4 w-4" />
-                <span className="hidden md:inline">John Doe</span>
+                <span className="hidden md:inline">{user?.name || "User"}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>
                 <div>
-                  <p className="font-medium">John Doe</p>
-                  <p className="text-sm text-muted-foreground">Business Owner</p>
+                  <p className="font-medium">{user?.name || "User"}</p>
+                  <p className="text-sm text-muted-foreground">{user?.role || "Business Owner"}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -82,7 +113,7 @@ export function DashboardHeader() {
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
+              <DropdownMenuItem onClick={handleLogout} className="text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
                 Log out
               </DropdownMenuItem>
