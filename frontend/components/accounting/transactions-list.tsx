@@ -1,8 +1,22 @@
+'use client'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Edit, Trash2, Paperclip, Eye } from "lucide-react"
+import { useEffect, useState } from "react"
+import { BASE_URL } from "@/hooks/storagehelper"
+
+type Transaction = {
+  id: string
+  date: string
+  type: "income" | "expense"
+  description: string
+  category: string
+  amount: number
+  paymentMethod: string
+  hasAttachment?: boolean
+}
 
 const mockTransactions = [
   {
@@ -58,6 +72,25 @@ const mockTransactions = [
 ]
 
 export function TransactionsList() {
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+
+  useEffect(() => {
+    // Fetch transactions from backend API when component mounts
+    const fetchTransactions = async () => {
+      try{
+        const res = await fetch(`${BASE_URL}api/transactions`)
+        if (!res.ok) throw new Error('Failed to fetch transactions')
+        const data = await res.json()
+        setTransactions(data)
+        console.log(data)
+      } catch (error) {
+        console.error('Error fetching transactions:', error)
+      }
+    }
+    fetchTransactions()
+  }, [])
+
+
   return (
     <Card>
       <CardHeader>
@@ -67,6 +100,7 @@ export function TransactionsList() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Id</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>Category</TableHead>
@@ -77,9 +111,10 @@ export function TransactionsList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockTransactions.map((transaction) => (
+            {transactions.map((transaction) => (
               <TableRow key={transaction.id}>
-                <TableCell className="font-medium">{transaction.date}</TableCell>
+                <TableCell className="font-medium">{transaction.id}</TableCell>
+                <TableCell className="font-medium">{transaction.date.split("T")[0]}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     {transaction.description}
@@ -91,7 +126,7 @@ export function TransactionsList() {
                   <Badge variant={transaction.type === "income" ? "default" : "secondary"}>{transaction.type}</Badge>
                 </TableCell>
                 <TableCell className={transaction.type === "income" ? "text-green-600" : "text-red-600"}>
-                  {transaction.type === "income" ? "+" : "-"}₹{transaction.amount.toLocaleString()}
+                  {transaction.type === "income" ? "+" : "-"}₹{transaction.amount.toLocaleString()} 
                 </TableCell>
                 <TableCell>{transaction.paymentMethod}</TableCell>
                 <TableCell>

@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, Upload, X } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
+import { BASE_URL } from "@/hooks/storagehelper"
 
 const transactionCategories = {
   income: ["Sales Revenue", "Service Income", "Interest Income", "Rental Income", "Other Income"],
@@ -45,16 +46,41 @@ export function TransactionForm() {
     setAttachments(attachments.filter((_, i) => i !== index))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
-      // Redirect back to transactions list
+    const formData = new FormData(e.currentTarget)
+
+    const transactionData = {
+      type: formData.get("type"),
+      amount: parseFloat(formData.get("amount") as string),
+      date: date ? format(date, "yyyy-MM-dd") : null,
+      category: formData.get("category"),
+      description: formData.get("description"),
+      notes: formData.get("notes"),
+      paymentMethod: formData.get("paymentMethod"),
+      attachments,
+    }
+
+    try {
+      // Call your API route
+      const res = await fetch(`${BASE_URL}api/transactions/`, {
+        method: "POST",
+        body: JSON.stringify(transactionData),
+        headers: { "Content-Type": "application/json" },
+      })
+
+      if (!res.ok) throw new Error("Failed to save transaction")
+
+      // Redirect after success
       window.location.href = "/dashboard/transactions"
-    }, 2000)
+    } catch (err) {
+      console.error("Error:", err)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -62,7 +88,7 @@ export function TransactionForm() {
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="type">Transaction Type</Label>
-          <Select value={type} onValueChange={(value: "income" | "expense") => setType(value)}>
+          <Select name="type" value={type} onValueChange={(value: "income" | "expense") => setType(value)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -75,7 +101,7 @@ export function TransactionForm() {
 
         <div className="space-y-2">
           <Label htmlFor="amount">Amount (₹)</Label>
-          <Input id="amount" type="number" placeholder="0.00" step="0.01" required />
+          <Input id="amount" name="amount" type="number" placeholder="0.00" step="0.01" required />
         </div>
       </div>
 
@@ -100,7 +126,7 @@ export function TransactionForm() {
 
         <div className="space-y-2">
           <Label htmlFor="category">Category</Label>
-          <Select>
+          <Select name="category">
             <SelectTrigger>
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
@@ -117,17 +143,17 @@ export function TransactionForm() {
 
       <div className="space-y-2">
         <Label htmlFor="description">Description</Label>
-        <Input id="description" placeholder="Enter transaction description" required />
+        <Input id="description" name="description" placeholder="Enter transaction description" required />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="notes">Notes (Optional)</Label>
-        <Textarea id="notes" placeholder="Additional notes about this transaction" rows={3} />
+        <Textarea id="notes" name="notes" placeholder="Additional notes about this transaction" rows={3} />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="paymentMethod">Payment Method</Label>
-        <Select>
+        <Select name="paymentMethod">
           <SelectTrigger>
             <SelectValue placeholder="Select payment method" />
           </SelectTrigger>

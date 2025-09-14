@@ -9,6 +9,11 @@ const morgan = require('morgan');
 const dayjs = require('dayjs');
 const path = require('path');
 
+const invoiceRoutes = require('./routes/invoice');
+const businessRoutes = require('./routes/business');
+const assignCARoutes = require('./routes/cabussiness');
+const transactionRoutes = require('./routes/transaction');
+
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../backend/.env') });
 
@@ -117,7 +122,14 @@ app.post('/auth/register', async (req, res) => {
 });
 
 
-// Business
+app.use('/api/business', businessRoutes);      // /api/business → create/list business
+app.use('/api/business', assignCARoutes);      // /api/business/:id/assign-ca/:caId → assign CA
+
+app.use('/api/invoice', invoiceRoutes);
+app.use('/api/transactions', transactionRoutes);
+
+
+/* Business
 app.post('/business', auth, allow(ROLES.CA, ROLES.OWNER), async (req, res) => {
   try {
     const biz = await Business.create({ ...req.body });
@@ -172,7 +184,7 @@ app.get('/transactions', auth, async (req, res) => {
   if (category) q.category = category;
   const list = await Transaction.find(q).sort({ date: -1 }).lean();
   return res.json(list);
-});
+});*/
 
 // TODO: Keep rest of routes (Invoices, Bank, Reports, Dashboard, Docs) similar structure...
 
