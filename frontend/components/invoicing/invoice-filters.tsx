@@ -9,17 +9,22 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, Filter, X } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
+import { useInvoiceFilters } from "@/contexts/FilterContext"
 
 export function InvoiceFilters() {
-  const [dateFrom, setDateFrom] = useState<Date>()
-  const [dateTo, setDateTo] = useState<Date>()
+  const { filters, setFilters, clearFilters } = useInvoiceFilters()
   const [showFilters, setShowFilters] = useState(false)
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-4">
         <div className="flex-1">
-          <Input placeholder="Search invoices..." className="max-w-sm" />
+          <Input 
+            placeholder="Search invoices..." 
+            className="max-w-sm" 
+            value={filters.search}
+            onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+          />
         </div>
         <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
           <Filter className="h-4 w-4 mr-2" />
@@ -31,7 +36,7 @@ export function InvoiceFilters() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 border rounded-lg bg-card">
           <div className="space-y-2">
             <label className="text-sm font-medium">Status</label>
-            <Select>
+            <Select value={filters.status} onValueChange={(val) => setFilters(prev => ({ ...prev, status: val }))}>
               <SelectTrigger>
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
@@ -47,7 +52,7 @@ export function InvoiceFilters() {
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Client</label>
-            <Select>
+            <Select value={filters.client} onValueChange={(val) => setFilters(prev => ({ ...prev, client: val }))}>
               <SelectTrigger>
                 <SelectValue placeholder="All clients" />
               </SelectTrigger>
@@ -66,14 +71,14 @@ export function InvoiceFilters() {
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className={cn("w-full justify-start text-left font-normal", !dateFrom && "text-muted-foreground")}
+                  className={cn("w-full justify-start text-left font-normal", !filters.dateFrom && "text-muted-foreground")}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateFrom ? format(dateFrom, "PPP") : "Pick a date"}
+                  {filters.dateFrom ? format(filters.dateFrom, "PPP") : "Pick a date"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
-                <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} initialFocus />
+                <Calendar mode="single" selected={filters.dateFrom} onSelect={(date) => setFilters(prev => ({ ...prev, dateFrom: date }))} initialFocus />
               </PopoverContent>
             </Popover>
           </div>
@@ -84,20 +89,20 @@ export function InvoiceFilters() {
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className={cn("w-full justify-start text-left font-normal", !dateTo && "text-muted-foreground")}
+                  className={cn("w-full justify-start text-left font-normal", !filters.dateTo && "text-muted-foreground")}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateTo ? format(dateTo, "PPP") : "Pick a date"}
+                  {filters.dateTo ? format(filters.dateTo, "PPP") : "Pick a date"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
-                <Calendar mode="single" selected={dateTo} onSelect={setDateTo} initialFocus />
+                <Calendar mode="single" selected={filters.dateTo} onSelect={(date) => setFilters(prev => ({ ...prev, dateTo: date }))} initialFocus />
               </PopoverContent>
             </Popover>
           </div>
 
           <div className="flex items-end">
-            <Button variant="outline" onClick={() => setShowFilters(false)}>
+            <Button variant="outline" onClick={clearFilters}>
               <X className="h-4 w-4 mr-2" />
               Clear Filters
             </Button>

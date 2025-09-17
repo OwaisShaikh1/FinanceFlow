@@ -1,9 +1,12 @@
+"use client"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Eye, Edit, Download, Send, MoreHorizontal } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useInvoiceFilters } from "@/contexts/FilterContext"
 
 const mockInvoices = [
   {
@@ -59,6 +62,24 @@ const mockInvoices = [
 ]
 
 export function InvoicesList() {
+  const { filters } = useInvoiceFilters()
+
+  // Apply filters
+  const filteredInvoices = mockInvoices.filter((invoice) => {
+    const matchesSearch = filters.search
+      ? invoice.id.toLowerCase().includes(filters.search.toLowerCase()) ||
+        invoice.client.toLowerCase().includes(filters.search.toLowerCase())
+      : true
+    const matchesStatus = filters.status === 'all' ? true : invoice.status === filters.status
+    const matchesClient = filters.client === 'all' ? true : invoice.client.toLowerCase().includes(filters.client.toLowerCase())
+    
+    const invoiceDate = new Date(invoice.date)
+    const matchesFrom = filters.dateFrom ? invoiceDate >= filters.dateFrom : true
+    const matchesTo = filters.dateTo ? invoiceDate <= filters.dateTo : true
+    
+    return matchesSearch && matchesStatus && matchesClient && matchesFrom && matchesTo
+  })
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "paid":
@@ -110,7 +131,7 @@ export function InvoicesList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockInvoices.map((invoice) => (
+            {filteredInvoices.map((invoice) => (
               <TableRow key={invoice.id}>
                 <TableCell className="font-medium">{invoice.id}</TableCell>
                 <TableCell>{invoice.date}</TableCell>

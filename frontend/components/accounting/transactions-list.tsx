@@ -1,4 +1,5 @@
-'use client'
+"use client"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -6,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Edit, Trash2, Paperclip, Eye } from "lucide-react"
 import { useEffect, useState } from "react"
 import { BASE_URL } from "@/hooks/storagehelper"
+import { useTransactionFilters } from "@/contexts/FilterContext"
 
 type Transaction = {
   id: string
@@ -18,78 +20,39 @@ type Transaction = {
   hasAttachment?: boolean
 }
 
-const mockTransactions = [
-  {
-    id: "TXN-001",
-    date: "2024-12-15",
-    type: "income",
-    description: "Website Development - ABC Corp",
-    category: "Service Income",
-    amount: 25000,
-    paymentMethod: "Bank Transfer",
-    hasAttachment: true,
-  },
-  {
-    id: "TXN-002",
-    date: "2024-12-14",
-    type: "expense",
-    description: "Office Rent - December",
-    category: "Office Rent",
-    amount: 15000,
-    paymentMethod: "Bank Transfer",
-    hasAttachment: true,
-  },
-  {
-    id: "TXN-003",
-    date: "2024-12-13",
-    type: "income",
-    description: "Consulting Services - XYZ Ltd",
-    category: "Service Income",
-    amount: 18000,
-    paymentMethod: "UPI",
-    hasAttachment: false,
-  },
-  {
-    id: "TXN-004",
-    date: "2024-12-12",
-    type: "expense",
-    description: "Office Supplies",
-    category: "Office Supplies",
-    amount: 2500,
-    paymentMethod: "Credit Card",
-    hasAttachment: true,
-  },
-  {
-    id: "TXN-005",
-    date: "2024-12-11",
-    type: "expense",
-    description: "Internet & Phone Bills",
-    category: "Utilities",
-    amount: 3200,
-    paymentMethod: "Bank Transfer",
-    hasAttachment: true,
-  },
-]
-
 export function TransactionsList() {
+  const { filters } = useTransactionFilters()
+
   const [transactions, setTransactions] = useState<Transaction[]>([])
 
   useEffect(() => {
-    // Fetch transactions from backend API when component mounts
     const fetchTransactions = async () => {
-      try{
+      try {
         const res = await fetch(`${BASE_URL}api/transactions`)
-        if (!res.ok) throw new Error('Failed to fetch transactions')
+        if (!res.ok) throw new Error("Failed to fetch transactions")
         const data = await res.json()
         setTransactions(data)
-        console.log(data)
       } catch (error) {
-        console.error('Error fetching transactions:', error)
+        console.error("Error fetching transactions:", error)
       }
     }
     fetchTransactions()
   }, [])
 
+  // Apply filters
+  const filteredTransactions = transactions.filter((txn) => {
+    const matchesSearch = filters.search
+      ? txn.description.toLowerCase().includes(filters.search.toLowerCase())
+      : true
+    const matchesType = filters.type === "all" ? true : txn.type === filters.type
+    const matchesCategory =
+      filters.category === "all" ? true : txn.category.toLowerCase() === filters.category.toLowerCase()
+    const txnDate = new Date(txn.date)
+    const matchesFrom = filters.dateFrom ? txnDate >= filters.dateFrom : true
+    const matchesTo = filters.dateTo ? txnDate <= filters.dateTo : true
+
+    return matchesSearch && matchesType && matchesCategory && matchesFrom && matchesTo
+  })
 
   return (
     <Card>
@@ -111,7 +74,7 @@ export function TransactionsList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {transactions.map((transaction) => (
+            {filteredTransactions.map((transaction) => (
               <TableRow key={transaction.id}>
                 <TableCell className="font-medium">{transaction.id}</TableCell>
                 <TableCell className="font-medium">{transaction.date.split("T")[0]}</TableCell>
@@ -123,10 +86,12 @@ export function TransactionsList() {
                 </TableCell>
                 <TableCell>{transaction.category}</TableCell>
                 <TableCell>
-                  <Badge variant={transaction.type === "income" ? "default" : "secondary"}>{transaction.type}</Badge>
+                  <Badge variant={transaction.type === "income" ? "default" : "secondary"}>
+                    {transaction.type}
+                  </Badge>
                 </TableCell>
                 <TableCell className={transaction.type === "income" ? "text-green-600" : "text-red-600"}>
-                  {transaction.type === "income" ? "+" : "-"}₹{transaction.amount.toLocaleString()} 
+                  {transaction.type === "income" ? "+" : "-"}₹{transaction.amount.toLocaleString()}
                 </TableCell>
                 <TableCell>{transaction.paymentMethod}</TableCell>
                 <TableCell>

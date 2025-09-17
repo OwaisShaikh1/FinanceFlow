@@ -1,3 +1,5 @@
+"use client"
+
 import { TransactionsList } from "@/components/accounting/transactions-list"
 import { TransactionStats } from "@/components/accounting/transaction-stats"
 import { TransactionFilters } from "@/components/accounting/transaction-filters"
@@ -6,6 +8,7 @@ import { Plus, Upload } from "lucide-react"
 import Link from "next/link"
 
 export default function TransactionsPage() {
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -28,6 +31,7 @@ export default function TransactionsPage() {
       </div>
 
       <TransactionStats />
+
       <TransactionFilters />
       <TransactionsList />
     </div>

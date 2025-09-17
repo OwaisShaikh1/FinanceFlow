@@ -1,11 +1,15 @@
+"use client"
+
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarInitials } from "@/components/ui/avatar"
 import { Building2, Mail, Phone, Calendar, MoreHorizontal, Eye, Edit, FileText } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useClientFilters } from "@/contexts/FilterContext"
 
 export function ClientsList() {
+  const { filters } = useClientFilters()
   const clients = [
     {
       id: 1,
@@ -74,9 +78,21 @@ export function ClientsList() {
     }
   }
 
+  // Apply filters
+  const filteredClients = clients.filter((client) => {
+    const matchesSearch = filters.search
+      ? client.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+        client.gstin.toLowerCase().includes(filters.search.toLowerCase())
+      : true
+    const matchesStatus = filters.status === 'all' ? true : client.status === filters.status
+    const matchesBusinessType = filters.businessType === 'all' ? true : client.type.toLowerCase() === filters.businessType.toLowerCase()
+    
+    return matchesSearch && matchesStatus && matchesBusinessType
+  })
+
   return (
     <div className="space-y-4">
-      {clients.map((client) => (
+      {filteredClients.map((client) => (
         <Card key={client.id} className="hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-start justify-between">

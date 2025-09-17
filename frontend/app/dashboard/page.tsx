@@ -5,6 +5,7 @@ const RecentActivity = lazy(() => import("@/components/dashboard/recent-activity
 const ComplianceAlerts = lazy(() => import("@/components/dashboard/compliance-alerts"))
 const QuickActions = lazy(() => import("@/components/dashboard/quick-actions"))
 const FinancialChart = lazy(() => import("@/components/dashboard/financial-chart"))
+const MetricsOverview = lazy(() => import("@/components/dashboard/metrics-overview").then(m => ({ default: m.MetricsOverview })))
 
 
 export default function DashboardPage() {
@@ -33,6 +34,10 @@ export default function DashboardPage() {
           </Suspense>
         </div>
       </div>
+
+      <Suspense fallback={<div>Loading metrics...</div>}>
+        <MetricsOverview />
+      </Suspense>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Suspense fallback={<div>Loading activity...</div>}>
