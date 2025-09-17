@@ -18,58 +18,58 @@ type Transaction = {
   hasAttachment?: boolean
 }
 
-const mockTransactions = [
-  {
-    id: "TXN-001",
-    date: "2024-12-15",
-    type: "income",
-    description: "Website Development - ABC Corp",
-    category: "Service Income",
-    amount: 25000,
-    paymentMethod: "Bank Transfer",
-    hasAttachment: true,
-  },
-  {
-    id: "TXN-002",
-    date: "2024-12-14",
-    type: "expense",
-    description: "Office Rent - December",
-    category: "Office Rent",
-    amount: 15000,
-    paymentMethod: "Bank Transfer",
-    hasAttachment: true,
-  },
-  {
-    id: "TXN-003",
-    date: "2024-12-13",
-    type: "income",
-    description: "Consulting Services - XYZ Ltd",
-    category: "Service Income",
-    amount: 18000,
-    paymentMethod: "UPI",
-    hasAttachment: false,
-  },
-  {
-    id: "TXN-004",
-    date: "2024-12-12",
-    type: "expense",
-    description: "Office Supplies",
-    category: "Office Supplies",
-    amount: 2500,
-    paymentMethod: "Credit Card",
-    hasAttachment: true,
-  },
-  {
-    id: "TXN-005",
-    date: "2024-12-11",
-    type: "expense",
-    description: "Internet & Phone Bills",
-    category: "Utilities",
-    amount: 3200,
-    paymentMethod: "Bank Transfer",
-    hasAttachment: true,
-  },
-]
+// const mockTransactions = [
+//   {
+//     id: "TXN-001",
+//     date: "2024-12-15",
+//     type: "income",
+//     description: "Website Development - ABC Corp",
+//     category: "Service Income",
+//     amount: 25000,
+//     paymentMethod: "Bank Transfer",
+//     hasAttachment: true,
+//   },
+//   {
+//     id: "TXN-002",
+//     date: "2024-12-14",
+//     type: "expense",
+//     description: "Office Rent - December",
+//     category: "Office Rent",
+//     amount: 15000,
+//     paymentMethod: "Bank Transfer",
+//     hasAttachment: true,
+//   },
+//   {
+//     id: "TXN-003",
+//     date: "2024-12-13",
+//     type: "income",
+//     description: "Consulting Services - XYZ Ltd",
+//     category: "Service Income",
+//     amount: 18000,
+//     paymentMethod: "UPI",
+//     hasAttachment: false,
+//   },
+//   {
+//     id: "TXN-004",
+//     date: "2024-12-12",
+//     type: "expense",
+//     description: "Office Supplies",
+//     category: "Office Supplies",
+//     amount: 2500,
+//     paymentMethod: "Credit Card",
+//     hasAttachment: true,
+//   },
+//   {
+//     id: "TXN-005",
+//     date: "2024-12-11",
+//     type: "expense",
+//     description: "Internet & Phone Bills",
+//     category: "Utilities",
+//     amount: 3200,
+//     paymentMethod: "Bank Transfer",
+//     hasAttachment: true,
+//   },
+// ]
 
 export function TransactionsList() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -78,7 +78,7 @@ export function TransactionsList() {
     // Fetch transactions from backend API when component mounts
     const fetchTransactions = async () => {
       try{
-        const res = await fetch(`${BASE_URL}api/transactions`)
+        const res = await fetch(`http://localhost:5000/api/transactions`)
         if (!res.ok) throw new Error('Failed to fetch transactions')
         const data = await res.json()
         setTransactions(data)

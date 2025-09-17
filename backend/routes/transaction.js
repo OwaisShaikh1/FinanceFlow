@@ -2,91 +2,91 @@ const express = require("express");
 const multer = require("multer");
 const Transaction = require("../models/Transaction");
 
+// Add this at the top with your other requires
+const UserCounter = require("../models/UserCounter");
+
 const router = express.Router();
 
 // Mock auth middleware
 const auth = (req, res, next) => {
-  req.user = { biz: "650f3f0c8f8c9a12a1234567" };
+  req.user = {
+    id: "650f3f0c8f8c9a12a7654321",   // fake user id
+    biz: "650f3f0c8f8c9a12a1234567", // fake business id
+    name: "Demo User"
+  };
   next();
 };
 
 // Multer setup
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => {
-    const ts = Date.now();
-    const safe = file.originalname.replace(/\s+/g, "_");
-    cb(null, `${ts}_${safe}`);
-  },
-});
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 // POST /api/transactions
 router.post("/", auth, upload.array("receipts"), async (req, res) => {
   try {
-    const { description, amount, category, coa, date, gstRate, gstInput, type, paymentMethod } = req.body;
-    const amountNum = Number(amount);
-    console.log("Transaction body:", req.body);
+    const { type, amount, date, category, description, notes, paymentMethod } = req.body;
 
-    // 1. Get user initials (example: "Owais Shaikh" => "OS")
-    const userName = req.user.name || "User"; // assume you have req.user from auth
+    if (!type) return res.status(400).json({ message: "Type is required" });
+    if (!amount || isNaN(Number(amount))) {
+      return res.status(400).json({ message: "Amount must be a number" });
+    }
+
+    const amountNum = Number(amount);
+
+    // Generate unique serial ID using persistent counter
+    const userName = req.user.name || "User";
     const initials = userName
       .split(" ")
-      .map(word => word[0].toUpperCase())
+      .map(w => w[0].toUpperCase())
       .join("")
-      .slice(0, 3); // limit to 2–3 chars
+      .slice(0, 3);
 
-    // 2. Count how many transactions this user already has
-    const count = await Transaction.countDocuments({ user: req.user.id });
+    // Get or create user counter
+    let counter = await UserCounter.findOne({ user: req.user.id });
+    if (!counter) {
+      counter = await UserCounter.create({ user: req.user.id, lastSerial: 0 });
+    }
 
-    // 3. Generate serial id
-    const serialId = `${initials}-${String(count + 1).padStart(4, "0")}`;
+    counter.lastSerial += 1;
+    await counter.save();
 
-    // 4. Create transaction
-    const tx = await Transaction.create({
-      id: serialId,
-      business: req.user.biz,
-      date: date ? new Date(date) : new Date(),
-      description,
-      amount: amountNum,
-      type,
-      category,
-      coa: coa || undefined,
-      receiptUrl: req.files?.map((f) => `/uploads/${f.filename}`),
-      source: "MANUAL",
-      paymentMethod,
-      gst: gstRate
-        ? {
-            rate: Number(gstRate),
-            amount: (amountNum * Number(gstRate)) / 100,
-            input: !!gstInput,
-          }
-        : undefined,
-    });
+    const serialId = `${initials}-${String(counter.lastSerial).padStart(4, "0")}`;
+
+    // Convert uploaded files to schema format
+    const files = req.files?.map(f => ({
+      filename: f.originalname,
+      contentType: f.mimetype,
+      data: f.buffer
+    })) || [];
+
+  // Prepare transaction object
+const txData = {
+  id: serialId,
+  business: req.user.biz,
+  user: req.user.id,
+  date: date ? new Date(date) : new Date(),
+  type,
+  amount: amountNum,
+  category,
+  description,
+  notes,
+  paymentMethod,
+  receipts: files,
+  source: "MANUAL"
+};
+
+// Log the transaction before saving
+console.log("Transaction to be saved:", txData);
+
+// Save to database
+const tx = await Transaction.create(txData);
+
+// tx now contains the saved document
 
     return res.status(201).json(tx);
   } catch (e) {
     console.error("Transaction error:", e);
-    return res.status(400).json({ message: e.message });
-  }
-});
-
-
-// GET /api/transactions
-router.get("/", auth, async (req, res) => {
-  try {
-    const { from, to, category } = req.query;
-    const q = { business: req.user.biz };
-
-    if (from || to) q.date = {};
-    if (from) q.date.$gte = new Date(from);
-    if (to) q.date.$lte = new Date(to);
-    if (category) q.category = category;
-
-    const list = await Transaction.find(q).sort({ date: -1 }).lean();
-    return res.json(list);
-  } catch (err) {
-    return res.status(500).json({ message: err.message });
+    return res.status(500).json({ message: e.message });
   }
 });
 

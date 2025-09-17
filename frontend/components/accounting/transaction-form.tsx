@@ -51,33 +51,53 @@ export function TransactionForm() {
     e.preventDefault()
     setIsLoading(true)
 
-    const formData = new FormData(e.currentTarget)
+   try {
+      const form = e.currentTarget
 
-    const transactionData = {
-      type: formData.get("type"),
-      amount: parseFloat(formData.get("amount") as string),
-      date: date ? format(date, "yyyy-MM-dd") : null,
-      category: formData.get("category"),
-      description: formData.get("description"),
-      notes: formData.get("notes"),
-      paymentMethod: formData.get("paymentMethod"),
-      attachments,
-    }
+      // Safely parse amount
+      const amount = parseFloat(form.amount.value)
+      if (isNaN(amount)) {
+        alert("Please enter a valid amount")
+        setIsLoading(false)
+        return
+      }
 
-    try {
-      // Call your API route
-      const res = await fetch(`${BASE_URL}api/transactions/`, {
+      const transactionData = {
+        type: form.type.value,
+        amount,
+        date: date ? format(date, "yyyy-MM-dd") : "",
+        category: form.category.value,
+        description: form.description.value,
+        notes: form.notes.value,
+        paymentMethod: form.paymentMethod.value,
+      }
+
+      // Build FormData
+      const formData = new FormData()
+      formData.append("type", transactionData.type)
+      formData.append("amount", transactionData.amount.toString())
+      formData.append("date", transactionData.date)
+      formData.append("category", transactionData.category)
+      formData.append("description", transactionData.description)
+      formData.append("notes", transactionData.notes)
+      formData.append("paymentMethod", transactionData.paymentMethod)
+
+      // Append files with the correct field name
+      attachments.forEach((file) => formData.append("receipts", file)) // ✅ must match backend Multer field
+
+      // Send request
+      const res = await fetch("http://localhost:5000/api/transactions", {
         method: "POST",
-        body: JSON.stringify(transactionData),
-        headers: { "Content-Type": "application/json" },
+        body: formData, // ✅ FormData handles Content-Type automatically
       })
 
       if (!res.ok) throw new Error("Failed to save transaction")
 
-      // Redirect after success
+      // Redirect on success
       window.location.href = "/dashboard/transactions"
     } catch (err) {
       console.error("Error:", err)
+      alert("Something went wrong while saving the transaction")
     } finally {
       setIsLoading(false)
     }
@@ -172,12 +192,13 @@ export function TransactionForm() {
         <Label>Attachments</Label>
         <div className="border-2 border-dashed border-border rounded-lg p-4">
           <input
-            type="file"
-            multiple
-            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-            onChange={handleFileUpload}
-            className="hidden"
-            id="file-upload"
+             type="file"
+          name="receipts" 
+           multiple
+          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+         onChange={handleFileUpload}
+          className="hidden"
+          id="file-upload"
           />
           <label htmlFor="file-upload" className="cursor-pointer">
             <div className="text-center">

@@ -1,4 +1,5 @@
-const express = require('express');
+
+///Core modules
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
@@ -8,11 +9,15 @@ const cors = require('cors');
 const morgan = require('morgan');
 const dayjs = require('dayjs');
 const path = require('path');
+const express = require('express');
 
+//local modules
 const invoiceRoutes = require('./routes/invoice');
 const businessRoutes = require('./routes/business');
 const assignCARoutes = require('./routes/cabussiness');
 const transactionRoutes = require('./routes/transaction');
+
+const app = express();
 
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../backend/.env') });
@@ -31,7 +36,6 @@ const {
   RecurringTemplate,
 } = require('./models'); // index.js inside models folder exports all models
 
-const app = express();
 
 // --------------------- Middleware ---------------------
 app.use(express.json());
@@ -40,9 +44,9 @@ app.use(morgan('dev'));
 
 // --------------------- MongoDB ---------------------
 mongoose
-  .connect(process.env.MONGO_URI, { dbName: 'financeflow' })
-  .then(() => console.log('✅ MongoDB connected'))
-  .catch((e) => console.error('MongoDB error ->', e.message));
+  .connect(process.env.MONGODB_URI, { dbName: 'Finance' })
+  .then(() => console.log('✅ MongoDB Atlas connected'))
+  .catch((e) => console.error('MongoDB Atlas error ->', e.message));
 
 // --------------------- Auth & Utilities ---------------------
 const ROLES = { CA: 'CA', OWNER: 'OWNER', EMPLOYEE: 'EMPLOYEE' };
@@ -94,8 +98,13 @@ app.post('/auth/login', async (req, res) => {
     if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
 
     // Generate JWT
-    const token = signToken(user);
+   const token = jwt.sign(
+  { id: user._id, email: user.email },
+  process.env.JWT_SECRET,
+  { expiresIn: "1h" }
+);
 
+     
     // Remove sensitive info (like password, __v, etc.)
     const safeUser = {
       id: user._id,
