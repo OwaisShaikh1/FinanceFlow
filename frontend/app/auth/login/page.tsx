@@ -10,11 +10,11 @@ export default function LoginPage() {
   const [message, setMessage] = useState("");
 
   const handleLogin = async (formData: any) => {
-    setMessage("...logging in");
+    setMessage("...Logging in");
     console.log("Login data:", formData);
 
     try {
-      const res = await fetch(`${BASE_URL}auth/login`, {
+       const res = await fetch("http://localhost:5000/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

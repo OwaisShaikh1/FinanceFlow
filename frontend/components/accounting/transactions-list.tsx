@@ -27,9 +27,9 @@ export function TransactionsList() {
 
   useEffect(() => {
     const fetchTransactions = async () => {
-      try {
+      try{
         const res = await fetch(`${BASE_URL}api/transactions`)
-        if (!res.ok) throw new Error("Failed to fetch transactions")
+        if (!res.ok) throw new Error('Failed to fetch transactions')
         const data = await res.json()
         setTransactions(data)
       } catch (error) {

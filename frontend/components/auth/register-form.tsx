@@ -18,7 +18,7 @@ interface RegisterFormProps {
     role: string
     company: string
     password: string
-    confirmPassword: string
+    confirmPassword?: string
   }) => Promise<void>
 }
 
@@ -49,23 +49,48 @@ export function RegisterForm({ onSubmit}: RegisterFormProps) {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!agreedToTerms) {
-      alert("Please agree to the terms and conditions")
-      return
+      alert("Please agree to the terms and conditions");
+      return;
     }
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match")
-      return
+      alert("Passwords do not match");
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await onSubmit(formData)   // ✅ now calls backend
+      // Only send required fields to backend
+      const payload = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        role: formData.role,
+        company: formData.company,
+        password: formData.password
+
+      };
+       const res = await fetch("http://localhost:5000/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+
+  if (res.ok) {
+    console.log("✅ Registration successful", data);
+    alert("Registration successful! You can now log in.");
+  } else {
+    console.error("❌ Registration failed", data.message);
+    alert("Registration failed: " + (data.message || "Unknown error"));
+  }
+     
     } catch (err) {
-      console.error("Registration failed:", err)
+      console.error("Registration failed:", err);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
