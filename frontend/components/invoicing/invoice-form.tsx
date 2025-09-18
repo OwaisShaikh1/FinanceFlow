@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -30,8 +29,28 @@ interface InvoiceItem {
 const gstRates = [0, 5, 12, 18, 28]
 
 export function InvoiceForm() {
+  // Invoice Details State
+  const [invoiceNumber, setInvoiceNumber] = useState("")
+  const [poNumber, setPoNumber] = useState("")
   const [invoiceDate, setInvoiceDate] = useState<Date>()
   const [dueDate, setDueDate] = useState<Date>()
+  const [paymentTerms, setPaymentTerms] = useState("")
+
+  // Client Details State
+  const [clientName, setClientName] = useState("")
+  const [clientGstin, setClientGstin] = useState("")
+  const [clientAddress, setClientAddress] = useState("")
+  const [clientCity, setClientCity] = useState("")
+  const [clientState, setClientState] = useState("")
+  const [clientPincode, setClientPincode] = useState("")
+
+  // Additional Details State
+  const [notes, setNotes] = useState("")
+  const [bankDetails, setBankDetails] = useState("")
+  const [pdfUrl, setPdfUrl] = useState("")
+  const [ewayBillNo, setEwayBillNo] = useState("")
+
+  // Invoice Items State
   const [items, setItems] = useState<InvoiceItem[]>([
     {
       id: "1",
@@ -44,6 +63,7 @@ export function InvoiceForm() {
       total: 0,
     },
   ])
+  
   const [isLoading, setIsLoading] = useState(false)
 
   const calculateItemTotals = (item: Partial<InvoiceItem>): InvoiceItem => {
@@ -105,19 +125,67 @@ export function InvoiceForm() {
     return { subtotal, totalGst, grandTotal }
   }
 
-  const { subtotal, totalGst, grandTotal } = calculateTotals()
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
+    try {
+      // Prepare form data - all fields are now properly connected
+      const formData = {
+        // Invoice Details
+        invoiceNumber,
+        poNumber,
+        invoiceDate,
+        dueDate,
+        paymentTerms,
+        
+        // Client Details
+        clientName,
+        clientGstin,
+        clientAddress,
+        clientCity,
+        clientState,
+        clientPincode,
+        
+        // Invoice Items
+        items,
+        
+        // Additional Details
+        notes,
+        bankDetails,
+        pdfUrl,
+        ewayBillNo,
+        
+        // Calculated Totals
+        ...calculateTotals()
+      }
+         console.log("Invoice Data:", formData)
+
+      // Send POST request to API
+      const response = await fetch('http://localhost:5000/api/invoice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) throw new Error(data.message || 'Server responded with ${response.status}')
+
+      console.log('Invoice saved:', data)
+
       // Redirect to invoice view
-      window.location.href = "/dashboard/invoices"
-    }, 2000)
+      window.location.href = '/dashboard/invoices'
+
+    } catch (error: any) {
+      console.error('Error creating invoice:', error.message)
+      alert(error.message)
+    } finally {
+      setIsLoading(false)
+    }
   }
+
+  const { subtotal, totalGst, grandTotal } = calculateTotals()
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -131,11 +199,22 @@ export function InvoiceForm() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="invoiceNumber">Invoice Number</Label>
-                <Input id="invoiceNumber" placeholder="INV-001" required />
+                <Input
+                  id="invoiceNumber"
+                  placeholder="INV-001"
+                  required
+                  value={invoiceNumber}
+                  onChange={(e) => setInvoiceNumber(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="poNumber">PO Number (Optional)</Label>
-                <Input id="poNumber" placeholder="PO-001" />
+                <Input 
+                  id="poNumber" 
+                  placeholder="PO-001" 
+                  value={poNumber}
+                  onChange={(e) => setPoNumber(e.target.value)}
+                />
               </div>
             </div>
 
@@ -182,7 +261,7 @@ export function InvoiceForm() {
 
             <div className="space-y-2">
               <Label htmlFor="paymentTerms">Payment Terms</Label>
-              <Select>
+              <Select value={paymentTerms} onValueChange={setPaymentTerms}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select payment terms" />
                 </SelectTrigger>
@@ -205,27 +284,51 @@ export function InvoiceForm() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="clientName">Client Name</Label>
-              <Input id="clientName" placeholder="ABC Corporation" required />
+              <Input 
+                id="clientName" 
+                placeholder="ABC Corporation" 
+                required 
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="clientGstin">GSTIN</Label>
-              <Input id="clientGstin" placeholder="22AAAAA0000A1Z5" />
+              <Input 
+                id="clientGstin" 
+                placeholder="22AAAAA0000A1Z5" 
+                value={clientGstin}
+                onChange={(e) => setClientGstin(e.target.value)}
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="clientAddress">Address</Label>
-              <Textarea id="clientAddress" placeholder="Enter client address" rows={3} required />
+              <Textarea 
+                id="clientAddress" 
+                placeholder="Enter client address" 
+                rows={3} 
+                required 
+                value={clientAddress}
+                onChange={(e) => setClientAddress(e.target.value)}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="clientCity">City</Label>
-                <Input id="clientCity" placeholder="Mumbai" required />
+                <Input 
+                  id="clientCity" 
+                  placeholder="Mumbai" 
+                  required 
+                  value={clientCity}
+                  onChange={(e) => setClientCity(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="clientState">State</Label>
-                <Select>
+                <Select value={clientState} onValueChange={setClientState}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select state" />
                   </SelectTrigger>
@@ -242,7 +345,13 @@ export function InvoiceForm() {
 
             <div className="space-y-2">
               <Label htmlFor="clientPincode">Pincode</Label>
-              <Input id="clientPincode" placeholder="400001" required />
+              <Input 
+                id="clientPincode" 
+                placeholder="400001" 
+                required 
+                value={clientPincode}
+                onChange={(e) => setClientPincode(e.target.value)}
+              />
             </div>
           </CardContent>
         </Card>
@@ -363,7 +472,13 @@ export function InvoiceForm() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="notes">Notes</Label>
-            <Textarea id="notes" placeholder="Additional notes or terms" rows={3} />
+            <Textarea 
+              id="notes" 
+              placeholder="Additional notes or terms" 
+              rows={3} 
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
           </div>
 
           <div className="space-y-2">
@@ -372,6 +487,28 @@ export function InvoiceForm() {
               id="bankDetails"
               placeholder="Bank Name: State Bank of India&#10;Account Number: 1234567890&#10;IFSC Code: SBIN0001234"
               rows={3}
+              value={bankDetails}
+              onChange={(e) => setBankDetails(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="pdfUrl">PDF URL (Optional)</Label>
+            <Input 
+              id="pdfUrl" 
+              placeholder="https://example.com/invoice.pdf" 
+              value={pdfUrl}
+              onChange={(e) => setPdfUrl(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="ewayBillNo">E-Way Bill Number (Optional)</Label>
+            <Input 
+              id="ewayBillNo" 
+              placeholder="123456789012" 
+              value={ewayBillNo}
+              onChange={(e) => setEwayBillNo(e.target.value)}
             />
           </div>
         </CardContent>

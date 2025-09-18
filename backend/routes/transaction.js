@@ -90,4 +90,13 @@ const tx = await Transaction.create(txData);
   }
 });
 
+router.get('/', auth, async (req, res) => {
+  try {
+    const transactions = await Transaction.find({ business: req.user.biz });
+    return res.json(transactions);
+  } catch (e) {
+    return res.status(500).json({ message: e.message });
+  }
+});
+
 module.exports = router;

@@ -1,3 +1,5 @@
+"use client"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -5,60 +7,48 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Eye, Edit, Download, Send, MoreHorizontal } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
-const mockInvoices = [
-  {
-    id: "INV-001",
-    date: "2024-12-15",
-    dueDate: "2024-12-30",
-    client: "ABC Corporation",
-    amount: 25000,
-    gstAmount: 4500,
-    total: 29500,
-    status: "paid",
-  },
-  {
-    id: "INV-002",
-    date: "2024-12-14",
-    dueDate: "2024-12-29",
-    client: "XYZ Limited",
-    amount: 18000,
-    gstAmount: 3240,
-    total: 21240,
-    status: "sent",
-  },
-  {
-    id: "INV-003",
-    date: "2024-12-13",
-    dueDate: "2024-12-28",
-    client: "DEF Industries",
-    amount: 32000,
-    gstAmount: 5760,
-    total: 37760,
-    status: "overdue",
-  },
-  {
-    id: "INV-004",
-    date: "2024-12-12",
-    dueDate: "2024-12-27",
-    client: "GHI Enterprises",
-    amount: 15000,
-    gstAmount: 2700,
-    total: 17700,
-    status: "draft",
-  },
-  {
-    id: "INV-005",
-    date: "2024-12-11",
-    dueDate: "2024-12-26",
-    client: "JKL Solutions",
-    amount: 22000,
-    gstAmount: 3960,
-    total: 25960,
-    status: "paid",
-  },
-]
+interface Invoice {
+  invoiceNumber: string
+  invoiceDate: string
+  dueDate: string
+  clientName: string
+  subtotal: number
+  totalGst: number
+  grandTotal: number
+  status: string
+}
 
 export function InvoicesList() {
+  const [invoices, setInvoices] = useState<Invoice[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/invoice", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+
+        if (!res.ok) {
+          throw new Error(`Error: ${res.status}`)
+        }
+
+        const data = await res.json()
+        setInvoices(data)
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch invoices")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchInvoices()
+  }, [])
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "paid":
@@ -89,75 +79,83 @@ export function InvoicesList() {
     }
   }
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Invoice List</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Invoice #</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Due Date</TableHead>
-              <TableHead>Client</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>GST</TableHead>
-              <TableHead>Total</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Actions</TableHead>
+ 
+ if (loading) return <p className="p-4">Loading invoices...</p>
+if (error) return <p className="p-4 text-red-500">Error: {error}</p>
+if (!invoices || invoices.length === 0) {
+  return <p className="p-4">No invoices found.</p>
+}
+
+return (
+  <>
+  <Card>
+    <CardHeader>
+      <CardTitle>Invoice List</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Invoice #</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Due Date</TableHead>
+            <TableHead>Client</TableHead>
+            <TableHead>Amount</TableHead>
+            <TableHead>GST</TableHead>
+            <TableHead>Total</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {invoices.map((invoice, index) => (
+            <TableRow key={index}>
+              <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
+              <TableCell>{invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleDateString("en-IN") : "-"}</TableCell>
+              <TableCell>{invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString("en-IN") : "-"}</TableCell>
+              <TableCell>{invoice.clientName}</TableCell>
+              <TableCell>₹{Number(invoice.subtotal ?? 0).toLocaleString("en-IN")}</TableCell>
+              <TableCell>₹{Number(invoice.totalGst ?? 0).toLocaleString("en-IN")}</TableCell>
+              <TableCell className="font-medium">₹{Number(invoice.grandTotal ?? 0).toLocaleString("en-IN")}</TableCell>
+              <TableCell>
+                <Badge variant={getStatusColor(invoice.status)}>
+                  {getStatusText(invoice.status)}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon">
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon">
+                    <Download className="h-4 w-4" />
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>
+                        <Edit className="mr-2 h-4 w-4" /> Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Send className="mr-2 h-4 w-4" /> Send
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Download className="mr-2 h-4 w-4" /> Download PDF
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {mockInvoices.map((invoice) => (
-              <TableRow key={invoice.id}>
-                <TableCell className="font-medium">{invoice.id}</TableCell>
-                <TableCell>{invoice.date}</TableCell>
-                <TableCell>{invoice.dueDate}</TableCell>
-                <TableCell>{invoice.client}</TableCell>
-                <TableCell>₹{invoice.amount.toLocaleString()}</TableCell>
-                <TableCell>₹{invoice.gstAmount.toLocaleString()}</TableCell>
-                <TableCell className="font-medium">₹{invoice.total.toLocaleString()}</TableCell>
-                <TableCell>
-                  <Badge variant={getStatusColor(invoice.status)}>{getStatusText(invoice.status)}</Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Send className="mr-2 h-4 w-4" />
-                          Send
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Download className="mr-2 h-4 w-4" />
-                          Download PDF
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
-  )
+          ))}
+        </TableBody>
+      </Table>
+    </CardContent>
+  </Card>
+</>
+)
 }
