@@ -1,4 +1,3 @@
-
 ///Core modules
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
@@ -16,6 +15,7 @@ const invoiceRoutes = require('./routes/invoice');
 const businessRoutes = require('./routes/business');
 const assignCARoutes = require('./routes/cabussiness');
 const transactionRoutes = require('./routes/transaction');
+const taxcalcRoute = require('./routes/taxcalc');
 
 const app = express();
 
@@ -153,6 +153,7 @@ app.use('/api/business', assignCARoutes);      // /api/business/:id/assign-ca/:c
 
 app.use('/api/invoice', invoiceRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/taxcalc', taxcalcRoute);
 
 
 /* Business
