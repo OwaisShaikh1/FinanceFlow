@@ -8,6 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Eye, Edit, Download, Send, MoreHorizontal } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useInvoiceFilters } from "@/contexts/FilterContext"
+import { TableSkeleton } from "@/components/ui/skeleton-presets"
+import { useSkeletonPreview } from "@/hooks/use-skeleton-preview"
+import { API_BASE_URL } from "@/lib/config"
 
 interface Invoice {
   invoiceNumber: string
@@ -25,11 +28,16 @@ export function InvoicesList() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { filters } = useInvoiceFilters()
+  const skeletonPreview = useSkeletonPreview()
 
   useEffect(() => {
+    if (skeletonPreview) {
+      const t = setTimeout(() => setLoading(false), 2000)
+      return () => clearTimeout(t)
+    }
     const fetchInvoices = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/invoice", {
+        const res = await fetch(`${API_BASE_URL}/api/invoice`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
         })
@@ -46,7 +54,7 @@ export function InvoicesList() {
     }
 
     fetchInvoices()
-  }, [])
+  }, [skeletonPreview])
 
   // Apply filters
   const filteredInvoices = invoices.filter((invoice) => {
@@ -84,7 +92,21 @@ export function InvoicesList() {
     }
   }
 
-  if (loading) return <p className="p-4">Loading invoices...</p>
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Invoice List</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TableSkeleton
+            columns={["Invoice #","Date","Due Date","Client","Amount","GST","Total","Status","Actions"]}
+            rows={8}
+          />
+        </CardContent>
+      </Card>
+    )
+  }
   if (error) return <p className="p-4 text-red-500">Error: {error}</p>
   if (!filteredInvoices || filteredInvoices.length === 0) {
     return <p className="p-4">No invoices found.</p>

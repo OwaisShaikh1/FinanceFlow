@@ -1,10 +1,22 @@
-import { TDSDashboard } from "@/components/tax/tds-dashboard"
+"use client"
+
+import { TDSDashboard, TDSDashboardRef } from "@/components/tax/tds-dashboard"
 import { TDSCalculator } from "@/components/tax/tds-calculator"
 import { TDSReturns } from "@/components/tax/tds-returns"
 import { Button } from "@/components/ui/button"
 import { Calculator, FileText, Download } from "lucide-react"
+import { useState, useRef } from "react"
 
 export default function TDSPage() {
+  const dashboardRef = useRef<TDSDashboardRef>(null);
+
+  const handleTDSRecorded = () => {
+    // Refresh the dashboard when a new TDS record is added
+    if (dashboardRef.current) {
+      dashboardRef.current.refreshDashboard();
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -28,10 +40,10 @@ export default function TDSPage() {
         </div>
       </div>
 
-      <TDSDashboard />
+      <TDSDashboard ref={dashboardRef} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <TDSCalculator />
+        <TDSCalculator onTDSRecorded={handleTDSRecorded} />
         <TDSReturns />
       </div>
     </div>

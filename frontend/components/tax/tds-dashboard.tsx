@@ -1,67 +1,194 @@
+"use client"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Calculator, FileText, AlertTriangle, CheckCircle } from "lucide-react"
+import { Calculator, FileText, AlertTriangle, CheckCircle, Loader2 } from "lucide-react"
+import { useEffect, useState, forwardRef, useImperativeHandle } from "react"
+import { ENDPOINTS } from "@/lib/config"
 
-export function TDSDashboard() {
+interface TDSDashboardData {
+  totalDeducted: number;
+  totalPayment: number;
+  totalEntries: number;
+  statusCounts: { recorded: number };
+  recentDeductions: Array<{
+    _id: string;
+    payeeName: string;
+    paymentAmount: number;
+    tdsAmount: number;
+    netPayment: number;
+    tdsSection: string;
+    recordDate: string;
+    tdsRate: number;
+    applicableThreshold: number;
+  }>;
+}
+
+export interface TDSDashboardRef {
+  refreshDashboard: () => void;
+}
+
+export const TDSDashboard = forwardRef<TDSDashboardRef>((props, ref) => {
+  const [dashboardData, setDashboardData] = useState<TDSDashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fallback dummy data in case API fails
+  const fallbackData = {
+    totalDeducted: 25780,
+    totalPayment: 486500,
+    totalEntries: 8,
+    statusCounts: { recorded: 8 },
+    recentDeductions: [
+      {
+        _id: "1",
+        payeeName: "Manager Consultancy",
+        paymentAmount: 79000,
+        tdsAmount: 3950,
+        netPayment: 75050,
+        tdsSection: "194D - Insurance Commission",
+        recordDate: "2025-01-10",
+        tdsRate: 5,
+        applicableThreshold: 15000
+      },
+      {
+        _id: "2",
+        payeeName: "Tech Solutions Pvt Ltd",
+        paymentAmount: 50000,
+        tdsAmount: 5000,
+        netPayment: 45000,
+        tdsSection: "194J - Professional Services",
+        recordDate: "2025-01-08",
+        tdsRate: 10,
+        applicableThreshold: 30000
+      },
+      {
+        _id: "3",
+        payeeName: "Design Agency",
+        paymentAmount: 75000,
+        tdsAmount: 7500,
+        netPayment: 67500,
+        tdsSection: "194J - Professional Services",
+        recordDate: "2025-01-05",
+        tdsRate: 10,
+        applicableThreshold: 30000
+      },
+      {
+        _id: "4",
+        payeeName: "ABC Construction",
+        paymentAmount: 99000,
+        tdsAmount: 990,
+        netPayment: 98010,
+        tdsSection: "194C - Contractor Payments",
+        recordDate: "2025-01-03",
+        tdsRate: 1,
+        applicableThreshold: 30000
+      },
+      {
+        _id: "5",
+        payeeName: "Security Services",
+        paymentAmount: 79000,
+        tdsAmount: 3950,
+        netPayment: 75050,
+        tdsSection: "194D - Insurance Commission",
+        recordDate: "2024-12-28",
+        tdsRate: 5,
+        applicableThreshold: 15000
+      }
+    ]
+  };
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('Fetching from:', `${ENDPOINTS.TDS_BASE}/dashboard`);
+      const response = await fetch(`${ENDPOINTS.TDS_BASE}/dashboard`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Response Error:', response.status, errorText);
+        throw new Error(`Server responded with status ${response.status}: ${errorText}`);
+      }
+      
+      const result = await response.json();
+      console.log('API Result:', result);
+      
+      if (result.success) {
+        console.log('Using real data from database');
+        setDashboardData(result.data);
+      } else {
+        console.log('API returned no success, using fallback data');
+        setDashboardData(fallbackData);
+        setError(null);
+      }
+    } catch (err) {
+      console.error('Dashboard fetch error:', err);
+      setError(`API Error: ${err instanceof Error ? err.message : String(err)}`);
+      // Temporarily show error instead of fallback data for debugging
+      setDashboardData(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useImperativeHandle(ref, () => ({
+    refreshDashboard: fetchDashboardData
+  }));
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading dashboard...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center text-red-600 p-8">
+        {error}
+      </div>
+    );
+  }
+
+  // Use fallback data if dashboardData is null
+  const data = dashboardData || fallbackData;
   const stats = [
     {
       title: "TDS Deducted",
-      value: "₹22,500",
-      change: "This quarter",
+      value: `₹${data.totalDeducted.toLocaleString()}`,
+      change: `From ${data.totalEntries} transactions`,
       icon: Calculator,
-      color: "text-blue-600",
-    },
-    {
-      title: "TDS Deposited",
-      value: "₹22,500",
-      change: "All deposited",
-      icon: CheckCircle,
       color: "text-green-600",
     },
     {
-      title: "Pending Returns",
-      value: "1",
-      change: "Due 7th Jan",
-      icon: AlertTriangle,
-      color: "text-red-600",
+      title: "Total Payment",
+      value: `₹${data.totalPayment.toLocaleString()}`,
+      change: "Gross payment amount",
+      icon: CheckCircle,
+      color: "text-blue-600",
     },
     {
-      title: "Certificates Issued",
-      value: "15",
-      change: "Form 16A issued",
+      title: "Total Entries",
+      value: data.totalEntries.toString(),
+      change: "TDS records this year",
       icon: FileText,
       color: "text-purple-600",
     },
-  ]
-
-  const recentDeductions = [
     {
-      date: "2024-12-15",
-      payee: "ABC Consultants",
-      amount: 50000,
-      tdsRate: 10,
-      tdsAmount: 5000,
-      section: "194C",
-      status: "deposited",
-    },
-    {
-      date: "2024-12-10",
-      payee: "XYZ Services",
-      amount: 25000,
-      tdsRate: 10,
-      tdsAmount: 2500,
-      section: "194J",
-      status: "deposited",
-    },
-    {
-      date: "2024-12-05",
-      payee: "DEF Solutions",
-      amount: 75000,
-      tdsRate: 2,
-      tdsAmount: 1500,
-      section: "194C",
-      status: "pending",
+      title: "Total Recorded",
+      value: (data.statusCounts.recorded || 0).toString(),
+      change: "TDS entries recorded",
+      icon: AlertTriangle,
+      color: "text-yellow-600",
     },
   ]
 
@@ -100,25 +227,37 @@ export function TDSDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {recentDeductions.map((deduction, index) => (
-                <TableRow key={index}>
-                  <TableCell>{deduction.date}</TableCell>
-                  <TableCell>{deduction.payee}</TableCell>
-                  <TableCell>₹{deduction.amount.toLocaleString()}</TableCell>
-                  <TableCell>{deduction.tdsRate}%</TableCell>
-                  <TableCell>₹{deduction.tdsAmount.toLocaleString()}</TableCell>
-                  <TableCell>{deduction.section}</TableCell>
-                  <TableCell>
-                    <Badge variant={deduction.status === "deposited" ? "default" : "secondary"}>
-                      {deduction.status}
-                    </Badge>
+              {data.recentDeductions.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                    No TDS deductions recorded yet
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                data.recentDeductions.map((deduction, index) => (
+                  <TableRow key={deduction._id || index}>
+                    <TableCell>
+                      {new Date(deduction.recordDate).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>{deduction.payeeName}</TableCell>
+                    <TableCell>₹{deduction.paymentAmount.toLocaleString()}</TableCell>
+                    <TableCell>{deduction.tdsRate}%</TableCell>
+                    <TableCell>₹{deduction.tdsAmount.toLocaleString()}</TableCell>
+                    <TableCell>{deduction.tdsSection}</TableCell>
+                    <TableCell>
+                      <Badge variant="default">
+                        Recorded
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
     </div>
   )
-}
+});
+
+TDSDashboard.displayName = 'TDSDashboard';

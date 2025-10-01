@@ -9,11 +9,11 @@ import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
 import { AlertTriangle } from "lucide-react"
-import { getSectionsForRegime, SectionDef, TaxRegime } from "@/lib/tax/config"
+import { getSectionsForRegime, SectionDef, TaxRegime } from "@/lib/tax/taxapi"
 import { computeAfterInvestments, generateInvestmentPlan } from "@/lib/tax/calculate"
 
 export function TaxSavingCalculator() {
-  const [regime, setRegime] = useState<TaxRegime>("new")
+  const [regime, setRegime] = useState<TaxRegime>("old")
   const [annualIncome, setAnnualIncome] = useState<number>(0)
   const [baseDeductions, setBaseDeductions] = useState<number>(0)
   const [investments, setInvestments] = useState<Record<string, number>>({})
@@ -46,6 +46,20 @@ export function TaxSavingCalculator() {
     return s.limit !== null && val > s.limit
   })
 
+  const handleRegimeChange = (newRegime: TaxRegime) => {
+    setRegime(newRegime)
+    // Clear investments that aren't valid for the new regime
+    const newSections = getSectionsForRegime(newRegime)
+    const validCodes = new Set(newSections.map(s => s.code))
+    const filteredInvestments: Record<string, number> = {}
+    Object.entries(investments).forEach(([code, amount]) => {
+      if (validCodes.has(code)) {
+        filteredInvestments[code] = amount
+      }
+    })
+    setInvestments(filteredInvestments)
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -56,7 +70,7 @@ export function TaxSavingCalculator() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label>Tax Regime</Label>
-            <Select value={regime} onValueChange={(v: TaxRegime) => setRegime(v)}>
+            <Select value={regime} onValueChange={handleRegimeChange}>
               <SelectTrigger className="bg-gray-100 border border-gray-300 rounded-md">
                 <SelectValue />
               </SelectTrigger>
@@ -87,9 +101,12 @@ export function TaxSavingCalculator() {
         </div>
 
         {sections.length === 0 && (
-          <div className="text-sm text-muted-foreground">
-            The selected regime currently doesn’t allow most traditional deductions. You may still claim employer NPS
-            contribution and specific items outside this demo.
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="font-medium text-blue-900 mb-2">New Regime - Limited Deductions</h4>
+            <p className="text-sm text-blue-700">
+              The New Tax Regime offers lower tax rates but doesn't allow most traditional deductions like 80C, 80D, etc. 
+              You can still claim employer NPS contributions and certain other specific deductions.
+            </p>
           </div>
         )}
 
@@ -106,7 +123,9 @@ export function TaxSavingCalculator() {
                     <p className="text-xs text-muted-foreground">{section.description}</p>
                   </div>
                   <div className="text-right">
-                    {limit !== null && <p className="text-xs text-muted-foreground">Limit: ₹{limit.toLocaleString()}</p>}
+                    {limit !== null && (
+                      <span className="text-xs text-muted-foreground">Limit: ₹{limit.toLocaleString()}</span>
+                    )}
                   </div>
                 </div>
                 <div className="relative">
@@ -114,8 +133,7 @@ export function TaxSavingCalculator() {
                     type="number"
                     placeholder="Investment amount"
                     value={invested || ""}
-                    max={limit ?? undefined}
-                    onChange={(e) => updateInvestment(section.code, Number.parseFloat(e.target.value) || 0)}
+                    onChange={(e) => updateInvestment(section.code, parseFloat(e.target.value) || 0)}
                     className={`bg-gray-100 border border-gray-300 rounded-md ${
                       limit !== null && invested > limit ? "border-red-500" : ""
                     }`}
@@ -226,9 +244,10 @@ export function TaxSavingCalculator() {
               const url = URL.createObjectURL(blob)
               const a = document.createElement("a")
               a.href = url
-              a.download = `tax-saving-report-${Date.now()}.json`
+              a.download = "tax-saving-report.json"
               a.click()
               URL.revokeObjectURL(url)
+              toast({ title: "Report Downloaded", description: "Your tax saving report has been downloaded." })
             }}
           >
             Export Tax Saving Report

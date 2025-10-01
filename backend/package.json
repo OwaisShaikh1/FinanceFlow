@@ -17,12 +17,14 @@
     "cors": "^2.8.5",
     "dayjs": "^1.11.13",
     "dotenv": "^17.2.2",
+    "exceljs": "^4.4.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.1",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
     "nodemin": "^1.0.1",
+    "puppeteer": "^24.22.3",
     "uuid": "^13.0.0"
   }
 }

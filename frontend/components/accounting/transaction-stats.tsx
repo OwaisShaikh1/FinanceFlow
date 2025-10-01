@@ -48,7 +48,7 @@ export function TransactionStats() {
           <CardContent>
             <div className="text-2xl font-bold">{stat.value}</div>
             <div className="flex items-center text-xs text-muted-foreground">
-              <span className="text-green-600">{stat.change}</span>
+              <span className={stat.trend === "up" ? "text-green-600" : "text-red-600"}>{stat.change}</span>
               <span className="ml-1">{stat.period}</span>
             </div>
           </CardContent>

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { computeTax, ComputeTaxResult } from "@/lib/tax/calculate"
-import { TaxRegime } from "@/lib/tax/config"
+import { TaxRegime } from "@/lib/tax/taxapi"
 
 export function AdvanceTaxCalculator() {
   const [annualIncome, setAnnualIncome] = useState<number>(0)

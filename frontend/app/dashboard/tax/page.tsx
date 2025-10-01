@@ -1,6 +1,7 @@
 import { AdvanceTaxCalculator } from "@/components/tax/advance-tax-calculator";
 import { TaxSavingCalculator } from "@/components/tax/tax-saving-calculator";
 import { Button } from "@/components/ui/button";
+import { API_BASE_URL } from "@/lib/config";
 import { useState } from "react";
 
 export default function TaxDashboardPage() {
@@ -14,7 +15,7 @@ export default function TaxDashboardPage() {
     };
 
     try {
-      const response = await fetch("http://localhost:4000/api/save-tax-data", {
+      const response = await fetch(`${API_BASE_URL}/api/save-tax-data`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

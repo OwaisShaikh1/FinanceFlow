@@ -20,7 +20,7 @@ const monthlyData = [
 export function ProfitLossChart() {
   return (
     <div className="space-y-6">
-      <Card>
+      <Card data-pdf-section="expense-breakdown">
         <CardHeader>
           <CardTitle>Expense Breakdown</CardTitle>
         </CardHeader>
@@ -56,7 +56,7 @@ export function ProfitLossChart() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card data-pdf-section="month-trend">
         <CardHeader>
           <CardTitle>3-Month Trend</CardTitle>
         </CardHeader>

@@ -16,15 +16,17 @@ const businessRoutes = require('./routes/business');
 const assignCARoutes = require('./routes/cabussiness');
 const transactionRoutes = require('./routes/transaction');
 const taxcalcRoute = require('./routes/taxcalc');
+const exportRoutes = require('./routes/export');
+const tdsRoutes = require('./routes/tds');
 
 const app = express();
 
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../backend/.env') });
 
-// Models
-const User = require('./models/User');
+// Models - All imported from centralized index
 const {
+  User,
   Business,
   ChartAccount,
   Transaction,
@@ -34,7 +36,8 @@ const {
   ReturnUpload,
   DocShare,
   RecurringTemplate,
-} = require('./models'); // index.js inside models folder exports all models
+  TDS
+} = require('./models');
 
 
 // --------------------- Middleware ---------------------
@@ -154,6 +157,8 @@ app.use('/api/business', assignCARoutes);      // /api/business/:id/assign-ca/:c
 app.use('/api/invoice', invoiceRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/taxcalc', taxcalcRoute);
+app.use('/api/export', exportRoutes);
+app.use('/api/tds', tdsRoutes);              // /api/tds → TDS management
 
 
 /* Business
@@ -224,3 +229,15 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Server error' });
 });
 app.listen(PORT, () => console.log(`🚀 Server on http://localhost:${PORT}`));
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  console.log('Shutting down gracefully...');
+  try {
+    const pdfGenerator = require('./utils/pdfGenerator');
+    await pdfGenerator.closeBrowser();
+  } catch (error) {
+    console.error('Error during shutdown:', error);
+  }
+  process.exit(0);
+});

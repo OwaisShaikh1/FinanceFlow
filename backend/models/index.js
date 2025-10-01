@@ -8,6 +8,7 @@ const Invoice = require('./Invoice');
 const ReturnUpload = require('./ReturnUpload');
 const DocShare = require('./DocShare');
 const RecurringTemplate = require('./RecuringTemplate');
+const TDS = require('./TDS');
 
 module.exports = {
   User,
@@ -20,4 +21,5 @@ module.exports = {
   ReturnUpload,
   DocShare,
   RecurringTemplate,
+  TDS,
 };

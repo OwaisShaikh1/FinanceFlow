@@ -22,7 +22,7 @@ export function ProfitLossReport() {
   const netProfit = totalRevenue - totalExpenses
 
   return (
-    <Card>
+    <Card data-pdf-section="profit-loss-statement">
       <CardHeader>
         <CardTitle>Profit & Loss Statement</CardTitle>
         <p className="text-sm text-muted-foreground">For the period: December 1-31, 2024</p>

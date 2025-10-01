@@ -18,7 +18,7 @@ export default function DashboardStats() {
   const stats = [
     {
       title: "Total Income",
-      value: "₹12,45,000",
+      value: "₹2,45,000",
       change: "+12.5%",
       trend: "up",
       icon: TrendingUp,
@@ -26,8 +26,8 @@ export default function DashboardStats() {
       chartColor: "#10b981"
     },
     {
-      title: "Total Expenses",
-      value: "₹8,75,000",
+      title: "Total Expenses", 
+      value: "₹1,85,000",
       change: "+8.2%",
       trend: "up",
       icon: TrendingDown,
@@ -35,18 +35,18 @@ export default function DashboardStats() {
       chartColor: "#ef4444"
     },
     {
-      title: "Outstanding Invoices",
-      value: "₹2,15,000",
-      change: "-5.1%",
-      trend: "down",
-      icon: FileText,
+      title: "Net Profit",
+      value: "₹60,000",
+      change: "+18.7%",
+      trend: "up",
+      icon: TrendingUp,
     },
     {
-      title: "Tax Due",
-      value: "₹45,000",
-      change: "Due in 15 days",
-      trend: "neutral",
-      icon: AlertTriangle,
+      title: "Transactions",
+      value: "156",
+      change: "+23 This month",
+      trend: "up",
+      icon: FileText,
     },
   ]
 

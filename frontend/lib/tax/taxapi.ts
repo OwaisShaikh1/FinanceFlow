@@ -76,7 +76,20 @@ export const SECTION_DEFS: SectionDef[] = [
     allowedIn: ["old"],
     priority: 5,
   },
-  // Examples that are available under new regime can be added later, e.g. 80CCD(2).
+  {
+    code: "80CCD2",
+    description: "Employer NPS Contribution",
+    limit: null, // 10% of salary, no fixed limit
+    allowedIn: ["new", "old"],
+    priority: 6,
+  },
+  {
+    code: "STANDARD",
+    description: "Standard Deduction (Auto-applied)",
+    limit: 50_000,
+    allowedIn: ["new", "old"],
+    priority: 0, // highest priority, auto-applied
+  },
 ]
 
 export function getSectionsForRegime(regime: TaxRegime) {

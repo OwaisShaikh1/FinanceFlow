@@ -8,6 +8,10 @@ import { Edit, Trash2, Paperclip, Eye } from "lucide-react"
 import { useEffect, useState } from "react"
 import { BASE_URL } from "@/hooks/storagehelper"
 import { useTransactionFilters } from "@/contexts/FilterContext"
+import { TableSkeleton } from "@/components/ui/skeleton-presets"
+import { useSkeletonPreview } from "@/hooks/use-skeleton-preview"
+import { useToast } from "@/components/ui/use-toast"
+import { API_BASE_URL } from "@/lib/config"
 
 type Transaction = {
   id: string
@@ -22,21 +26,57 @@ type Transaction = {
 
 export function TransactionsList() {
   const { filters } = useTransactionFilters()
+  const { toast } = useToast()
+  const skeletonPreview = useSkeletonPreview()
 
   const [transactions, setTransactions] = useState<Transaction[]>([])
-useEffect(() => {
-  const fetchTransactions = async () => {
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (skeletonPreview) {
+      const t = setTimeout(() => setLoading(false), 2000)
+      return () => clearTimeout(t)
+    }
+    const fetchTransactions = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/transactions`) // 👈 full URL
+        if (!res.ok) throw new Error("Failed to fetch transactions")
+        const data = await res.json()
+        setTransactions(data)
+      } catch (error: any) {
+        console.error("Error fetching transactions:", error)
+        setError(error.message ?? "Failed to fetch transactions")
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchTransactions()
+  }, [skeletonPreview])
+
+  const handleDelete = async (id: string) => {
+    if (!id) return
+    const ok = window.confirm("Delete this transaction? This cannot be undone.")
+    if (!ok) return
     try {
-      const res = await fetch("http://localhost:5000/api/transactions") // 👈 full URL
-      if (!res.ok) throw new Error("Failed to fetch transactions")
-      const data = await res.json()
-      setTransactions(data)
-    } catch (error) {
-      console.error("Error fetching transactions:", error)
+      setDeletingId(id)
+      const res = await fetch(`${API_BASE_URL}/api/transactions/${encodeURIComponent(id)}` , {
+        method: "DELETE",
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body?.message || `Failed with ${res.status}`)
+      }
+      setTransactions((prev) => prev.filter((t) => t.id !== id))
+      toast({ title: "Deleted", description: `Transaction ${id} removed.` })
+    } catch (e: any) {
+      console.error(e)
+      toast({ title: "Delete failed", description: e.message || "Unable to delete", variant: "destructive" })
+    } finally {
+      setDeletingId(null)
     }
   }
-  fetchTransactions()
-}, [])  
 
   // Apply filters
   const filteredTransactions = transactions.filter((txn) => {
@@ -52,6 +92,48 @@ useEffect(() => {
 
     return matchesSearch && matchesType && matchesCategory && matchesFrom && matchesTo
   })
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Transactions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TableSkeleton
+            columns={["Id", "Date", "Description", "Category", "Type", "Amount", "Payment Method", "Actions"]}
+            rows={8}
+          />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Transactions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-red-600">{error}</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (!filteredTransactions.length) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Transactions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">No transactions found.</p>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card>
@@ -101,8 +183,8 @@ useEffect(() => {
                     <Button variant="ghost" size="icon">
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon">
-                      <Trash2 className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(transaction.id)} disabled={deletingId === transaction.id} aria-disabled={deletingId === transaction.id}>
+                      <Trash2 className={`h-4 w-4 ${deletingId === transaction.id ? "opacity-50" : ""}`} />
                     </Button>
                   </div>
                 </TableCell>

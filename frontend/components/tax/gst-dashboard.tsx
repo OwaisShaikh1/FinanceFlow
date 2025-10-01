@@ -1,60 +1,115 @@
+"use client"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Receipt, FileText, AlertTriangle, CheckCircle } from "lucide-react"
+import { Receipt, FileText, AlertTriangle, CheckCircle, Loader2 } from "lucide-react"
+import { useEffect, useState } from "react"
+import { API_BASE_URL } from "@/lib/config"
+
+interface GSTData {
+  currentMonthGST: number;
+  inputTaxCredit: number;
+  netGSTPayable: number;
+  returnsFiled: number;
+  totalReturns: number;
+  upcomingDeadlines: Array<{
+    return: string;
+    period: string;
+    dueDate: string;
+    status: string;
+    amount: string;
+  }>;
+}
 
 export function GSTDashboard() {
+  const [gstData, setGSTData] = useState<GSTData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchGSTData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const response = await fetch(`${API_BASE_URL}/api/gst/dashboard`);
+        
+        if (!response.ok) {
+          throw new Error(`Server responded with status ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          setGSTData(result.data);
+        } else {
+          setError(result.message || 'Unable to fetch GST data');
+        }
+      } catch (err) {
+        console.error('GST Dashboard fetch error:', err);
+        setError('Unable to connect to server. Please check your connection.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGSTData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading GST data...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center text-red-600 p-8">
+        {error}
+      </div>
+    );
+  }
+
+  if (!gstData) {
+    return (
+      <div className="text-center text-muted-foreground p-8">
+        <p className="text-lg">No GST data available yet</p>
+        <p className="text-sm">Start by adding transactions with GST information</p>
+      </div>
+    );
+  }
+
   const stats = [
     {
       title: "Current Month GST",
-      value: "₹45,600",
+      value: `₹${gstData.currentMonthGST.toLocaleString()}`,
       change: "Output GST collected",
       icon: Receipt,
       color: "text-green-600",
     },
     {
       title: "Input Tax Credit",
-      value: "₹12,800",
+      value: `₹${gstData.inputTaxCredit.toLocaleString()}`,
       change: "Available for offset",
       icon: FileText,
       color: "text-blue-600",
     },
     {
       title: "Net GST Payable",
-      value: "₹32,800",
-      change: "Due by 20th Dec",
+      value: `₹${gstData.netGSTPayable.toLocaleString()}`,
+      change: `Due by ${new Date().getDate()}th ${new Date().toLocaleString('default', { month: 'short' })}`,
       icon: AlertTriangle,
       color: "text-red-600",
     },
     {
       title: "Returns Filed",
-      value: "11/12",
+      value: `${gstData.returnsFiled}/${gstData.totalReturns}`,
       change: "This financial year",
       icon: CheckCircle,
       color: "text-green-600",
-    },
-  ]
-
-  const upcomingDeadlines = [
-    {
-      return: "GSTR-3B",
-      period: "November 2024",
-      dueDate: "20th December 2024",
-      status: "pending",
-      amount: "₹32,800",
-    },
-    {
-      return: "GSTR-1",
-      period: "November 2024",
-      dueDate: "11th December 2024",
-      status: "overdue",
-      amount: "-",
-    },
-    {
-      return: "GSTR-3B",
-      period: "December 2024",
-      dueDate: "20th January 2025",
-      status: "upcoming",
-      amount: "₹45,600",
     },
   ]
 
@@ -81,7 +136,12 @@ export function GSTDashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {upcomingDeadlines.map((deadline, index) => (
+            {gstData.upcomingDeadlines.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8">
+                No upcoming GST deadlines
+              </div>
+            ) : (
+              gstData.upcomingDeadlines.map((deadline, index) => (
               <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="flex items-center gap-4">
                   <div>
@@ -107,7 +167,8 @@ export function GSTDashboard() {
                   </div>
                 </div>
               </div>
-            ))}
+              ))
+            )}
           </div>
         </CardContent>
       </Card>

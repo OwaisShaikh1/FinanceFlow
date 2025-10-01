@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, Upload, X } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
+import { API_BASE_URL } from "@/lib/config"
 import { BASE_URL } from "@/hooks/storagehelper"
 
 const transactionCategories = {
@@ -86,7 +87,7 @@ export function TransactionForm() {
       attachments.forEach((file) => formData.append("receipts", file)) // ✅ must match backend Multer field
 
       // Send request
-      const res = await fetch("http://localhost:5000/api/transactions", {
+      const res = await fetch(`${API_BASE_URL}/api/transactions`, {
         method: "POST",
         body: formData, // ✅ FormData handles Content-Type automatically
       })

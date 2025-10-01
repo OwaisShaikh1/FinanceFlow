@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Eye, EyeOff, Mail, Lock, User, Building, Phone } from "lucide-react"
+import { API_BASE_URL } from "@/lib/config"
 
 interface RegisterFormProps {
   onSubmit: (data: {
@@ -72,7 +73,7 @@ export function RegisterForm({ onSubmit}: RegisterFormProps) {
         password: formData.password
 
       };
-       const res = await fetch("http://localhost:5000/auth/register", {
+       const res = await fetch(`${API_BASE_URL}/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
