@@ -26,7 +26,7 @@ mongoose
 // ----------------------------------------------------------------------------
 // Helpers & Middleware
 // ----------------------------------------------------------------------------
-const ROLES = { CA: 'CA', OWNER: 'OWNER', EMPLOYEE: 'EMPLOYEE' };
+const ROLES = { CA: 'CA', ADMIN: 'Admin', USER: 'user' };
 
 const signToken = (user) =>
   jwt.sign({ id: user._id, role: user.role, biz: user.business }, process.env.JWT_SECRET, {
@@ -223,7 +223,16 @@ app.post('/auth/login', async (req, res) => {
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
     const token = signToken(user);
-    return res.json({ token, role: user.role, business: user.business });
+    return res.json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        business: user.business,
+      },
+    });
   } catch (e) {
     return res.status(400).json({ message: e.message });
   }

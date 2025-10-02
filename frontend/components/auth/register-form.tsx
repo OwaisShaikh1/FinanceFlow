@@ -170,9 +170,9 @@ export function RegisterForm({ onSubmit}: RegisterFormProps) {
             <SelectValue placeholder="Select your role" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="business-owner">Business Owner</SelectItem>
-            <SelectItem value="ca">Chartered Accountant</SelectItem>
-            <SelectItem value="employee">Employee</SelectItem>
+            <SelectItem value="Admin">Admin</SelectItem>
+            <SelectItem value="CA">Chartered Accountant</SelectItem>
+            <SelectItem value="user">User</SelectItem>
           </SelectContent>
         </Select>
       </div>

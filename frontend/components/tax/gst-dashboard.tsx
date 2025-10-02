@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Receipt, FileText, AlertTriangle, CheckCircle, Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
-import { API_BASE_URL } from "@/lib/config"
 
 interface GSTData {
   currentMonthGST: number;
@@ -27,33 +26,42 @@ export function GSTDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchGSTData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    // Frontend-only GST Dashboard with mock data
+    const loadMockGSTData = () => {
+      setLoading(true);
+      
+      // Simulate loading delay
+      setTimeout(() => {
+        const mockData: GSTData = {
+          currentMonthGST: 25000,
+          inputTaxCredit: 8500,
+          netGSTPayable: 16500,
+          returnsFiled: 8,
+          totalReturns: 12,
+          upcomingDeadlines: [
+            {
+              return: "GSTR-1",
+              period: "Oct 2025",
+              dueDate: "11 Nov 2025",
+              status: "pending",
+              amount: "₹25,000"
+            },
+            {
+              return: "GSTR-3B", 
+              period: "Oct 2025",
+              dueDate: "20 Nov 2025",
+              status: "pending",
+              amount: "₹16,500"
+            }
+          ]
+        };
         
-        const response = await fetch(`${API_BASE_URL}/api/gst/dashboard`);
-        
-        if (!response.ok) {
-          throw new Error(`Server responded with status ${response.status}`);
-        }
-        
-        const result = await response.json();
-        
-        if (result.success) {
-          setGSTData(result.data);
-        } else {
-          setError(result.message || 'Unable to fetch GST data');
-        }
-      } catch (err) {
-        console.error('GST Dashboard fetch error:', err);
-        setError('Unable to connect to server. Please check your connection.');
-      } finally {
+        setGSTData(mockData);
         setLoading(false);
-      }
+      }, 800);
     };
 
-    fetchGSTData();
+    loadMockGSTData();
   }, []);
 
   if (loading) {

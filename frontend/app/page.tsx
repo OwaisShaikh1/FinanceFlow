@@ -10,7 +10,7 @@ const LandingFooter = lazy(() => import("@/components/landing/landing-footer").t
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-background">
       <Suspense fallback={<div className="p-4 text-center">Loading header...</div>}>
         <LandingHeader />
       </Suspense>
