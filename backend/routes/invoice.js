@@ -46,17 +46,69 @@ router.post('/', auth, async (req, res) => {
 router.get('/', auth, async (req, res) => {
   try {
     const invoices = await GenInvoice.find({ business: req.user.biz });
-    const tableData = invoices.map(inv => ({
-      invoiceNumber: inv.invoiceNumber,
-      invoiceDate: inv.invoiceDate,
-      dueDate: inv.dueDate,
-      clientName: inv.clientName,
-      subtotal: inv.subtotal,
-      totalGst: inv.totalGst,
-      grandTotal: inv.grandTotal,
-      status: inv.status
-    }));
+    console.log('Found invoices:', invoices.length);
+    
+    const tableData = invoices.map(inv => {
+      console.log('Processing invoice:', inv.invoiceNumber, 'Items:', inv.items.length);
+      
+      // Calculate totals from items array
+      const subtotal = inv.items.reduce((sum, item) => {
+        console.log('Item amount:', item.amount);
+        return sum + (item.amount || 0);
+      }, 0);
+      
+      const totalGst = inv.items.reduce((sum, item) => {
+        console.log('Item GST:', item.gstAmount);
+        return sum + (item.gstAmount || 0);
+      }, 0);
+      
+      const grandTotal = inv.items.reduce((sum, item) => {
+        console.log('Item total:', item.total);
+        return sum + (item.total || 0);
+      }, 0);
+      
+      console.log('Calculated:', { subtotal, totalGst, grandTotal });
+      
+      return {
+        invoiceNumber: inv.invoiceNumber,
+        invoiceDate: inv.invoiceDate,
+        dueDate: inv.dueDate,
+        clientName: inv.clientName,
+        subtotal: subtotal,
+        totalGst: totalGst,
+        grandTotal: grandTotal,
+        status: inv.status
+      };
+    });
     return res.json(tableData);
+  } catch (e) {
+    return res.status(500).json({ message: e.message });
+  }
+});
+
+// Update invoice status
+router.patch('/:id/status', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    // Validate status
+    const validStatuses = ['DRAFT', 'FINAL', 'SENT', 'PAID'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+    
+    const invoice = await GenInvoice.findByIdAndUpdate(
+      id, 
+      { status }, 
+      { new: true }
+    );
+    
+    if (!invoice) {
+      return res.status(404).json({ message: 'Invoice not found' });
+    }
+    
+    res.json({ message: 'Status updated successfully', invoice });
   } catch (e) {
     return res.status(500).json({ message: e.message });
   }

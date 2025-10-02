@@ -37,9 +37,16 @@ export function InvoicesList() {
     }
     const fetchInvoices = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/invoice`, {
+        const token = localStorage.getItem("token")
+        const headers: Record<string, string> = { "Content-Type": "application/json" }
+        
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`
+        }
+
+        const res = await fetch(`http://localhost:5000/api/invoice`, {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
+          headers,
         })
 
         if (!res.ok) throw new Error(`Error: ${res.status}`)
@@ -78,6 +85,7 @@ export function InvoicesList() {
       case "sent": return "secondary"
       case "overdue": return "destructive"
       case "draft": return "outline"
+      case "final": return "default"
       default: return "secondary"
     }
   }
@@ -88,6 +96,7 @@ export function InvoicesList() {
       case "sent": return "Sent"
       case "overdue": return "Overdue"
       case "draft": return "Draft"
+      case "final": return "Final"
       default: return status
     }
   }
