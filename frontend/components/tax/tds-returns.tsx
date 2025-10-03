@@ -3,50 +3,78 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { FileText, Download, Upload, Clock, CheckCircle, AlertCircle } from "lucide-react"
+import { FileText, Download, Upload, Clock, CheckCircle, AlertCircle, Loader2 } from "lucide-react"
+import { useState, useEffect } from "react"
 
-const tdsReturns = [
+interface TDSReturn {
+  id: string;
+  type: string;
+  quarter: string;
+  dueDate: string;
+  status: string;
+  filedDate?: string;
+  amount: number;
+  deductees: number;
+  records?: number;
+}
+
+// Fallback data for when API fails
+const fallbackReturns: TDSReturn[] = [
   {
-    id: 1,
+    id: "2025-Q2-24Q",
     type: "Form 24Q",
-    quarter: "Q4 2023-24",
-    dueDate: "2024-05-31",
+    quarter: "Q2 2024-25",
+    dueDate: "2024-10-31",
     status: "pending",
-    amount: 125000,
-    deductees: 45,
+    amount: 11229,
+    deductees: 4,
   },
   {
-    id: 2,
+    id: "2025-Q2-26Q",
     type: "Form 26Q",
-    quarter: "Q4 2023-24",
-    dueDate: "2024-05-31",
+    quarter: "Q2 2024-25",
+    dueDate: "2024-10-31",
     status: "pending",
-    amount: 85000,
-    deductees: 12,
-  },
-  {
-    id: 3,
-    type: "Form 24Q",
-    quarter: "Q3 2023-24",
-    dueDate: "2024-02-29",
-    status: "filed",
-    filedDate: "2024-02-25",
-    amount: 110000,
-    deductees: 42,
-  },
-  {
-    id: 4,
-    type: "Form 26Q",
-    quarter: "Q3 2023-24",
-    dueDate: "2024-02-29",
-    status: "filed",
-    filedDate: "2024-02-28",
-    amount: 75000,
-    deductees: 10,
+    amount: 3369,
+    deductees: 2,
   },
 ]
 
 export function TDSReturns() {
+  const [tdsReturns, setTdsReturns] = useState<TDSReturn[]>(fallbackReturns);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTDSReturns = async () => {
+      try {
+        setLoading(true);
+        console.log('Fetching TDS returns from backend...');
+        
+        const response = await fetch('http://localhost:5000/api/tds/returns');
+        const result = await response.json();
+        
+        if (result.success && result.data && result.data.length > 0) {
+          console.log('Loaded TDS returns from database:', result.data);
+          setTdsReturns(result.data);
+          setError(null);
+        } else {
+          console.log('No TDS returns data, using fallback');
+          setTdsReturns(fallbackReturns);
+          setError(null);
+        }
+      } catch (err) {
+        console.error('Error fetching TDS returns:', err);
+        setError('Failed to load TDS returns');
+        setTdsReturns(fallbackReturns);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTDSReturns();
+  }, []);
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "filed":
@@ -82,8 +110,20 @@ export function TDSReturns() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {tdsReturns.map((returnItem) => (
+        {loading ? (
+          <div className="flex items-center justify-center h-32">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span className="ml-2">Loading returns...</span>
+          </div>
+        ) : error ? (
+          <div className="text-center text-red-600 p-4">
+            <AlertCircle className="h-6 w-6 mx-auto mb-2" />
+            <p>{error}</p>
+            <p className="text-sm text-gray-500 mt-1">Showing sample data</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {tdsReturns.map((returnItem: TDSReturn) => (
             <div key={returnItem.id} className="flex items-center justify-between p-4 border rounded-lg">
               <div className="flex items-center gap-3">
                 {getStatusIcon(returnItem.status)}
@@ -114,8 +154,9 @@ export function TDSReturns() {
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   )

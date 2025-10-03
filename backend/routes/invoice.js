@@ -1,4 +1,4 @@
-const express = require('express');
+   const express = require('express');
 
 
 // Import the correct model
@@ -70,6 +70,7 @@ router.get('/', auth, async (req, res) => {
       console.log('Calculated:', { subtotal, totalGst, grandTotal });
       
       return {
+        _id: inv._id,
         invoiceNumber: inv.invoiceNumber,
         invoiceDate: inv.invoiceDate,
         dueDate: inv.dueDate,
@@ -92,24 +93,52 @@ router.patch('/:id/status', auth, async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     
-    // Validate status
+    console.log(`Updating invoice ${id} status to ${status}`);
+    
+    // Validate status transitions
     const validStatuses = ['DRAFT', 'FINAL', 'SENT', 'PAID'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: 'Invalid status' });
     }
     
-    const invoice = await GenInvoice.findByIdAndUpdate(
-      id, 
-      { status }, 
-      { new: true }
-    );
-    
-    if (!invoice) {
+    // Get current invoice to validate transition
+    const currentInvoice = await GenInvoice.findById(id);
+    if (!currentInvoice) {
       return res.status(404).json({ message: 'Invoice not found' });
     }
     
+    // Status transition validation
+    const transitions = {
+      'DRAFT': ['FINAL'],
+      'FINAL': ['SENT', 'PAID'],
+      'SENT': ['PAID'],
+      'PAID': [] // Terminal state
+    };
+    
+    if (!transitions[currentInvoice.status]?.includes(status)) {
+      return res.status(400).json({ 
+        message: `Cannot transition from ${currentInvoice.status} to ${status}` 
+      });
+    }
+    
+    // Update with additional fields based on status
+    const updateData = { status };
+    if (status === 'SENT') {
+      updateData.sentDate = new Date();
+    } else if (status === 'PAID') {
+      updateData.paidDate = new Date();
+    }
+    
+    const invoice = await GenInvoice.findByIdAndUpdate(
+      id, 
+      updateData,
+      { new: true }
+    );
+    
+    console.log(`Invoice ${id} updated to ${status}`);
     res.json({ message: 'Status updated successfully', invoice });
   } catch (e) {
+    console.error('Status update error:', e);
     return res.status(500).json({ message: e.message });
   }
 });

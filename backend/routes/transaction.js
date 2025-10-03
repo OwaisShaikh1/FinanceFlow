@@ -99,4 +99,84 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+// Dashboard stats endpoint
+router.get('/dashboard-stats', auth, async (req, res) => {
+  try {
+    // Get all transactions for the business
+    const transactions = await Transaction.find({ business: req.user.biz }).lean();
+    
+    // Calculate totals (database has lowercase 'income' and 'expense')
+    const totalIncome = transactions
+      .filter(tx => tx.type === 'income')
+      .reduce((sum, tx) => sum + tx.amount, 0);
+    
+    const totalExpenses = transactions
+      .filter(tx => tx.type === 'expense')
+      .reduce((sum, tx) => sum + tx.amount, 0);
+    
+    const netProfit = totalIncome - totalExpenses;
+    
+    // Count all transactions (total entries)
+    const totalTransactions = transactions.length;
+
+    res.json({
+      totalIncome,
+      totalExpenses,
+      netProfit,
+      transactionCount: totalTransactions
+    });
+  } catch (error) {
+    console.error('Dashboard stats error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Dashboard chart data endpoint
+router.get('/chart-data', auth, async (req, res) => {
+  try {
+    const transactions = await Transaction.find({ business: req.user.biz }).lean();
+    
+    // Group transactions by month for the last 12 months
+    const monthlyData = {};
+    const currentDate = new Date();
+    
+    // Initialize 12 months of data
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const monthKey = date.toLocaleDateString('en-US', { month: 'short' });
+      monthlyData[monthKey] = { income: 0, expenses: 0, profit: 0, transactions: 0 };
+    }
+    
+    // Process transactions
+    transactions.forEach(tx => {
+      const txDate = new Date(tx.date);
+      const monthKey = txDate.toLocaleDateString('en-US', { month: 'short' });
+      
+      if (monthlyData[monthKey]) {
+        if (tx.type === 'income') {
+          monthlyData[monthKey].income += tx.amount;
+        } else if (tx.type === 'expense') {
+          monthlyData[monthKey].expenses += tx.amount;
+        }
+        monthlyData[monthKey].transactions += 1; // Count all transactions
+        monthlyData[monthKey].profit = monthlyData[monthKey].income - monthlyData[monthKey].expenses;
+      }
+    });
+    
+    // Convert to array format for chart
+    const chartData = Object.keys(monthlyData).map(month => ({
+      month,
+      income: monthlyData[month].income,
+      expenses: monthlyData[month].expenses,
+      profit: monthlyData[month].profit,
+      transactions: monthlyData[month].transactions
+    }));
+    
+    res.json(chartData);
+  } catch (error) {
+    console.error('Chart data error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;
