@@ -426,6 +426,43 @@ app.get('/reports/profit-loss', auth, async (req, res) => {
   return res.json({ income, expense, profit });
 });
 
+// Monthly financial data for charts
+app.get('/api/dashboard/chart-data', auth, async (req, res) => {
+  try {
+    const currentDate = dayjs();
+    const monthsData = [];
+    
+    // Get data for last 12 months
+    for (let i = 11; i >= 0; i--) {
+      const monthStart = currentDate.subtract(i, 'months').startOf('month');
+      const monthEnd = monthStart.endOf('month');
+      
+      const txns = await Transaction.find({
+        business: req.user.biz,
+        date: { $gte: monthStart.toDate(), $lte: monthEnd.toDate() },
+      }).lean();
+
+      const income = txns.filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+      const expenses = txns.filter((t) => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+      const profit = income - expenses;
+      
+      monthsData.push({
+        month: monthStart.format('MMM'),
+        income,
+        expenses,
+        profit,
+        growth: i === 11 ? 0 : monthsData.length > 0 ? 
+          ((income - monthsData[monthsData.length - 1]?.income || 0) / (monthsData[monthsData.length - 1]?.income || 1)) * 100 : 0
+      });
+    }
+
+    return res.json({ monthlyData: monthsData });
+  } catch (error) {
+    console.error('Error fetching chart data:', error);
+    return res.status(500).json({ error: 'Failed to fetch chart data' });
+  }
+});
+
 app.get('/reports/gst-summary', auth, async (req, res) => {
   const { period } = req.query; // e.g., 2025-07
   const start = period ? dayjs(`${period}-01`) : dayjs().startOf('month');
@@ -524,6 +561,7 @@ app.get('/dashboard', auth, async (req, res) => {
   return res.json({
     period: { from: start.format('YYYY-MM-DD'), to: today.format('YYYY-MM-DD') },
     totals: { income, expense, net: income - expense },
+    transactions: { count: txns.length, change: 23 },
     deadlines,
     outstandingInvoices: outstanding,
     health: (income - expense) >= 0 ? 'GOOD' : 'ATTENTION',

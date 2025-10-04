@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TrendingUp, TrendingDown, FileText, AlertTriangle } from "lucide-react"
 import { LineChart, Line, ResponsiveContainer, AreaChart, Area } from "recharts"
+import { useEffect, useState } from "react"
 
 const miniChartData = [
   { value: 120 }, { value: 135 }, { value: 148 }, { value: 162 }, 
@@ -14,38 +15,100 @@ const expenseChartData = [
   { value: 110 }, { value: 115 }, { value: 120 }
 ]
 
+interface DashboardData {
+  totalIncome: number;
+  totalExpenses: number;
+  netProfit: number;
+  transactionCount: number;
+}
+
 export default function DashboardStats() {
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        console.log('Dashboard - Token available:', !!token); // Debug log
+        
+        const response = await fetch('http://localhost:5000/api/transactions/dashboard-stats', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('Dashboard - Response status:', response.status); // Debug log
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Dashboard - Data received:', data); // Debug log
+          setDashboardData(data);
+        } else {
+          console.error('Dashboard - Response not ok:', response.status, response.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[...Array(4)].map((_, index) => (
+          <Card key={index} className="animate-pulse">
+            <CardHeader>
+              <div className="h-4 bg-gray-200 rounded w-24"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-8 bg-gray-200 rounded w-32 mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-20"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  const formatCurrency = (amount: number) => `₹${amount.toLocaleString('en-IN')}`;
+  
   const stats = [
     {
       title: "Total Income",
-      value: "₹2,45,000",
+      value: dashboardData ? formatCurrency(dashboardData.totalIncome) : "₹0",
       change: "+12.5%",
-      trend: "up",
+      trend: "up" as const,
       icon: TrendingUp,
       chartData: miniChartData,
       chartColor: "#10b981"
     },
     {
       title: "Total Expenses", 
-      value: "₹1,85,000",
+      value: dashboardData ? formatCurrency(dashboardData.totalExpenses) : "₹0",
       change: "+8.2%",
-      trend: "up",
+      trend: "up" as const,
       icon: TrendingDown,
       chartData: expenseChartData,
       chartColor: "#ef4444"
     },
     {
       title: "Net Profit",
-      value: "₹60,000",
-      change: "+18.7%",
-      trend: "up",
+      value: dashboardData ? formatCurrency(dashboardData.netProfit) : "₹0",
+      change: (dashboardData?.netProfit ?? 0) >= 0 ? "+18.7%" : "-12.3%",
+      trend: (dashboardData?.netProfit ?? 0) >= 0 ? "up" as const : "down" as const,
       icon: TrendingUp,
     },
     {
       title: "Transactions",
-      value: "156",
+      value: dashboardData?.transactionCount?.toString() || "0",
       change: "+23 This month",
-      trend: "up",
+      trend: "up" as const,
       icon: FileText,
     },
   ]

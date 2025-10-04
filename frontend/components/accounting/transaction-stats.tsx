@@ -1,37 +1,93 @@
+"use client"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TrendingUp, TrendingDown, DollarSign, PieChart } from "lucide-react"
+import { useEffect, useState } from "react"
+
+interface TransactionData {
+  totalIncome: number;
+  totalExpenses: number;
+  netProfit: number;
+  transactionCount: number;
+}
 
 export function TransactionStats() {
+  const [transactionData, setTransactionData] = useState<TransactionData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTransactionData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:5000/api/transactions/dashboard-stats', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setTransactionData(data);
+        }
+      } catch (error) {
+        console.error('Error fetching transaction data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransactionData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i}>
+            <CardHeader>
+              <div className="animate-pulse bg-gray-200 h-4 w-20 rounded"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="animate-pulse bg-gray-200 h-8 w-24 rounded mb-2"></div>
+              <div className="animate-pulse bg-gray-200 h-3 w-16 rounded"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
   const stats = [
     {
       title: "Total Income",
-      value: "₹2,45,000",
+      value: `₹${transactionData?.totalIncome?.toLocaleString() || '0'}`,
       change: "+12.5%",
-      trend: "up",
+      trend: "up" as const,
       icon: TrendingUp,
       period: "This month",
     },
     {
-      title: "Total Expenses",
-      value: "₹1,85,000",
+      title: "Total Expenses", 
+      value: `₹${transactionData?.totalExpenses?.toLocaleString() || '0'}`,
       change: "+8.2%",
-      trend: "up",
+      trend: "up" as const,
       icon: TrendingDown,
       period: "This month",
     },
     {
       title: "Net Profit",
-      value: "₹60,000",
+      value: `₹${Math.max(0, (transactionData?.netProfit || 0)).toLocaleString()}`,
       change: "+18.7%",
-      trend: "up",
+      trend: (transactionData?.netProfit || 0) >= 0 ? "up" as const : "down" as const,
       icon: DollarSign,
       period: "This month",
     },
     {
       title: "Transactions",
-      value: "156",
+      value: transactionData?.transactionCount?.toString() || '0',
       change: "+23",
-      trend: "up",
+      trend: "up" as const,
       icon: PieChart,
       period: "This month",
     },

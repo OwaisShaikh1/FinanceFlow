@@ -22,6 +22,8 @@ const GenInvoiceSchema = new mongoose.Schema({
   status: { type: String, enum: ['DRAFT', 'FINAL', 'SENT', 'PAID'], default: 'DRAFT' },
   invoiceDate: { type: Date, required: true },
   dueDate: { type: Date, required: true },
+  sentDate: { type: Date },
+  paidDate: { type: Date },
 
   pdfUrl: { type: String, default: '' },
   ewayBillNo: { type: String, default: '' }

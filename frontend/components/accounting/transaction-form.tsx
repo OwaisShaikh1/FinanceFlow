@@ -2,7 +2,8 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -33,10 +34,18 @@ const transactionCategories = {
 }
 
 export function TransactionForm() {
+  const searchParams = useSearchParams()
   const [date, setDate] = useState<Date>()
   const [type, setType] = useState<"income" | "expense">("income")
   const [attachments, setAttachments] = useState<File[]>([])
   const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    const typeParam = searchParams?.get('type')
+    if (typeParam === 'income' || typeParam === 'expense') {
+      setType(typeParam)
+    }
+  }, [searchParams])
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])

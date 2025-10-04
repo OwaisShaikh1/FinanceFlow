@@ -18,6 +18,9 @@ const transactionRoutes = require('./routes/transaction');
 const taxcalcRoute = require('./routes/taxcalc');
 const exportRoutes = require('./routes/export');
 const tdsRoutes = require('./routes/tds');
+const gstRoutes = require('./routes/gst');
+const gstInvoicesRoutes = require('./routes/gstInvoices');
+const gstReturnsRoutes = require('./routes/gstReturns');
 
 const app = express();
 
@@ -36,7 +39,10 @@ const {
   ReturnUpload,
   DocShare,
   RecurringTemplate,
-  TDS
+  TDS,
+  GSTInvoice,
+  GSTReturn,
+  Taxpayer
 } = require('./models');
 
 
@@ -159,6 +165,9 @@ app.use('/api/transactions', transactionRoutes);
 app.use('/api/taxcalc', taxcalcRoute);
 app.use('/api/export', exportRoutes);
 app.use('/api/tds', tdsRoutes);              // /api/tds → TDS management
+app.use('/api/gst', gstRoutes);              // /api/gst → GST summary and periods
+app.use('/api/invoices', gstInvoicesRoutes); // /api/invoices → GST invoice management
+app.use('/api/returns', gstReturnsRoutes);   // /api/returns → GST returns management
 
 
 /* Business
@@ -217,8 +226,6 @@ app.get('/transactions', auth, async (req, res) => {
   const list = await Transaction.find(q).sort({ date: -1 }).lean();
   return res.json(list);
 });*/
-
-// TODO: Keep rest of routes (Invoices, Bank, Reports, Dashboard, Docs) similar structure...
 
 // --------------------- Server ---------------------
 const PORT = process.env.PORT || 4000;

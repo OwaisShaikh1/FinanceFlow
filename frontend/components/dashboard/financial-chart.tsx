@@ -9,23 +9,16 @@ import {
   BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell, Legend,
   ComposedChart, ReferenceLine
 } from "recharts"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { TrendingUp, BarChart3, PieChart as PieChartIcon, Activity } from "lucide-react"
 
-const monthlyData = [
-  { month: "Jan", income: 120000, expenses: 85000, profit: 35000, growth: 5.2 },
-  { month: "Feb", income: 135000, expenses: 92000, profit: 43000, growth: 12.5 },
-  { month: "Mar", income: 148000, expenses: 98000, profit: 50000, growth: 9.6 },
-  { month: "Apr", income: 162000, expenses: 105000, profit: 57000, growth: 14.0 },
-  { month: "May", income: 155000, expenses: 110000, profit: 45000, growth: -4.3 },
-  { month: "Jun", income: 178000, expenses: 115000, profit: 63000, growth: 14.8 },
-  { month: "Jul", income: 185000, expenses: 120000, profit: 65000, growth: 3.9 },
-  { month: "Aug", income: 192000, expenses: 125000, profit: 67000, growth: 3.8 },
-  { month: "Sep", income: 188000, expenses: 118000, profit: 70000, growth: -2.1 },
-  { month: "Oct", income: 205000, expenses: 135000, profit: 70000, growth: 9.0 },
-  { month: "Nov", income: 198000, expenses: 128000, profit: 70000, growth: -3.4 },
-  { month: "Dec", income: 215000, expenses: 145000, profit: 70000, growth: 8.6 },
-]
+interface MonthlyData {
+  month: string;
+  income: number;
+  expenses: number;
+  profit: number;
+  transactions: number;
+}
 
 const expenseBreakdown = [
   { name: 'Office Rent', value: 45000, color: '#8884d8' },
@@ -41,6 +34,55 @@ export default function FinancialChart() {
   const [chartType, setChartType] = useState<"line" | "bar" | "area" | "pie" | "composed">("line")
   const [timeRange, setTimeRange] = useState("12months")
   const [showGrowth, setShowGrowth] = useState(false)
+  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchChartData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        console.log('Token available:', !!token); // Debug log
+        
+        const response = await fetch('http://localhost:5000/api/transactions/chart-data', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('Response status:', response.status); // Debug log
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Chart data received:', data); // Debug log
+          setMonthlyData(data || []);
+        } else {
+          console.error('Response not ok:', response.status, response.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching chart data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChartData();
+  }, [])
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Financial Overview</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-80 flex items-center justify-center">
+            <div className="animate-pulse text-muted-foreground">Loading chart data...</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>

@@ -1,48 +1,56 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Clock, AlertTriangle } from "lucide-react"
+import { Calendar, Clock, CheckCircle, AlertTriangle } from "lucide-react"
 
 const filingDates = [
   {
-    date: "2024-04-11",
+    date: "2025-11-11",
     type: "GSTR-1",
-    description: "Monthly return for March 2024",
+    description: "Monthly return for October 2025",
     status: "upcoming",
-    daysLeft: 5,
+    daysLeft: 40,
   },
   {
-    date: "2024-04-20",
+    date: "2025-11-20",
     type: "GSTR-3B",
-    description: "Monthly return for March 2024",
+    description: "Monthly return for October 2025",
     status: "upcoming",
-    daysLeft: 14,
+    daysLeft: 49,
   },
   {
-    date: "2024-05-11",
+    date: "2025-12-11",
     type: "GSTR-1",
-    description: "Monthly return for April 2024",
+    description: "Monthly return for November 2025",
     status: "future",
-    daysLeft: 35,
+    daysLeft: 70,
   },
   {
-    date: "2024-05-20",
+    date: "2025-12-20",
     type: "GSTR-3B",
-    description: "Monthly return for April 2024",
+    description: "Monthly return for November 2025",
     status: "future",
-    daysLeft: 44,
-  },
-  {
-    date: "2024-03-20",
-    type: "GSTR-3B",
-    description: "Monthly return for February 2024",
-    status: "overdue",
-    daysLeft: -17,
+    daysLeft: 79,
   },
 ]
 
+// Consistent date formatter to prevent hydration errors
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
 export function GSTFilingCalendar() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const getStatusColor = (status: string) => {
     switch (status) {
       case "upcoming":
@@ -90,7 +98,9 @@ export function GSTFilingCalendar() {
                 <div>
                   <div className="font-medium">{filing.type}</div>
                   <div className="text-sm text-muted-foreground">{filing.description}</div>
-                  <div className="text-sm font-medium">{new Date(filing.date).toLocaleDateString()}</div>
+                  <div className="text-sm font-medium">
+                    {mounted ? formatDate(filing.date) : filing.date}
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">

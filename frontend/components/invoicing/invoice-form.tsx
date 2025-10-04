@@ -90,9 +90,21 @@ export function InvoiceForm() {
 
   const updateItem = (index: number, field: keyof InvoiceItem, value: string | number) => {
     const updatedItems = [...items]
+    
+    // Handle numeric fields properly to avoid "0100" issue
+    let processedValue = value
+    if (field === 'rate' || field === 'quantity') {
+      // If empty string, use the value as is for display, calculation will handle it
+      if (typeof value === 'string' && value === '') {
+        processedValue = 0
+      } else {
+        processedValue = typeof value === 'string' ? (Number.parseFloat(value) || 0) : value
+      }
+    }
+    
     updatedItems[index] = {
       ...updatedItems[index],
-      [field]: value,
+      [field]: processedValue,
     }
     updatedItems[index] = calculateItemTotals(updatedItems[index])
     setItems(updatedItems)
@@ -396,16 +408,21 @@ export function InvoiceForm() {
                   <TableCell>
                     <Input
                       type="number"
-                      value={item.quantity}
-                      onChange={(e) => updateItem(index, "quantity", Number.parseFloat(e.target.value) || 0)}
+                      value={item.quantity === 0 ? "" : item.quantity}
+                      onChange={(e) => updateItem(index, "quantity", e.target.value)}
+                      placeholder="1"
+                      min="0"
                       className="w-20"
                     />
                   </TableCell>
                   <TableCell>
                     <Input
                       type="number"
-                      value={item.rate}
-                      onChange={(e) => updateItem(index, "rate", Number.parseFloat(e.target.value) || 0)}
+                      value={item.rate === 0 ? "" : item.rate}
+                      onChange={(e) => updateItem(index, "rate", e.target.value)}
+                      placeholder="0.00"
+                      min="0"
+                      step="0.01"
                       className="w-24"
                     />
                   </TableCell>

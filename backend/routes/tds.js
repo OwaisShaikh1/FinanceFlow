@@ -200,4 +200,104 @@ router.get('/dashboard', async (req, res) => {
   }
 });
 
+// 4. TDS Returns Routes
+router.get('/returns', async (req, res) => {
+  try {
+    console.log('Fetching TDS returns...');
+    
+    // Get TDS data aggregated by quarter for returns
+    const tdsRecords = await TDS.find({}).sort({ recordDate: -1 });
+    
+    // Group by financial year and quarter
+    const returnsSummary = {};
+    
+    tdsRecords.forEach(record => {
+      const recordDate = new Date(record.recordDate);
+      const month = recordDate.getMonth() + 1; // 1-12
+      const year = recordDate.getFullYear();
+      
+      // Determine financial year and quarter
+      let financialYear, quarter;
+      if (month >= 4) {
+        financialYear = `${year}-${year + 1}`;
+        if (month >= 4 && month <= 6) quarter = 'Q1';
+        else if (month >= 7 && month <= 9) quarter = 'Q2';
+        else if (month >= 10 && month <= 12) quarter = 'Q3';
+      } else {
+        financialYear = `${year - 1}-${year}`;
+        if (month >= 1 && month <= 3) quarter = 'Q4';
+      }
+      
+      const key = `${financialYear}-${quarter}`;
+      
+      if (!returnsSummary[key]) {
+        returnsSummary[key] = {
+          financialYear,
+          quarter,
+          totalAmount: 0,
+          deductees: new Set(),
+          records: []
+        };
+      }
+      
+      returnsSummary[key].totalAmount += record.tdsAmount;
+      returnsSummary[key].deductees.add(record.payeeName);
+      returnsSummary[key].records.push(record);
+    });
+    
+    // Convert to returns format
+    const returns = Object.entries(returnsSummary).map(([key, data], index) => {
+      const quarterEndDates = {
+        'Q1': '07-31', // Q1: Apr-Jun, due July 31
+        'Q2': '10-31', // Q2: Jul-Sep, due Oct 31
+        'Q3': '01-31', // Q3: Oct-Dec, due Jan 31
+        'Q4': '05-31'  // Q4: Jan-Mar, due May 31
+      };
+      
+      const [fyStart] = data.financialYear.split('-');
+      const fyEnd = parseInt(fyStart) + 1;
+      const dueDateMonth = quarterEndDates[data.quarter];
+      const dueYear = data.quarter === 'Q4' ? fyEnd : (data.quarter === 'Q3' ? fyEnd : parseInt(fyStart));
+      
+      return [
+        {
+          id: `${key}-24Q`,
+          type: 'Form 24Q',
+          quarter: `${data.quarter} ${data.financialYear}`,
+          dueDate: `${dueYear}-${dueDateMonth.split('-')[0]}-${dueDateMonth.split('-')[1]}`,
+          status: 'pending',
+          amount: Math.round(data.totalAmount),
+          deductees: data.deductees.size,
+          records: data.records.length
+        },
+        {
+          id: `${key}-26Q`,
+          type: 'Form 26Q',
+          quarter: `${data.quarter} ${data.financialYear}`,
+          dueDate: `${dueYear}-${dueDateMonth.split('-')[0]}-${dueDateMonth.split('-')[1]}`,
+          status: 'pending',
+          amount: Math.round(data.totalAmount * 0.3), // Assume 30% for 26Q
+          deductees: Math.ceil(data.deductees.size * 0.3),
+          records: Math.ceil(data.records.length * 0.3)
+        }
+      ];
+    }).flat();
+    
+    console.log(`Generated ${returns.length} TDS returns from ${tdsRecords.length} records`);
+    
+    res.json({
+      success: true,
+      data: returns.slice(0, 8) // Limit to recent 8 returns
+    });
+    
+  } catch (error) {
+    console.error('TDS Returns fetch error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch TDS returns',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+});
+
 module.exports = router;
