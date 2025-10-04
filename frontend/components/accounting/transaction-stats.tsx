@@ -12,35 +12,43 @@ interface TransactionData {
 }
 
 export function TransactionStats() {
-  const [transactionData, setTransactionData] = useState<TransactionData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [transactionData, setTransactionData] = useState<TransactionData | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  const fetchTransactionData = async () => {
+    try {
+      const token = localStorage.getItem("token")
+      const response = await fetch("http://localhost:5000/api/transactions/dashboard-stats", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setTransactionData(data)
+        localStorage.setItem("transactionData", JSON.stringify(data)) // cache it
+      }
+    } catch (err) {
+      console.error("Error fetching transaction data:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const fetchTransactionData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/transactions/dashboard-stats', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setTransactionData(data);
-        }
-      } catch (error) {
-        console.error('Error fetching transaction data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Check if cached data exists
+    const cached = localStorage.getItem("transactionData")
+    if (cached) {
+      setTransactionData(JSON.parse(cached))
+      setLoading(false)
+    }
 
-    fetchTransactionData();
-  }, []);
+    // Refresh in background
+    fetchTransactionData()
+  }, [])
 
-  if (loading) {
+  if (!transactionData && loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[1, 2, 3, 4].map((i) => (
@@ -55,21 +63,21 @@ export function TransactionStats() {
           </Card>
         ))}
       </div>
-    );
+    )
   }
 
   const stats = [
     {
       title: "Total Income",
-      value: `₹${transactionData?.totalIncome?.toLocaleString() || '0'}`,
+      value: `₹${transactionData?.totalIncome?.toLocaleString() || "0"}`,
       change: "+12.5%",
       trend: "up" as const,
       icon: TrendingUp,
       period: "This month",
     },
     {
-      title: "Total Expenses", 
-      value: `₹${transactionData?.totalExpenses?.toLocaleString() || '0'}`,
+      title: "Total Expenses",
+      value: `₹${transactionData?.totalExpenses?.toLocaleString() || "0"}`,
       change: "+8.2%",
       trend: "up" as const,
       icon: TrendingDown,
@@ -77,7 +85,7 @@ export function TransactionStats() {
     },
     {
       title: "Net Profit",
-      value: `₹${Math.max(0, (transactionData?.netProfit || 0)).toLocaleString()}`,
+      value: `₹${(transactionData?.netProfit || 0).toLocaleString()}`,
       change: "+18.7%",
       trend: (transactionData?.netProfit || 0) >= 0 ? "up" as const : "down" as const,
       icon: DollarSign,
@@ -85,7 +93,7 @@ export function TransactionStats() {
     },
     {
       title: "Transactions",
-      value: transactionData?.transactionCount?.toString() || '0',
+      value: transactionData?.transactionCount?.toString() || "0",
       change: "+23",
       trend: "up" as const,
       icon: PieChart,

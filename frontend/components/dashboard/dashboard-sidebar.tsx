@@ -51,7 +51,7 @@ const navigationItems = [
     items: [
       { title: "Invoices", href: "/dashboard/invoices", icon: FileText, roles: ["admin", "user"] },
       { title: "Recurring Invoices", href: "/dashboard/recurring-invoices", icon: Calendar, roles: ["admin"] },
-      { title: "Payments", href: "/dashboard/payments", icon: CreditCard, roles: ["admin", "user"] },
+      { title: "Payments", href: "/dashboard/payments", icon: CreditCard, roles: ["admin", "ca"] },
     ],
   },
   {

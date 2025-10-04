@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Eye, EyeOff, Mail, Lock, User, Building, Phone } from "lucide-react"
-import { API_BASE_URL } from "@/lib/config"
 
 interface RegisterFormProps {
   onSubmit: (data: {
@@ -23,7 +22,7 @@ interface RegisterFormProps {
   }) => Promise<void>
 }
 
-export function RegisterForm({ onSubmit}: RegisterFormProps) {
+export function RegisterForm({ onSubmit }: RegisterFormProps) {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -37,8 +36,8 @@ export function RegisterForm({ onSubmit}: RegisterFormProps) {
 
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target
@@ -50,55 +49,28 @@ export function RegisterForm({ onSubmit}: RegisterFormProps) {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
+
     if (!agreedToTerms) {
-      alert("Please agree to the terms and conditions");
-      return;
+      alert("Please agree to the terms and conditions")
+      return
     }
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
-      return;
+      alert("Passwords do not match")
+      return
     }
 
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      // Only send required fields to backend
-      const payload = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        role: formData.role,
-        company: formData.company,
-        password: formData.password
-
-      };
-       const res = await fetch(`${API_BASE_URL}/auth/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  const data = await res.json();
-
-  if (res.ok) {
-    console.log("✅ Registration successful", data);
-    alert("Registration successful! You can now log in.");
-  } else {
-    console.error("❌ Registration failed", data.message);
-    alert("Registration failed: " + (data.message || "Unknown error"));
-  }
-     
-    } catch (err) {
-      console.error("Registration failed:", err);
+      await onSubmit(formData) // delegate to parent
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
   }
-
-
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* First + Last Name */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="firstName">First Name</Label>
@@ -131,6 +103,7 @@ export function RegisterForm({ onSubmit}: RegisterFormProps) {
         </div>
       </div>
 
+      {/* Email */}
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <div className="relative">
@@ -147,6 +120,7 @@ export function RegisterForm({ onSubmit}: RegisterFormProps) {
         </div>
       </div>
 
+      {/* Phone */}
       <div className="space-y-2">
         <Label htmlFor="phone">Phone Number</Label>
         <div className="relative">
@@ -163,6 +137,7 @@ export function RegisterForm({ onSubmit}: RegisterFormProps) {
         </div>
       </div>
 
+      {/* Role */}
       <div className="space-y-2">
         <Label htmlFor="role">Role</Label>
         <Select required value={formData.role} onValueChange={handleRoleChange}>
@@ -177,6 +152,7 @@ export function RegisterForm({ onSubmit}: RegisterFormProps) {
         </Select>
       </div>
 
+      {/* Company */}
       <div className="space-y-2">
         <Label htmlFor="company">Company/Organization</Label>
         <div className="relative">
@@ -192,6 +168,7 @@ export function RegisterForm({ onSubmit}: RegisterFormProps) {
         </div>
       </div>
 
+      {/* Password */}
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
         <div className="relative">
@@ -221,6 +198,7 @@ export function RegisterForm({ onSubmit}: RegisterFormProps) {
         </div>
       </div>
 
+      {/* Confirm Password */}
       <div className="space-y-2">
         <Label htmlFor="confirmPassword">Confirm Password</Label>
         <div className="relative">
@@ -250,6 +228,7 @@ export function RegisterForm({ onSubmit}: RegisterFormProps) {
         </div>
       </div>
 
+      {/* Terms */}
       <div className="flex items-center space-x-2">
         <Checkbox
           id="terms"

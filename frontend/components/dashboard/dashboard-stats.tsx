@@ -1,9 +1,9 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TrendingUp, TrendingDown, FileText, AlertTriangle } from "lucide-react"
-import { LineChart, Line, ResponsiveContainer, AreaChart, Area } from "recharts"
-import { useEffect, useState } from "react"
+import { TrendingUp, TrendingDown, FileText } from "lucide-react"
+import { ResponsiveContainer, AreaChart, Area } from "recharts"
+import { useDashboard } from "@/contexts/DashboardContext"
 
 const miniChartData = [
   { value: 120 }, { value: 135 }, { value: 148 }, { value: 162 }, 
@@ -15,50 +15,10 @@ const expenseChartData = [
   { value: 110 }, { value: 115 }, { value: 120 }
 ]
 
-interface DashboardData {
-  totalIncome: number;
-  totalExpenses: number;
-  netProfit: number;
-  transactionCount: number;
-}
-
 export default function DashboardStats() {
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { dashboardData, loading } = useDashboard()
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        console.log('Dashboard - Token available:', !!token); // Debug log
-        
-        const response = await fetch('http://localhost:5000/api/transactions/dashboard-stats', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        console.log('Dashboard - Response status:', response.status); // Debug log
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Dashboard - Data received:', data); // Debug log
-          setDashboardData(data);
-        } else {
-          console.error('Dashboard - Response not ok:', response.status, response.statusText);
-        }
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, []);
-
-  if (loading) {
+  if (loading || !dashboardData) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[...Array(4)].map((_, index) => (
@@ -73,15 +33,15 @@ export default function DashboardStats() {
           </Card>
         ))}
       </div>
-    );
+    )
   }
 
-  const formatCurrency = (amount: number) => `₹${amount.toLocaleString('en-IN')}`;
-  
+  const formatCurrency = (amount: number) => `₹${amount.toLocaleString("en-IN")}`
+
   const stats = [
     {
       title: "Total Income",
-      value: dashboardData ? formatCurrency(dashboardData.totalIncome) : "₹0",
+      value: formatCurrency(dashboardData.totalIncome),
       change: "+12.5%",
       trend: "up" as const,
       icon: TrendingUp,
@@ -89,8 +49,8 @@ export default function DashboardStats() {
       chartColor: "#10b981"
     },
     {
-      title: "Total Expenses", 
-      value: dashboardData ? formatCurrency(dashboardData.totalExpenses) : "₹0",
+      title: "Total Expenses",
+      value: formatCurrency(dashboardData.totalExpenses),
       change: "+8.2%",
       trend: "up" as const,
       icon: TrendingDown,
@@ -99,18 +59,18 @@ export default function DashboardStats() {
     },
     {
       title: "Net Profit",
-      value: dashboardData ? formatCurrency(dashboardData.netProfit) : "₹0",
-      change: (dashboardData?.netProfit ?? 0) >= 0 ? "+18.7%" : "-12.3%",
-      trend: (dashboardData?.netProfit ?? 0) >= 0 ? "up" as const : "down" as const,
-      icon: TrendingUp,
+      value: formatCurrency(dashboardData.netProfit),
+      change: dashboardData.netProfit >= 0 ? "+18.7%" : "-12.3%",
+      trend: dashboardData.netProfit >= 0 ? "up" as const : "down" as const,
+      icon: TrendingUp
     },
     {
       title: "Transactions",
-      value: dashboardData?.transactionCount?.toString() || "0",
+      value: dashboardData.transactionCount.toString(),
       change: "+23 This month",
       trend: "up" as const,
-      icon: FileText,
-    },
+      icon: FileText
+    }
   ]
 
   return (
@@ -127,11 +87,7 @@ export default function DashboardStats() {
                 <div className="text-2xl font-bold">{stat.value}</div>
                 <p
                   className={`text-xs flex items-center gap-1 ${
-                    stat.trend === "up"
-                      ? "text-green-600"
-                      : stat.trend === "down"
-                        ? "text-red-600"
-                        : "text-muted-foreground"
+                    stat.trend === "up" ? "text-green-600" : "text-red-600"
                   }`}
                 >
                   {stat.trend === "up" && <TrendingUp className="h-3 w-3" />}
@@ -143,10 +99,10 @@ export default function DashboardStats() {
                 <div className="h-12 w-20">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={stat.chartData}>
-                      <Area 
-                        type="monotone" 
-                        dataKey="value" 
-                        stroke={stat.chartColor} 
+                      <Area
+                        type="monotone"
+                        dataKey="value"
+                        stroke={stat.chartColor}
                         fill={stat.chartColor}
                         fillOpacity={0.2}
                         strokeWidth={2}

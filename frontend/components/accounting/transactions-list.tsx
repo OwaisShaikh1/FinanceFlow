@@ -5,55 +5,23 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Edit, Trash2, Paperclip, Eye } from "lucide-react"
-import { useEffect, useState } from "react"
-import { BASE_URL } from "@/hooks/storagehelper"
+import { useState } from "react"
 import { useTransactionFilters } from "@/contexts/FilterContext"
-import { TableSkeleton } from "@/components/ui/skeleton-presets"
 import { useSkeletonPreview } from "@/hooks/use-skeleton-preview"
 import { useToast } from "@/components/ui/use-toast"
+import { useDashboard, Transaction } from "@/contexts/DashboardContext"
+import { TableSkeleton } from "@/components/ui/skeleton-presets"
 import { API_BASE_URL } from "@/lib/config"
-
-type Transaction = {
-  id: string
-  date: string
-  type: "income" | "expense"
-  description: string
-  category: string
-  amount: number
-  paymentMethod: string
-  hasAttachment?: boolean
-}
 
 export function TransactionsList() {
   const { filters } = useTransactionFilters()
   const { toast } = useToast()
   const skeletonPreview = useSkeletonPreview()
 
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const { transactions, loading: contextLoading, error: contextError, refreshDashboard } = useDashboard()
 
-  useEffect(() => {
-    if (skeletonPreview) {
-      const t = setTimeout(() => setLoading(false), 2000)
-      return () => clearTimeout(t)
-    }
-    const fetchTransactions = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/transactions`) // 👈 full URL
-        if (!res.ok) throw new Error("Failed to fetch transactions")
-        const data = await res.json()
-        setTransactions(data)
-      } catch (error: any) {
-        console.error("Error fetching transactions:", error)
-        setError(error.message ?? "Failed to fetch transactions")
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchTransactions()
-  }, [skeletonPreview])
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false) // optional: for skeleton when deleting
 
   const handleDelete = async (id: string) => {
     if (!id) return
@@ -61,15 +29,16 @@ export function TransactionsList() {
     if (!ok) return
     try {
       setDeletingId(id)
-      const res = await fetch(`${API_BASE_URL}/api/transactions/${encodeURIComponent(id)}` , {
+      const res = await fetch(`${API_BASE_URL}/api/transactions/${encodeURIComponent(id)}`, {
         method: "DELETE",
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
         throw new Error(body?.message || `Failed with ${res.status}`)
       }
-      setTransactions((prev) => prev.filter((t) => t.id !== id))
       toast({ title: "Deleted", description: `Transaction ${id} removed.` })
+      // Refresh context to update all pages
+      await refreshDashboard()
     } catch (e: any) {
       console.error(e)
       toast({ title: "Delete failed", description: e.message || "Unable to delete", variant: "destructive" })
@@ -89,11 +58,10 @@ export function TransactionsList() {
     const txnDate = new Date(txn.date)
     const matchesFrom = filters.dateFrom ? txnDate >= filters.dateFrom : true
     const matchesTo = filters.dateTo ? txnDate <= filters.dateTo : true
-
     return matchesSearch && matchesType && matchesCategory && matchesFrom && matchesTo
   })
 
-  if (loading) {
+  if (contextLoading || skeletonPreview) {
     return (
       <Card>
         <CardHeader>
@@ -109,14 +77,14 @@ export function TransactionsList() {
     )
   }
 
-  if (error) {
+  if (contextError) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Recent Transactions</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-red-600">{error}</p>
+          <p className="text-sm text-red-600">{contextError}</p>
         </CardContent>
       </Card>
     )
@@ -183,7 +151,13 @@ export function TransactionsList() {
                     <Button variant="ghost" size="icon">
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(transaction.id)} disabled={deletingId === transaction.id} aria-disabled={deletingId === transaction.id}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(transaction.id)}
+                      disabled={deletingId === transaction.id}
+                      aria-disabled={deletingId === transaction.id}
+                    >
                       <Trash2 className={`h-4 w-4 ${deletingId === transaction.id ? "opacity-50" : ""}`} />
                     </Button>
                   </div>

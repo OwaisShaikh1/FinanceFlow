@@ -31,7 +31,6 @@ export default function TransactionsPage() {
       </div>
 
       <TransactionStats />
-
       <TransactionFilters />
       <TransactionsList />
     </div>

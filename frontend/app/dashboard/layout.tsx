@@ -1,6 +1,7 @@
 import type React from "react"
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
+import { DashboardProvider } from "@/contexts/DashboardContext"
 
 export default function DashboardLayout({
   children,
@@ -8,12 +9,14 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="h-fit flex flex-col bg-background">
-      <DashboardHeader />
-      <div className="flex h-fit">
-        <DashboardSidebar />
-        <main className="flex-1 p-6">{children}</main>
+    <DashboardProvider>
+      <div className="h-fit flex flex-col bg-background">
+        <DashboardHeader />
+        <div className="flex h-fit">
+          <DashboardSidebar />
+          <main className="flex-1 p-6">{children}</main>
+        </div>
       </div>
-    </div>
+    </DashboardProvider>
   )
 }

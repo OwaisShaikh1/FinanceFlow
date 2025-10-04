@@ -19,18 +19,24 @@ export default function RegisterPage() {
     role: string
     company: string
     password: string
-    confirmPassword: string
+    confirmPassword?: string
   }) => {
-    setMessage("...registering")
-    console.log("Form Data:", formdata)
-    try{
-      const res = await fetch(`${BASE_URL}auth/register`, {
+    setMessage("...registering");
+
+    // Create a new object excluding confirmPassword
+    const payload = { ...formdata };
+    delete payload.confirmPassword;
+
+    console.log("Payload sent to API:", payload);
+
+    try {
+      const res = await fetch(`http://localhost:5000/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formdata),
+        body: JSON.stringify(payload),
       });
 
-      const data = await res.json()
+      const data = await res.json();
 
       if (res.ok) {
         setMessage("✅ Registered! Redirecting to login...");
@@ -38,12 +44,11 @@ export default function RegisterPage() {
       } else {
         setMessage("❌ " + (data.message || "Registration failed"));
       }
-    } catch(err){
-      setMessage("⚠️ Error connecting to server")
+    } catch (err) {
+      setMessage("⚠️ Error connecting to server");
     }
+  };
 
-
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
