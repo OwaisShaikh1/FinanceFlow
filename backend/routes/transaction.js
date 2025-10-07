@@ -179,4 +179,5 @@ router.get('/chart-data', auth, async (req, res) => {
   }
 });
 
+console.log('Transaction routes loaded');
 module.exports = router;

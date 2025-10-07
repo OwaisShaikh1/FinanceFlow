@@ -137,7 +137,86 @@ router.get('/summary', auth, async (req, res) => {
   }
 });
 
-// GET /api/gst/periods - Get available periods with data from GenInvoice
+// GET /api/gst/dashboard - Alias for summary endpoint for dashboard components
+router.get('/dashboard', auth, async (req, res) => {
+  try {
+    const currentPeriod = req.query.period || dayjs().format('YYYY-MM');
+    req.query.period = currentPeriod;
+    
+    // Forward request to summary endpoint
+    const summaryUrl = req.originalUrl.replace('/dashboard', '/summary');
+    req.url = summaryUrl;
+    
+    // Use the same logic as summary
+    const { period } = req.query;
+    const [year, month] = period.split('-').map(Number);
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59);
+    
+    const invoices = await GenInvoice.find({
+      business: req.user.business,
+      status: { $in: ['FINAL', 'SENT', 'PAID'] },
+      invoiceDate: { $gte: startDate, $lte: endDate }
+    });
+
+    let currentMonthGST = 0;
+    let totalTaxableValue = 0;
+    
+    invoices.forEach(invoice => {
+      if (invoice.items && Array.isArray(invoice.items)) {
+        invoice.items.forEach(item => {
+          const itemTotal = item.quantity * item.rate;
+          const gstRate = item.gstRate || 18;
+          const gstAmount = itemTotal * gstRate / 100;
+          currentMonthGST += gstAmount;
+          totalTaxableValue += itemTotal;
+        });
+      }
+    });
+
+    const inputTaxCredit = 0;
+    const netGSTPayable = Math.max(0, currentMonthGST - inputTaxCredit);
+
+    const summary = {
+      currentMonthGST: Math.round(currentMonthGST),
+      inputTaxCredit,
+      netGSTPayable: Math.round(netGSTPayable),
+      returnsFiled: 8,
+      totalReturns: 12,
+      upcomingDeadlines: [
+        {
+          return: "GSTR-1",
+          period: period,
+          dueDate: "11 Nov 2025",
+          status: "pending",
+          amount: `₹${Math.round(currentMonthGST)}`
+        },
+        {
+          return: "GSTR-3B",
+          period: period,
+          dueDate: "20 Nov 2025", 
+          status: "pending",
+          amount: `₹${Math.round(netGSTPayable)}`
+        }
+      ]
+    };
+
+    res.json({
+      success: true,
+      data: summary
+    });
+
+  } catch (error) {
+    console.error('GST Dashboard error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to load GST dashboard',
+      error: error.message
+    });
+  }
+});
+
+// GET /api/gst/periods - Get all periods with GST data
 router.get('/periods', auth, async (req, res) => {
   try {
     // Get all invoices and calculate periods from invoiceDate

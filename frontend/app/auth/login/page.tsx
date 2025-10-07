@@ -25,6 +25,7 @@ export default function LoginPage() {
       if (res.ok && data.token) {
         localStorage.setItem("token", data.token)
         localStorage.setItem("user", JSON.stringify(data.user))
+        //console.log("user:", localStorage.getItem("user"))
         setMessage("✅ Logged in! Redirecting...")
         router.push("/dashboard")
       } else {

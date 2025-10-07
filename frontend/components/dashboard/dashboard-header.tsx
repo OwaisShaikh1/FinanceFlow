@@ -40,7 +40,7 @@ export function DashboardHeader() {
   const handleLogout = () => {
     localStorage.removeItem("user")
     localStorage.removeItem("token") // if you stored JWT
-    window.location.href = "/login" // redirect
+    window.location.href = "/auth/login" // redirect
   }
 
   return (

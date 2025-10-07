@@ -24,6 +24,9 @@ import {
   Calendar,
   AlertTriangle,
   Building,
+  CheckSquare,
+  Shield,
+  Target,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -31,54 +34,71 @@ import { cn } from "@/lib/utils"
 const navigationItems = [
   {
     title: "Overview",
-    roles: ["admin", "user", "ca"],
+    roles: ["Admin", "user", "ca"],
     items: [
-      { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["admin", "user", "ca"] },
+      { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["Admin", "user", "ca"] },
     ],
   },
   {
     title: "Accounting & Bookkeeping",
-    roles: ["admin", "ca", "user"],
+    roles: ["Admin", "ca", "user"],
     items: [
-      { title: "Income & Expenses", href: "/dashboard/transactions", icon: TrendingUp, roles: ["admin", "ca", "user"] },
-      { title: "Chart of Accounts", href: "/dashboard/accounts", icon: Calculator, roles: ["admin"] },
-      { title: "Bank Reconciliation", href: "/dashboard/reconciliation", icon: Banknote, roles: ["admin"] },
+      { title: "Income & Expenses", href: "/dashboard/transactions", icon: TrendingUp, roles: ["Admin", "ca", "user"] },
+      { title: "Chart of Accounts", href: "/dashboard/accounts", icon: Calculator, roles: ["Admin"] },
+      { title: "Bank Reconciliation", href: "/dashboard/reconciliation", icon: Banknote, roles: ["Admin"] },
     ],
   },
   {
     title: "Billing & Invoicing",
-    roles: ["admin", "user"],
+    roles: ["Admin", "user"],
     items: [
-      { title: "Invoices", href: "/dashboard/invoices", icon: FileText, roles: ["admin", "user"] },
-      { title: "Recurring Invoices", href: "/dashboard/recurring-invoices", icon: Calendar, roles: ["admin"] },
-      { title: "Payments", href: "/dashboard/payments", icon: CreditCard, roles: ["admin", "ca"] },
+      { title: "Invoices", href: "/dashboard/invoices", icon: FileText, roles: ["Admin", "user"] },
+      { title: "Recurring Invoices", href: "/dashboard/recurring-invoices", icon: Calendar, roles: ["Admin"] },
+      { title: "Payments", href: "/dashboard/payments", icon: CreditCard, roles: ["Admin", "ca"] },
+    ],
+  },
+  {
+    title: "Tax Management",
+    roles: ["Admin", "user", "ca"],
+    items: [
+      { title: "GST", href: "/dashboard/gst", icon: Receipt, roles: ["Admin", "user", "ca"] },
+      { title: "TDS", href: "/dashboard/tds", icon: Shield, roles: ["Admin", "ca"] },
+      { title: "Income Tax", href: "/dashboard/income-tax", icon: Calculator, roles: ["Admin", "user"] },
+      { title: "Tax Management", href: "/dashboard/tax", icon: FileText, roles: ["Admin", "ca"] },
     ],
   },
   {
     title: "Reporting",
-    roles: ["admin", "user"],
+    roles: ["Admin", "user"],
     items: [
-      { title: "Financial Reports", href: "/dashboard/reports", icon: BarChart3, roles: ["admin","user"] },
-      { title: "Tax Reports", href: "/dashboard/tax-reports", icon: PieChart, roles: ["admin", "user"] },
+      { title: "Financial Reports", href: "/dashboard/reports", icon: BarChart3, roles: ["Admin","user"] },
+      { title: "Tax Reports", href: "/dashboard/tax-reports", icon: PieChart, roles: ["Admin", "user"] },
+    ],
+  },
+  {
+    title: "Task Management",
+    roles: ["Admin", "ca"],
+    items: [
+      { title: "Tasks", href: "/dashboard/tasks", icon: CheckSquare, roles: ["Admin", "ca"] },
     ],
   },
   {
     title: "Client Management",
-    roles: ["admin", "ca"],
+    roles: ["Admin", "ca"],
     items: [
-      { title: "Clients", href: "/dashboard/clients", icon: Users, roles: ["admin"] },
-      { title: "Organizations", href: "/dashboard/organizations", icon: Building, roles: ["admin"] },
+      { title: "Clients", href: "/dashboard/clients", icon: Users, roles: ["Admin"] },
+      { title: "Organizations", href: "/dashboard/organizations", icon: Building, roles: ["Admin"] },
     ],
   },
 ]
 
 export function DashboardSidebar() {
   const [collapsed, setCollapsed] = useState(false)
-  const [role, setRole] = useState<string | "user">("user")
+  const [role, setRole] = useState<string>("user")
   const pathname = usePathname()
 
   useEffect(() => {
-    // Get user from localStorage (example: { "role": "admin" })
+    // Get user from localStorage (example: { "role": "Admin" })
     const user = JSON.parse(localStorage.getItem("user") || "{}")
     setRole(user?.role || null)
   }, [])
@@ -103,7 +123,7 @@ export function DashboardSidebar() {
         <ScrollArea className="flex-1 px-3">
           <div className="space-y-6">
             {navigationItems
-              .filter((section) => role && section.roles.includes(role))
+              .filter((section) => !role || section.roles.includes(role))
               .map((section, index) => (
                 <div key={index}>
                   {!collapsed && (
@@ -113,7 +133,7 @@ export function DashboardSidebar() {
                   )}
                   <div className="space-y-1">
                     {section.items
-                      .filter((item) => role && item.roles.includes(role))
+                      .filter((item) => !role || item.roles.includes(role))
                       .map((item) => (
                         <Link key={item.href} href={item.href}>
                           <Button

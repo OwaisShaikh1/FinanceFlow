@@ -20,6 +20,7 @@ export const ENDPOINTS = {
   },
   GST: {
     DASHBOARD: `${API_BASE_URL}/api/gst/dashboard`,
+    SUMMARY: `${API_BASE_URL}/api/gst/summary`,
   },
 }
 
