@@ -26,14 +26,14 @@ export function TransactionFilters() {
             onChange={(e) => setFilters((prev: any) => ({ ...prev, search: e.target.value }))}
           />
         </div>
-        <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
+        <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="border-blue-200 hover:bg-blue-50 text-blue-700">
           <Filter className="h-4 w-4 mr-2" />
           Filters
         </Button>
       </div>
 
       {showFilters && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 border rounded-lg bg-card">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 border border-blue-100 rounded-lg bg-gradient-to-br from-white to-blue-50">
           {/* Type Filter */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Type</label>

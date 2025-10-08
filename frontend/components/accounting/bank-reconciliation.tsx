@@ -56,14 +56,14 @@ const mockBankTransactions = [
 export function BankReconciliation() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Bank Statement Transactions</CardTitle>
+      <Card className="bg-gradient-to-br from-white to-blue-50 border-blue-100">
+        <CardHeader className="border-b border-blue-100">
+          <CardTitle className="text-blue-900">Bank Statement Transactions</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="hover:bg-blue-50/50">
                 <TableHead className="w-12">Match</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Description</TableHead>
@@ -73,7 +73,7 @@ export function BankReconciliation() {
             </TableHeader>
             <TableBody>
               {mockBankTransactions.map((transaction) => (
-                <TableRow key={transaction.id}>
+                <TableRow key={transaction.id} className="hover:bg-blue-50/50">
                   <TableCell>
                     <Checkbox checked={transaction.matched} />
                   </TableCell>
@@ -102,38 +102,38 @@ export function BankReconciliation() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Reconciliation Actions</CardTitle>
+      <Card className="bg-gradient-to-br from-white to-blue-50 border-blue-100">
+        <CardHeader className="border-b border-blue-100">
+          <CardTitle className="text-blue-900">Reconciliation Actions</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="p-4 border rounded-lg">
-            <h4 className="font-medium mb-2">Unmatched Transactions</h4>
-            <p className="text-sm text-muted-foreground mb-3">
+        <CardContent className="space-y-4 pt-6">
+          <div className="p-4 border border-blue-200 rounded-lg bg-blue-50/30">
+            <h4 className="font-medium mb-2 text-blue-900">Unmatched Transactions</h4>
+            <p className="text-sm text-blue-700 mb-3">
               2 bank transactions need to be matched with your records
             </p>
             <div className="space-y-2">
-              <Button variant="outline" size="sm" className="w-full justify-start bg-transparent">
+              <Button variant="outline" size="sm" className="w-full justify-start bg-white border-blue-200 hover:bg-blue-50 text-blue-700">
                 <Plus className="h-4 w-4 mr-2" />
                 Create Transaction Record
               </Button>
-              <Button variant="outline" size="sm" className="w-full justify-start bg-transparent">
+              <Button variant="outline" size="sm" className="w-full justify-start bg-white border-blue-200 hover:bg-blue-50 text-blue-700">
                 <Check className="h-4 w-4 mr-2" />
                 Match with Existing
               </Button>
             </div>
           </div>
 
-          <div className="p-4 border rounded-lg">
-            <h4 className="font-medium mb-2">Reconciliation Summary</h4>
+          <div className="p-4 border border-blue-200 rounded-lg bg-blue-50/30">
+            <h4 className="font-medium mb-2 text-blue-900">Reconciliation Summary</h4>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span>Bank Balance:</span>
-                <span className="font-medium">₹2,85,000</span>
+                <span className="text-blue-700">Bank Balance:</span>
+                <span className="font-medium text-blue-900">₹2,85,000</span>
               </div>
               <div className="flex justify-between">
-                <span>Book Balance:</span>
-                <span className="font-medium">₹2,82,800</span>
+                <span className="text-blue-700">Book Balance:</span>
+                <span className="font-medium text-blue-900">₹2,82,800</span>
               </div>
               <div className="flex justify-between text-red-600">
                 <span>Difference:</span>
@@ -142,7 +142,7 @@ export function BankReconciliation() {
             </div>
           </div>
 
-          <Button className="w-full">Complete Reconciliation</Button>
+          <Button className="w-full bg-blue-600 hover:bg-blue-700">Complete Reconciliation</Button>
         </CardContent>
       </Card>
     </div>

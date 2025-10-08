@@ -22,13 +22,13 @@ export default function DashboardStats() {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[...Array(4)].map((_, index) => (
-          <Card key={index} className="animate-pulse">
-            <CardHeader>
-              <div className="h-4 bg-gray-200 rounded w-24"></div>
+          <Card key={index} className="animate-pulse bg-gradient-to-br from-white to-blue-50 border-blue-100">
+            <CardHeader className="border-b border-blue-100">
+              <div className="h-4 bg-blue-200 rounded w-24"></div>
             </CardHeader>
-            <CardContent>
-              <div className="h-8 bg-gray-200 rounded w-32 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-20"></div>
+            <CardContent className="pt-4">
+              <div className="h-8 bg-blue-200 rounded w-32 mb-2"></div>
+              <div className="h-3 bg-blue-100 rounded w-20"></div>
             </CardContent>
           </Card>
         ))}
@@ -76,15 +76,15 @@ export default function DashboardStats() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {stats.map((stat, index) => (
-        <Card key={index} className="hover:shadow-lg transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
-            <stat.icon className="h-4 w-4 text-muted-foreground" />
+        <Card key={index} className="hover:shadow-lg transition-shadow duration-200 bg-gradient-to-br from-white to-blue-50 border-blue-100">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 border-b border-blue-100">
+            <CardTitle className="text-sm font-medium text-blue-700">{stat.title}</CardTitle>
+            <stat.icon className="h-4 w-4 text-blue-600" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             <div className="flex items-end justify-between">
               <div>
-                <div className="text-2xl font-bold">{stat.value}</div>
+                <div className="text-2xl font-bold text-blue-900">{stat.value}</div>
                 <p
                   className={`text-xs flex items-center gap-1 ${
                     stat.trend === "up" ? "text-green-600" : "text-red-600"
