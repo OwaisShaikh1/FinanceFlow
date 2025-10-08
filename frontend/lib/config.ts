@@ -22,6 +22,32 @@ export const ENDPOINTS = {
     DASHBOARD: `${API_BASE_URL}/api/gst/dashboard`,
     SUMMARY: `${API_BASE_URL}/api/gst/summary`,
   },
+  REPORTS: {
+    BALANCE_SHEET: {
+      PDF: `${API_BASE_URL}/api/reports/balance-sheet/pdf`,
+      EXCEL: `${API_BASE_URL}/api/reports/balance-sheet/excel`,
+      TEST: `${API_BASE_URL}/api/reports/balance-sheet/test`,
+    },
+    CASH_FLOW: {
+      PDF: `${API_BASE_URL}/api/reports/cash-flow/pdf`,
+      EXCEL: `${API_BASE_URL}/api/reports/cash-flow/excel`,
+      TEST: `${API_BASE_URL}/api/reports/cash-flow/test`,
+    },
+    PROFIT_LOSS: {
+      PDF: `${API_BASE_URL}/api/reports/profit-loss/pdf`,
+      EXCEL: `${API_BASE_URL}/api/reports/profit-loss/excel`,
+    },
+    TAX: {
+      GST: {
+        PDF: `${API_BASE_URL}/api/reports/tax/gst/pdf`,
+        EXCEL: `${API_BASE_URL}/api/reports/tax/gst/excel`,
+      },
+      TDS: {
+        PDF: `${API_BASE_URL}/api/reports/tax/tds/pdf`,
+        EXCEL: `${API_BASE_URL}/api/reports/tax/tds/excel`,
+      }
+    }
+  },
 }
 
 // Format currency with Rupee symbol

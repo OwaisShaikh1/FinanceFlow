@@ -209,6 +209,400 @@ app.get('/api/reports/profit-loss/pdf', auth, async (req, res) => {
   }
 });
 
+// Balance Sheet Test endpoint
+app.get('/api/reports/balance-sheet/test', (req, res) => {
+  console.log('📊 Balance Sheet test request received');
+  res.json({ message: 'Balance Sheet endpoint works!', timestamp: new Date().toISOString() });
+});
+
+// Balance Sheet PDF Generation
+app.get('/api/reports/balance-sheet/pdf', async (req, res) => {
+  console.log('📊 Balance Sheet PDF request received');
+  try {
+    const { generateBalanceSheetPDF } = require('./utils/balanceSheetPdfGenerator');
+    
+    // Sample Balance Sheet data - you can modify this to fetch from your database
+    const reportData = {
+      businessName: req.query.businessName || 'Sample Business',
+      asOfDate: req.query.asOfDate || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+      currentAssets: [
+        { name: 'Cash in Hand', amount: 50000 },
+        { name: 'Bank Account', amount: 385000 },
+        { name: 'Accounts Receivable', amount: 125000 },
+        { name: 'Inventory', amount: 85000 }
+      ],
+      fixedAssets: [
+        { name: 'Office Equipment', amount: 150000 },
+        { name: 'Furniture & Fixtures', amount: 75000 },
+        { name: 'Computer Systems', amount: 120000 }
+      ],
+      currentLiabilities: [
+        { name: 'Accounts Payable', amount: 45000 },
+        { name: 'Short Term Loans', amount: 25000 },
+        { name: 'Accrued Expenses', amount: 15000 }
+      ],
+      longTermLiabilities: [
+        { name: 'Long Term Loan', amount: 200000 },
+        { name: 'Equipment Loan', amount: 50000 }
+      ],
+      equity: [
+        { name: 'Owner Equity', amount: 400000 },
+        { name: 'Retained Earnings', amount: 255000 }
+      ]
+    };
+    
+    console.log('📋 Generating Balance Sheet PDF with data:', reportData);
+    const pdf = await generateBalanceSheetPDF(reportData);
+    console.log('✅ Balance Sheet PDF generated successfully, size:', pdf.length, 'bytes');
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="balance-sheet-${Date.now()}.pdf"`);
+    res.send(pdf);
+  } catch (error) {
+    console.error('❌ Balance Sheet PDF generation error:', error.message);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Failed to generate Balance Sheet PDF',
+      message: error.message 
+    });
+  }
+});
+
+// Balance Sheet Excel Generation
+app.get('/api/reports/balance-sheet/excel', async (req, res) => {
+  console.log('📊 Balance Sheet Excel request received');
+  try {
+    const { generateBalanceSheetExcel } = require('./utils/balanceSheetExcelGenerator');
+    
+    // Sample Balance Sheet data - same as PDF route
+    const reportData = {
+      businessName: req.query.businessName || 'Sample Business',
+      asOfDate: req.query.asOfDate || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+      currentAssets: [
+        { name: 'Cash in Hand', amount: 50000 },
+        { name: 'Bank Account', amount: 385000 },
+        { name: 'Accounts Receivable', amount: 125000 },
+        { name: 'Inventory', amount: 85000 }
+      ],
+      fixedAssets: [
+        { name: 'Office Equipment', amount: 150000 },
+        { name: 'Furniture & Fixtures', amount: 75000 },
+        { name: 'Computer Systems', amount: 120000 }
+      ],
+      currentLiabilities: [
+        { name: 'Accounts Payable', amount: 45000 },
+        { name: 'Short Term Loans', amount: 25000 },
+        { name: 'Accrued Expenses', amount: 15000 }
+      ],
+      longTermLiabilities: [
+        { name: 'Long Term Loan', amount: 200000 },
+        { name: 'Equipment Loan', amount: 50000 }
+      ],
+      equity: [
+        { name: 'Owner Equity', amount: 400000 },
+        { name: 'Retained Earnings', amount: 255000 }
+      ]
+    };
+    
+    // Chart data for visualization (optional - can be derived from reportData)
+    const chartData = {
+      totalAssets: 890000,
+      totalLiabilities: 335000,
+      totalEquity: 655000
+    };
+    
+    console.log('📋 Generating Balance Sheet Excel with data:', reportData);
+    const workbook = await generateBalanceSheetExcel(reportData, chartData);
+    
+    // Convert workbook to buffer
+    const buffer = await workbook.xlsx.writeBuffer();
+    console.log('✅ Balance Sheet Excel generated successfully, size:', buffer.length, 'bytes');
+    
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="balance-sheet-${Date.now()}.xlsx"`);
+    res.send(buffer);
+  } catch (error) {
+    console.error('❌ Balance Sheet Excel generation error:', error.message);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Failed to generate Balance Sheet Excel',
+      message: error.message 
+    });
+  }
+});
+
+// Cash Flow Test endpoint
+app.get('/api/reports/cash-flow/test', (req, res) => {
+  console.log('💰 Cash Flow test request received');
+  res.json({ message: 'Cash Flow endpoint works!', timestamp: new Date().toISOString() });
+});
+
+// Cash Flow PDF Generation
+app.get('/api/reports/cash-flow/pdf', async (req, res) => {
+  console.log('💰 Cash Flow PDF request received');
+  try {
+    const { generateCashFlowPDF } = require('./utils/cashFlowPdfGenerator');
+    
+    // Sample Cash Flow data - you can modify this to fetch from your database
+    const reportData = {
+      businessName: req.query.businessName || 'Sample Business',
+      periodEnding: req.query.periodEnding || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+      operatingActivities: [
+        { name: 'Net Income', amount: 450000 },
+        { name: 'Depreciation', amount: 25000 },
+        { name: 'Accounts Receivable', amount: -15000 },
+        { name: 'Accounts Payable', amount: 8000 },
+        { name: 'Inventory', amount: -12000 }
+      ],
+      investingActivities: [
+        { name: 'Equipment Purchase', amount: -75000 },
+        { name: 'Investment Sale', amount: 20000 }
+      ],
+      financingActivities: [
+        { name: 'Loan Repayment', amount: -30000 },
+        { name: 'Dividend Payment', amount: -25000 }
+      ]
+    };
+    
+    console.log('💰 Generating Cash Flow PDF with data:', reportData);
+    
+    const pdf = await generateCashFlowPDF(reportData);
+    
+    console.log('✅ Cash Flow PDF generated successfully, size:', pdf.length, 'bytes');
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="cash-flow-statement-${Date.now()}.pdf"`);
+    res.send(pdf);
+  } catch (error) {
+    console.error('❌ Cash Flow PDF generation error:', error.message);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Failed to generate Cash Flow PDF',
+      message: error.message 
+    });
+  }
+});
+
+// Cash Flow Excel Generation
+app.get('/api/reports/cash-flow/excel', async (req, res) => {
+  console.log('💰 Cash Flow Excel request received');
+  try {
+    const { generateCashFlowExcel } = require('./utils/cashFlowExcelGenerator');
+    
+    // Sample Cash Flow data - same as PDF route
+    const reportData = {
+      businessName: req.query.businessName || 'Sample Business',
+      periodEnding: req.query.periodEnding || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+      operatingActivities: [
+        { name: 'Net Income', amount: 450000 },
+        { name: 'Depreciation', amount: 25000 },
+        { name: 'Accounts Receivable', amount: -15000 },
+        { name: 'Accounts Payable', amount: 8000 },
+        { name: 'Inventory', amount: -12000 }
+      ],
+      investingActivities: [
+        { name: 'Equipment Purchase', amount: -75000 },
+        { name: 'Investment Sale', amount: 20000 }
+      ],
+      financingActivities: [
+        { name: 'Loan Repayment', amount: -30000 },
+        { name: 'Dividend Payment', amount: -25000 }
+      ]
+    };
+    
+    console.log('💰 Generating Cash Flow Excel with data:', reportData);
+    
+    const buffer = await generateCashFlowExcel(reportData);
+    
+    console.log('✅ Cash Flow Excel generated successfully, size:', buffer.length, 'bytes');
+    
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="cash-flow-statement-${Date.now()}.xlsx"`);
+    res.send(buffer);
+  } catch (error) {
+    console.error('❌ Cash Flow Excel generation error:', error.message);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Failed to generate Cash Flow Excel',
+      message: error.message 
+    });
+  }
+});
+
+// --------------------- Tax Reports API ---------------------
+const { generateGSTReportPDF } = require('./utils/gstReportPdfGenerator');
+const { generateGSTReportExcel } = require('./utils/gstReportExcelGenerator');
+
+// GST Report PDF endpoint
+app.get('/api/reports/tax/gst/pdf', async (req, res) => {
+  try {
+    console.log('🏛️ GST Report PDF generation requested');
+    
+    const reportData = {
+      businessName: 'Sample Business Pvt Ltd',
+      reportDate: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+      gstCollected: 45600,
+      gstPaid: 12800,
+      tdsDeducted: 8500,
+      pendingReturns: 2,
+      gstSummary: [
+        { period: 'December 2024', sales: 287000, gstCollected: 51660, gstPaid: 22500, netGST: 29160, status: 'Pending' },
+        { period: 'November 2024', sales: 235000, gstCollected: 42300, gstPaid: 17640, netGST: 24660, status: 'Filed' },
+        { period: 'October 2024', sales: 220000, gstCollected: 39600, gstPaid: 18900, netGST: 20700, status: 'Filed' },
+        { period: 'September 2024', sales: 198000, gstCollected: 35640, gstPaid: 15800, netGST: 19840, status: 'Filed' },
+        { period: 'August 2024', sales: 212000, gstCollected: 38160, gstPaid: 16200, netGST: 21960, status: 'Filed' }
+      ],
+      tdsSummary: [
+        { quarter: 'Q3 2024', totalPayments: 450000, tdsDeducted: 22500, tdsDeposited: 22500, dueDate: '2025-01-07', status: 'Deposited' },
+        { quarter: 'Q2 2024', totalPayments: 380000, tdsDeducted: 19000, tdsDeposited: 19000, dueDate: '2024-10-07', status: 'Filed' },
+        { quarter: 'Q1 2024', totalPayments: 320000, tdsDeducted: 16000, tdsDeposited: 16000, dueDate: '2024-07-07', status: 'Filed' }
+      ]
+    };
+    
+    console.log('📊 Generating GST Report PDF with data:', reportData);
+    
+    const buffer = await generateGSTReportPDF(reportData);
+    
+    console.log('✅ GST Report PDF generated successfully, size:', buffer.length, 'bytes');
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="gst-tax-report-${Date.now()}.pdf"`);
+    res.send(buffer);
+  } catch (error) {
+    console.error('❌ GST Report PDF generation error:', error.message);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Failed to generate GST Report PDF',
+      message: error.message 
+    });
+  }
+});
+
+// GST Report Excel endpoint  
+app.get('/api/reports/tax/gst/excel', async (req, res) => {
+  try {
+    console.log('📋 GST Report Excel generation requested');
+    
+    const reportData = {
+      businessName: 'Sample Business Pvt Ltd',
+      reportDate: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+      gstCollected: 45600,
+      gstPaid: 12800,
+      tdsDeducted: 8500,
+      pendingReturns: 2,
+      gstSummary: [
+        { period: 'December 2024', sales: 287000, gstCollected: 51660, gstPaid: 22500, netGST: 29160, status: 'Pending' },
+        { period: 'November 2024', sales: 235000, gstCollected: 42300, gstPaid: 17640, netGST: 24660, status: 'Filed' },
+        { period: 'October 2024', sales: 220000, gstCollected: 39600, gstPaid: 18900, netGST: 20700, status: 'Filed' },
+        { period: 'September 2024', sales: 198000, gstCollected: 35640, gstPaid: 15800, netGST: 19840, status: 'Filed' },
+        { period: 'August 2024', sales: 212000, gstCollected: 38160, gstPaid: 16200, netGST: 21960, status: 'Filed' }
+      ],
+      tdsSummary: [
+        { quarter: 'Q3 2024', totalPayments: 450000, tdsDeducted: 22500, tdsDeposited: 22500, dueDate: '2025-01-07', status: 'Deposited' },
+        { quarter: 'Q2 2024', totalPayments: 380000, tdsDeducted: 19000, tdsDeposited: 19000, dueDate: '2024-10-07', status: 'Filed' },
+        { quarter: 'Q1 2024', totalPayments: 320000, tdsDeducted: 16000, tdsDeposited: 16000, dueDate: '2024-07-07', status: 'Filed' }
+      ]
+    };
+    
+    console.log('💰 Generating GST Report Excel with data:', reportData);
+    
+    const buffer = await generateGSTReportExcel(reportData);
+    
+    console.log('✅ GST Report Excel generated successfully, size:', buffer.length, 'bytes');
+    
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="gst-tax-report-${Date.now()}.xlsx"`);
+    res.send(buffer);
+  } catch (error) {
+    console.error('❌ GST Report Excel generation error:', error.message);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Failed to generate GST Report Excel',
+      message: error.message 
+    });
+  }
+});
+
+// TDS Report PDF endpoint (using GST generator for now)
+app.get('/api/reports/tax/tds/pdf', async (req, res) => {
+  try {
+    console.log('🏛️ TDS Report PDF generation requested');
+    
+    const reportData = {
+      businessName: 'Sample Business PvLtd',
+      reportDate: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+      gstCollected: 0, // TDS focused report
+      gstPaid: 0,
+      tdsDeducted: 57500, // Focus on TDS
+      pendingReturns: 1,
+      gstSummary: [], // Empty for TDS report
+      tdsSummary: [
+        { quarter: 'Q3 2024', totalPayments: 450000, tdsDeducted: 22500, tdsDeposited: 22500, dueDate: '2025-01-07', status: 'Deposited' },
+        { quarter: 'Q2 2024', totalPayments: 380000, tdsDeducted: 19000, tdsDeposited: 19000, dueDate: '2024-10-07', status: 'Filed' },
+        { quarter: 'Q1 2024', totalPayments: 320000, tdsDeducted: 16000, tdsDeposited: 16000, dueDate: '2024-07-07', status: 'Filed' },
+        { quarter: 'Q4 2023', totalPayments: 295000, tdsDeducted: 14750, tdsDeposited: 14750, dueDate: '2024-04-07', status: 'Filed' }
+      ]
+    };
+    
+    console.log('📊 Generating TDS Report PDF with data:', reportData);
+    
+    const buffer = await generateGSTReportPDF(reportData); // Reusing GST generator for TDS
+    
+    console.log('✅ TDS Report PDF generated successfully, size:', buffer.length, 'bytes');
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="tds-tax-report-${Date.now()}.pdf"`);
+    res.send(buffer);
+  } catch (error) {
+    console.error('❌ TDS Report PDF generation error:', error.message);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Failed to generate TDS Report PDF',
+      message: error.message 
+    });
+  }
+});
+
+// TDS Report Excel endpoint (using GST generator for now)
+app.get('/api/reports/tax/tds/excel', async (req, res) => {
+  try {
+    console.log('📋 TDS Report Excel generation requested');
+    
+    const reportData = {
+      businessName: 'Sample Business PvLtd', 
+      reportDate: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+      gstCollected: 0, // TDS focused report
+      gstPaid: 0,
+      tdsDeducted: 57500, // Focus on TDS
+      pendingReturns: 1,
+      gstSummary: [], // Empty for TDS report
+      tdsSummary: [
+        { quarter: 'Q3 2024', totalPayments: 450000, tdsDeducted: 22500, tdsDeposited: 22500, dueDate: '2025-01-07', status: 'Deposited' },
+        { quarter: 'Q2 2024', totalPayments: 380000, tdsDeducted: 19000, tdsDeposited: 19000, dueDate: '2024-10-07', status: 'Filed' },
+        { quarter: 'Q1 2024', totalPayments: 320000, tdsDeducted: 16000, tdsDeposited: 16000, dueDate: '2024-07-07', status: 'Filed' },
+        { quarter: 'Q4 2023', totalPayments: 295000, tdsDeducted: 14750, tdsDeposited: 14750, dueDate: '2024-04-07', status: 'Filed' }
+      ]
+    };
+    
+    console.log('💰 Generating TDS Report Excel with data:', reportData);
+    
+    const buffer = await generateGSTReportExcel(reportData); // Reusing GST generator for TDS
+    
+    console.log('✅ TDS Report Excel generated successfully, size:', buffer.length, 'bytes');
+    
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="tds-tax-report-${Date.now()}.xlsx"`);
+    res.send(buffer);
+  } catch (error) {
+    console.error('❌ TDS Report Excel generation error:', error.message);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Failed to generate TDS Report Excel',
+      message: error.message 
+    });
+  }
+});
+
 /* Business
 app.post('/business', auth, allow(ROLES.CA, ROLES.OWNER), async (req, res) => {
   try {
@@ -276,14 +670,14 @@ app.use((err, req, res, next) => {
 });
 app.listen(PORT, () => console.log(`🚀 Server on http://localhost:${PORT}`));
 
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  console.log('Shutting down gracefully...');
-  try {
-    const pdfGenerator = require('./utils/pdfGenerator');
-    await pdfGenerator.closeBrowser();
-  } catch (error) {
-    console.error('Error during shutdown:', error);
-  }
-  process.exit(0);
-});
+// Graceful shutdown - temporarily disabled for testing
+// process.on('SIGINT', async () => {
+//   console.log('Shutting down gracefully...');
+//   try {
+//     const pdfGenerator = require('./utils/pdfGenerator');
+//     await pdfGenerator.closeBrowser();
+//   } catch (error) {
+//     console.error('Error during shutdown:', error);
+//   }
+//   process.exit(0);
+// });
