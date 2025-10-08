@@ -43,21 +43,21 @@ export default function QuickActions() {
   ]
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Quick Actions</CardTitle>
+    <Card className="bg-gradient-to-br from-white to-blue-50 border-blue-100">
+      <CardHeader className="border-b border-blue-100">
+        <CardTitle className="text-blue-900">Quick Actions</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         <div className="space-y-3">
           {actions.map((action, index) => (
             <Link key={index} href={action.href}>
-              <Button variant="outline" className="w-full justify-start h-auto p-4 bg-transparent">
+              <Button variant="outline" className="w-full justify-start h-auto p-4 bg-white border-blue-200 hover:bg-blue-50 hover:border-blue-300 transition-colors">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${action.color}`}>
                   <action.icon className="h-4 w-4 text-white" />
                 </div>
                 <div className="text-left">
-                  <div className="font-medium">{action.title}</div>
-                  <div className="text-sm text-muted-foreground">{action.description}</div>
+                  <div className="font-medium text-blue-900">{action.title}</div>
+                  <div className="text-sm text-blue-600">{action.description}</div>
                 </div>
               </Button>
             </Link>

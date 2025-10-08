@@ -198,18 +198,18 @@ export function ProfitLossReport({ transactions = [], loading = false, onRefresh
 
   if (!data) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Profit & Loss Statement</CardTitle>
+      <Card className="bg-gradient-to-br from-white to-blue-50 border-blue-100">
+        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
+          <CardTitle className="text-blue-900">Profit & Loss Statement</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <div className="text-center py-8">
-            <p className="text-muted-foreground">No data available</p>
+            <p className="text-blue-600">No data available</p>
             {onRefresh && (
               <Button 
                 onClick={onRefresh} 
                 variant="outline" 
-                className="mt-4"
+                className="mt-4 border-blue-200 text-blue-700 hover:bg-blue-50"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Try Again
@@ -222,12 +222,12 @@ export function ProfitLossReport({ transactions = [], loading = false, onRefresh
   }
 
   return (
-    <Card data-pdf-section="profit-loss-statement">
-      <CardHeader>
+    <Card data-pdf-section="profit-loss-statement" className="bg-gradient-to-br from-white to-blue-50 border-blue-100">
+      <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Profit & Loss Statement</CardTitle>
-            <p className="text-sm text-muted-foreground">
+            <CardTitle className="text-blue-900">Profit & Loss Statement</CardTitle>
+            <p className="text-sm text-blue-600">
               For the period: {data.period.description}
             </p>
           </div>
@@ -237,6 +237,7 @@ export function ProfitLossReport({ transactions = [], loading = false, onRefresh
               variant="outline" 
               size="sm"
               disabled={loading}
+              className="border-blue-200 text-blue-700 hover:bg-blue-50"
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Refresh
@@ -244,73 +245,73 @@ export function ProfitLossReport({ transactions = [], loading = false, onRefresh
           )}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         <div className="space-y-6">
           {/* Revenue Section */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3 text-green-600">Revenue</h3>
+          <div className="bg-gradient-to-br from-white to-blue-50 border border-blue-100 rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-3 text-blue-900">Revenue</h3>
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Account</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="text-right">%</TableHead>
+                <TableRow className="border-blue-200">
+                  <TableHead className="text-blue-800">Account</TableHead>
+                  <TableHead className="text-right text-blue-800">Amount</TableHead>
+                  <TableHead className="text-right text-blue-800">%</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data.revenue.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.account}</TableCell>
-                    <TableCell className="text-right">₹{item.amount.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">{item.percentage}%</TableCell>
+                  <TableRow key={index} className="hover:bg-blue-50/50 border-blue-100">
+                    <TableCell className="text-blue-800">{item.account}</TableCell>
+                    <TableCell className="text-right text-blue-800">₹{item.amount.toLocaleString()}</TableCell>
+                    <TableCell className="text-right text-blue-800">{item.percentage}%</TableCell>
                   </TableRow>
                 ))}
-                <TableRow className="border-t-2 font-semibold">
-                  <TableCell>Total Revenue</TableCell>
-                  <TableCell className="text-right">₹{data.summary.totalRevenue.toLocaleString()}</TableCell>
-                  <TableCell className="text-right">100.0%</TableCell>
+                <TableRow className="border-t-2 border-blue-300 font-semibold bg-blue-50/50">
+                  <TableCell className="text-blue-900">Total Revenue</TableCell>
+                  <TableCell className="text-right text-blue-900">₹{data.summary.totalRevenue.toLocaleString()}</TableCell>
+                  <TableCell className="text-right text-blue-900">100.0%</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
           </div>
 
           {/* Expenses Section */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3 text-red-600">Expenses</h3>
+          <div className="bg-gradient-to-br from-white to-blue-50 border border-blue-100 rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-3 text-blue-900">Expenses</h3>
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Account</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="text-right">%</TableHead>
+                <TableRow className="border-blue-200">
+                  <TableHead className="text-blue-800">Account</TableHead>
+                  <TableHead className="text-right text-blue-800">Amount</TableHead>
+                  <TableHead className="text-right text-blue-800">%</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data.expenses.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.account}</TableCell>
-                    <TableCell className="text-right">₹{item.amount.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">{item.percentage}%</TableCell>
+                  <TableRow key={index} className="hover:bg-blue-50/50 border-blue-100">
+                    <TableCell className="text-blue-800">{item.account}</TableCell>
+                    <TableCell className="text-right text-blue-800">₹{item.amount.toLocaleString()}</TableCell>
+                    <TableCell className="text-right text-blue-800">{item.percentage}%</TableCell>
                   </TableRow>
                 ))}
-                <TableRow className="border-t-2 font-semibold">
-                  <TableCell>Total Expenses</TableCell>
-                  <TableCell className="text-right">₹{data.summary.totalExpenses.toLocaleString()}</TableCell>
-                  <TableCell className="text-right">100.0%</TableCell>
+                <TableRow className="border-t-2 border-blue-300 font-semibold bg-blue-50/50">
+                  <TableCell className="text-blue-900">Total Expenses</TableCell>
+                  <TableCell className="text-right text-blue-900">₹{data.summary.totalExpenses.toLocaleString()}</TableCell>
+                  <TableCell className="text-right text-blue-900">100.0%</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
           </div>
 
           {/* Net Profit */}
-          <div className="border-t-2 pt-4">
-            <div className="flex justify-between items-center text-xl font-bold">
+          <div className="border-t-2 border-blue-300 pt-4 bg-gradient-to-r from-blue-100 to-indigo-100 rounded p-4">
+            <div className="flex justify-between items-center text-xl font-bold text-blue-900">
               <span>Net Profit</span>
-              <span className={data.summary.netProfit >= 0 ? "text-green-600" : "text-red-600"}>
+              <span className={data.summary.netProfit >= 0 ? "text-green-700" : "text-red-600"}>
                 ₹{data.summary.netProfit.toLocaleString()}
               </span>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-blue-700 mt-1">
               Profit Margin: {data.summary.profitMargin}%
             </p>
           </div>

@@ -11,12 +11,17 @@ const MetricsOverview = lazy(() => import("@/components/dashboard/metrics-overvi
 
 export default function DashboardPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Overview of your financial health and compliance status
-        </p>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Enhanced Header Section */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            Dashboard
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl">
+            Overview of your financial health and compliance status with comprehensive business insights
+          </p>
+        </div>
       </div>
 
       <Suspense fallback={<div>Loading stats...</div>}>

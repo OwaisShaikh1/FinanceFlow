@@ -93,17 +93,17 @@ export function ChartOfAccounts() {
   return (
     <div className="space-y-6">
       {Object.entries(groupedAccounts).map(([accountType, accounts]) => (
-        <Card key={accountType}>
-          <CardHeader>
+        <Card key={accountType} className="bg-gradient-to-br from-white to-blue-50 border-blue-100">
+          <CardHeader className="border-b border-blue-100">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">{accountType} Accounts</CardTitle>
-              <Badge variant="outline">{accounts.length} accounts</Badge>
+              <CardTitle className="text-lg text-blue-900">{accountType} Accounts</CardTitle>
+              <Badge variant="outline" className="border-blue-200 text-blue-700">{accounts.length} accounts</Badge>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="hover:bg-blue-50/50">
                   <TableHead>Code</TableHead>
                   <TableHead>Account Name</TableHead>
                   <TableHead>Sub Type</TableHead>
@@ -114,7 +114,7 @@ export function ChartOfAccounts() {
               </TableHeader>
               <TableBody>
                 {accounts.map((account) => (
-                  <TableRow key={account.id}>
+                  <TableRow key={account.id} className="hover:bg-blue-50/50">
                     <TableCell className="font-mono">{account.code}</TableCell>
                     <TableCell className="font-medium">{account.name}</TableCell>
                     <TableCell>{account.subType}</TableCell>

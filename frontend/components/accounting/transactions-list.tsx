@@ -81,9 +81,9 @@ export function TransactionsList() {
 
   if (contextLoading || skeletonPreview) {
     return (
-      <Card>
+      <Card className="bg-gradient-to-br from-white to-blue-50 border-blue-100">
         <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
+          <CardTitle className="text-blue-900">Recent Transactions</CardTitle>
         </CardHeader>
         <CardContent>
           <TableSkeleton
@@ -97,9 +97,9 @@ export function TransactionsList() {
 
   if (contextError) {
     return (
-      <Card>
+      <Card className="bg-gradient-to-br from-white to-blue-50 border-blue-100">
         <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
+          <CardTitle className="text-blue-900">Recent Transactions</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-red-600">{contextError}</p>
@@ -110,26 +110,26 @@ export function TransactionsList() {
 
   if (!filteredTransactions.length) {
     return (
-      <Card>
+      <Card className="bg-gradient-to-br from-white to-blue-50 border-blue-100">
         <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
+          <CardTitle className="text-blue-900">Recent Transactions</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">No transactions found.</p>
+          <p className="text-sm text-blue-600">No transactions found.</p>
         </CardContent>
       </Card>
     )
   }
 
   return (
-    <Card>
+    <Card className="bg-gradient-to-br from-white to-blue-50 border-blue-100">
       <CardHeader>
-        <CardTitle>Recent Transactions</CardTitle>
+        <CardTitle className="text-blue-900">Recent Transactions</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="hover:bg-blue-50/50">
               <TableHead>Id</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Description</TableHead>
@@ -142,7 +142,7 @@ export function TransactionsList() {
           </TableHeader>
           <TableBody>
             {filteredTransactions.map((transaction) => (
-              <TableRow key={transaction.id}>
+              <TableRow key={transaction.id} className="hover:bg-blue-50/50">
                 <TableCell className="font-medium">{transaction.id}</TableCell>
                 <TableCell className="font-medium">{transaction.date.split("T")[0]}</TableCell>
                 <TableCell>
