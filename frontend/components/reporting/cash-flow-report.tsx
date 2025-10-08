@@ -37,42 +37,42 @@ export function CashFlowReport() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <Card className="bg-gradient-to-br from-white to-blue-50 border-blue-100">
+      <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
+        <CardTitle className="flex items-center gap-2 text-blue-900">
           <DollarSign className="h-5 w-5" />
           Cash Flow Statement
         </CardTitle>
-        <p className="text-sm text-muted-foreground">For the period ending March 31, 2024</p>
+        <p className="text-sm text-blue-600">For the period ending March 31, 2024</p>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 p-6">
         {/* Operating Activities */}
-        <div>
-          <h3 className="font-semibold text-lg mb-3 text-primary">Cash Flow from Operating Activities</h3>
+        <div className="bg-gradient-to-br from-white to-blue-50 border border-blue-100 rounded-lg p-4">
+          <h3 className="font-semibold text-lg mb-3 text-blue-900">Cash Flow from Operating Activities</h3>
           <div className="space-y-2 pl-4">
-            <div className="flex justify-between">
+            <div className="flex justify-between text-blue-800">
               <span>Net Income</span>
               <span className="font-medium">{formatCurrency(cashFlowData.operatingActivities.netIncome)}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between text-blue-800">
               <span>Depreciation</span>
               <span className="font-medium">{formatCurrency(cashFlowData.operatingActivities.depreciation)}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between text-blue-800">
               <span>Accounts Receivable</span>
               <span className="font-medium">{formatCurrency(cashFlowData.operatingActivities.accountsReceivable)}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between text-blue-800">
               <span>Accounts Payable</span>
               <span className="font-medium">{formatCurrency(cashFlowData.operatingActivities.accountsPayable)}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between text-blue-800">
               <span>Inventory</span>
               <span className="font-medium">{formatCurrency(cashFlowData.operatingActivities.inventory)}</span>
             </div>
-            <div className="flex justify-between border-t pt-2 font-semibold">
-              <span>Net Cash from Operating Activities</span>
-              <span className="flex items-center gap-1">
+            <div className="flex justify-between border-t border-blue-200 pt-2 font-semibold bg-blue-50/50 px-2 py-1 rounded">
+              <span className="text-blue-900">Net Cash from Operating Activities</span>
+              <span className="flex items-center gap-1 text-blue-900">
                 <TrendingUp className="h-4 w-4 text-green-600" />
                 {formatCurrency(cashFlowData.operatingActivities.total)}
               </span>
@@ -81,20 +81,20 @@ export function CashFlowReport() {
         </div>
 
         {/* Investing Activities */}
-        <div>
-          <h3 className="font-semibold text-lg mb-3 text-primary">Cash Flow from Investing Activities</h3>
+        <div className="bg-gradient-to-br from-white to-blue-50 border border-blue-100 rounded-lg p-4">
+          <h3 className="font-semibold text-lg mb-3 text-blue-900">Cash Flow from Investing Activities</h3>
           <div className="space-y-2 pl-4">
-            <div className="flex justify-between">
+            <div className="flex justify-between text-blue-800">
               <span>Equipment Purchase</span>
               <span className="font-medium">{formatCurrency(cashFlowData.investingActivities.equipmentPurchase)}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between text-blue-800">
               <span>Investment Sale</span>
               <span className="font-medium">{formatCurrency(cashFlowData.investingActivities.investmentSale)}</span>
             </div>
-            <div className="flex justify-between border-t pt-2 font-semibold">
-              <span>Net Cash from Investing Activities</span>
-              <span className="flex items-center gap-1">
+            <div className="flex justify-between border-t border-blue-200 pt-2 font-semibold bg-blue-50/50 px-2 py-1 rounded">
+              <span className="text-blue-900">Net Cash from Investing Activities</span>
+              <span className="flex items-center gap-1 text-blue-900">
                 <TrendingDown className="h-4 w-4 text-red-600" />
                 {formatCurrency(cashFlowData.investingActivities.total)}
               </span>
@@ -103,20 +103,20 @@ export function CashFlowReport() {
         </div>
 
         {/* Financing Activities */}
-        <div>
-          <h3 className="font-semibold text-lg mb-3 text-primary">Cash Flow from Financing Activities</h3>
+        <div className="bg-gradient-to-br from-white to-blue-50 border border-blue-100 rounded-lg p-4">
+          <h3 className="font-semibold text-lg mb-3 text-blue-900">Cash Flow from Financing Activities</h3>
           <div className="space-y-2 pl-4">
-            <div className="flex justify-between">
+            <div className="flex justify-between text-blue-800">
               <span>Loan Repayment</span>
               <span className="font-medium">{formatCurrency(cashFlowData.financingActivities.loanRepayment)}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between text-blue-800">
               <span>Dividend Payment</span>
               <span className="font-medium">{formatCurrency(cashFlowData.financingActivities.dividendPayment)}</span>
             </div>
-            <div className="flex justify-between border-t pt-2 font-semibold">
-              <span>Net Cash from Financing Activities</span>
-              <span className="flex items-center gap-1">
+            <div className="flex justify-between border-t border-blue-200 pt-2 font-semibold bg-blue-50/50 px-2 py-1 rounded">
+              <span className="text-blue-900">Net Cash from Financing Activities</span>
+              <span className="flex items-center gap-1 text-blue-900">
                 <TrendingDown className="h-4 w-4 text-red-600" />
                 {formatCurrency(cashFlowData.financingActivities.total)}
               </span>
@@ -125,8 +125,8 @@ export function CashFlowReport() {
         </div>
 
         {/* Net Cash Flow */}
-        <div className="border-t-2 pt-4">
-          <div className="flex justify-between text-lg font-bold">
+        <div className="border-t-2 border-blue-300 pt-4 bg-gradient-to-r from-blue-100 to-indigo-100 rounded p-4">
+          <div className="flex justify-between text-lg font-bold text-blue-900">
             <span>Net Increase in Cash</span>
             <span className="flex items-center gap-1">
               {netCashFlow >= 0 ? (
