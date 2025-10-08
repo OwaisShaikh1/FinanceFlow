@@ -49,7 +49,15 @@ export function ProfitLossChart({ transactions = [], loading = false, onRefresh 
 
   const processChartData = () => {
     try {
-      console.log('Processing chart data from transactions:', transactions);
+      console.log('Processing chart data from transactions:', transactions?.length || 0, 'transactions');
+      
+      if (!transactions || transactions.length === 0) {
+        console.log('No transactions available for chart processing');
+        setExpenseData([]);
+        setIncomeData([]);
+        setMonthlyData([]);
+        return;
+      }
       
       // Process breakdown for current period (last 3 months to match report)
       const currentDate = new Date();
@@ -58,12 +66,12 @@ export function ProfitLossChart({ transactions = [], loading = false, onRefresh 
       
       const periodExpenses = transactions.filter((tx: Transaction) => {
         const txDate = new Date(tx.date);
-        return tx.type === 'expense' && txDate >= startOfPeriod && txDate <= endOfPeriod;
+        return tx.type === 'expense' && !isNaN(txDate.getTime()) && txDate >= startOfPeriod && txDate <= endOfPeriod;
       });
 
       const periodIncomes = transactions.filter((tx: Transaction) => {
         const txDate = new Date(tx.date);
-        return tx.type === 'income' && txDate >= startOfPeriod && txDate <= endOfPeriod;
+        return tx.type === 'income' && !isNaN(txDate.getTime()) && txDate >= startOfPeriod && txDate <= endOfPeriod;
       });
 
       console.log('Period expenses for chart:', periodExpenses);
@@ -73,12 +81,17 @@ export function ProfitLossChart({ transactions = [], loading = false, onRefresh 
       const expensesByCategory: { [key: string]: number } = {};
       periodExpenses.forEach((tx: Transaction) => {
         const category = tx.category || 'Other';
-        const amount = Math.abs(tx.amount);
-        expensesByCategory[category] = (expensesByCategory[category] || 0) + amount;
+        const amount = Math.abs(Number(tx.amount) || 0);
+        if (amount > 0) {
+          expensesByCategory[category] = (expensesByCategory[category] || 0) + amount;
+        }
       });
+
+      console.log('Expenses by category:', expensesByCategory);
 
       // Format expense data for pie chart
       const formattedExpenseData: ExpenseData[] = Object.entries(expensesByCategory)
+        .filter(([name, value]) => value > 0) // Only include categories with positive values
         .map(([name, value], index) => ({
           name,
           value,
@@ -87,18 +100,24 @@ export function ProfitLossChart({ transactions = [], loading = false, onRefresh 
         .sort((a, b) => b.value - a.value) // Sort by value descending
         .slice(0, 8); // Limit to top 8 categories
 
+      console.log('Formatted expense data:', formattedExpenseData);
       setExpenseData(formattedExpenseData);
 
       // Group income by category
       const incomesByCategory: { [key: string]: number } = {};
       periodIncomes.forEach((tx: Transaction) => {
         const category = tx.category || 'Other Income';
-        const amount = Math.abs(tx.amount);
-        incomesByCategory[category] = (incomesByCategory[category] || 0) + amount;
+        const amount = Math.abs(Number(tx.amount) || 0);
+        if (amount > 0) {
+          incomesByCategory[category] = (incomesByCategory[category] || 0) + amount;
+        }
       });
+
+      console.log('Income by category:', incomesByCategory);
 
       // Format income data for pie chart
       const formattedIncomeData: IncomeData[] = Object.entries(incomesByCategory)
+        .filter(([name, value]) => value > 0) // Only include categories with positive values
         .map(([name, value], index) => ({
           name,
           value,
@@ -107,6 +126,7 @@ export function ProfitLossChart({ transactions = [], loading = false, onRefresh 
         .sort((a, b) => b.value - a.value) // Sort by value descending
         .slice(0, 8); // Limit to top 8 categories
 
+      console.log('Formatted income data:', formattedIncomeData);
       setIncomeData(formattedIncomeData);
 
       // Process 3-month trend data
@@ -122,16 +142,21 @@ export function ProfitLossChart({ transactions = [], loading = false, onRefresh 
       // Process transactions for 3-month trend
       transactions.forEach((tx: Transaction) => {
         const txDate = new Date(tx.date);
-        const monthKey = txDate.toLocaleDateString('en-US', { month: 'short' });
-        
-        if (monthlyTrend[monthKey] !== undefined) {
-          if (tx.type === 'income') {
-            monthlyTrend[monthKey].revenue += tx.amount;
-          } else if (tx.type === 'expense') {
-            monthlyTrend[monthKey].expenses += Math.abs(tx.amount);
+        if (!isNaN(txDate.getTime())) {
+          const monthKey = txDate.toLocaleDateString('en-US', { month: 'short' });
+          const amount = Number(tx.amount) || 0;
+          
+          if (monthlyTrend[monthKey] !== undefined) {
+            if (tx.type === 'income') {
+              monthlyTrend[monthKey].revenue += Math.abs(amount);
+            } else if (tx.type === 'expense') {
+              monthlyTrend[monthKey].expenses += Math.abs(amount);
+            }
           }
         }
       });
+
+      console.log('Monthly trend data:', monthlyTrend);
 
       // Format monthly data for bar chart
       const formattedMonthlyData: MonthlyData[] = Object.entries(monthlyTrend).map(([month, data]) => ({

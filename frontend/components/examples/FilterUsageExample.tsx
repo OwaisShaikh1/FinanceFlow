@@ -54,12 +54,12 @@ export function FilterSummary() {
 }
 
 // Mock functions - replace with your actual data fetching logic
-function getFilteredTransactions(filters: any) {
+function getFilteredTransactions(filters: any): { id: string; description: string }[] {
   // Apply filters to your transaction data
   return []
 }
 
-function getFilteredClients(filters: any) {
+function getFilteredClients(filters: any): { id: string; name: string }[] {
   // Apply filters to your client data
   return []
 }

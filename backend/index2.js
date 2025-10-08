@@ -1,7 +1,7 @@
 ///Core modules
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const cors = require('cors');
@@ -47,8 +47,9 @@ const {
 
 
 // --------------------- Middleware ---------------------
-app.use(express.json());
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(express.json({ limit: '50mb' })); // Increased limit for large data exports
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(cors({ origin: ["http://localhost:3000", "http://localhost:3003"], credentials: true }));
 app.use(morgan('dev'));
 
 // --------------------- MongoDB ---------------------
@@ -169,6 +170,44 @@ app.use('/api/gst', gstRoutes);              // /api/gst → GST summary and per
 app.use('/api/invoices', gstInvoicesRoutes); // /api/invoices → GST invoice management
 app.use('/api/returns', gstReturnsRoutes);   // /api/returns → GST returns management
 
+// P&L Statement PDF Generation
+app.get('/api/reports/profit-loss/pdf', auth, async (req, res) => {
+  console.log('📊 P&L PDF request received');
+  try {
+    const { generateProfitLossPDF } = require('./utils/profitLossPdfGenerator');
+    
+    // Sample P&L data - you can modify this to fetch from your database
+    const reportData = {
+      businessName: req.query.businessName || 'Sample Business',
+      periodDescription: req.query.period || 'October 2025 Profit & Loss (Last 3 Months)',
+      revenue: [
+        { account: 'service-income', amount: 100001 },
+        { account: 'interest-income', amount: 114222 }
+      ],
+      expenses: [
+        { account: 'office-supplies', amount: 25000 },
+        { account: 'rent-expense', amount: 30000 },
+        { account: 'utilities', amount: 8500 },
+        { account: 'marketing', amount: 15000 }
+      ]
+    };
+    
+    console.log('📋 Generating PDF with data:', reportData);
+    const pdf = await generateProfitLossPDF(reportData);
+    console.log('✅ PDF generated successfully, size:', pdf.length, 'bytes');
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="profit-loss-statement-${Date.now()}.pdf"`);
+    res.send(pdf);
+  } catch (error) {
+    console.error('❌ P&L PDF generation error:', error.message);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Failed to generate P&L PDF',
+      message: error.message 
+    });
+  }
+});
 
 /* Business
 app.post('/business', auth, allow(ROLES.CA, ROLES.OWNER), async (req, res) => {

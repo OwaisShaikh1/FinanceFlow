@@ -15,17 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { CalendarIcon, Plus, Trash2 } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
-
-interface InvoiceItem {
-  id: string
-  description: string
-  quantity: number
-  rate: number
-  gstRate: number
-  amount: number
-  gstAmount: number
-  total: number
-}
+import { InvoiceItem } from "@/types/invoice"
 
 const gstRates = [0, 5, 12, 18, 28]
 

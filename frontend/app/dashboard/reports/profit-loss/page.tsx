@@ -78,6 +78,7 @@ export default function ProfitLossPage() {
         title="Profit & Loss Statement"
         description="Comprehensive financial analysis for the selected period"
         reportType="profit-loss"
+        reportData={{ businessName: 'Your Business', transactions }}
       />
 
       {error && (
