@@ -158,15 +158,55 @@ export function ReportHeader({ title, description, reportType, reportData }: Rep
               // Fallback to browser print
               window.print();
             }
-          } else {
-            // For other reports, use browser print dialog
-            window.print()
+          }
+          // Generate Tax Pro branded PDF for Balance Sheet
+          else if (reportType === 'balance-sheet') {
+            try {
+              const token = localStorage.getItem("token");
+              const response = await fetch(`${API_BASE_URL}/api/reports/balance-sheet/pdf?businessName=${encodeURIComponent(reportData?.businessName || 'Your Business')}&asOfDate=${encodeURIComponent(new Date().toLocaleDateString('en-GB'))}`, {
+                headers: {
+                  "Authorization": `Bearer ${token}`,
+                }
+              });
+
+              if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `balance-sheet-${new Date().getTime()}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                toast({
+                  title: "PDF Generated",
+                  description: "Tax Pro Balance Sheet downloaded successfully"
+                });
+              } else {
+                throw new Error('Failed to generate PDF');
+              }
+            } catch (error) {
+              console.error('Balance Sheet PDF generation failed:', error);
+              toast({
+                title: "PDF Generation Failed",
+                description: "Using browser print as fallback"
+              });
+              // Fallback to browser print
+              window.print();
+            }
+          }
+          else {
+            // Default browser print for other report types
+            window.print();
             toast({
               title: "Print Ready",
               description: "Print dialog opened"
-            })
+            });
           }
-          break
+          break;
 
         case 'share':
           // Use Web Share API if available, otherwise fallback to clipboard
@@ -192,19 +232,31 @@ export function ReportHeader({ title, description, reportType, reportData }: Rep
 
         case 'export-excel':
           // Generate Excel using backend API
-
-          const excelResponse = await fetch(`${API_BASE_URL}/api/export`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              action: 'excel',
-              reportType,
-              data: extractChartData(), // Send enhanced data with chart information
-              url: window.location.href
-            })
-          })
+          let excelResponse;
+          
+          if (reportType === 'balance-sheet') {
+            // Use dedicated balance sheet Excel endpoint
+            const token = localStorage.getItem("token");
+            excelResponse = await fetch(`${API_BASE_URL}/api/reports/balance-sheet/excel?businessName=${encodeURIComponent(reportData?.businessName || 'Your Business')}&asOfDate=${encodeURIComponent(new Date().toLocaleDateString('en-GB'))}`, {
+              headers: {
+                "Authorization": `Bearer ${token}`,
+              }
+            });
+          } else {
+            // Use generic export endpoint for other report types
+            excelResponse = await fetch(`${API_BASE_URL}/api/export`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                action: 'excel',
+                reportType,
+                data: extractChartData(), // Send enhanced data with chart information
+                url: window.location.href
+              })
+            });
+          }
 
           if (!excelResponse.ok) {
             let errorMessage = 'Excel export failed'
@@ -226,7 +278,9 @@ export function ReportHeader({ title, description, reportType, reportData }: Rep
           const excelLink = document.createElement('a')
           excelLink.style.display = 'none'
           excelLink.href = excelUrl
-          excelLink.download = `${reportType}_${new Date().toISOString().split('T')[0]}.xlsx`
+          excelLink.download = reportType === 'balance-sheet' 
+            ? `balance-sheet-${new Date().getTime()}.xlsx`
+            : `${reportType}_${new Date().toISOString().split('T')[0]}.xlsx`
           document.body.appendChild(excelLink)
           excelLink.click()
           window.URL.revokeObjectURL(excelUrl)
@@ -234,7 +288,9 @@ export function ReportHeader({ title, description, reportType, reportData }: Rep
 
           toast({
             title: "Excel Downloaded",
-            description: "Report saved as Excel file"
+            description: reportType === 'balance-sheet' 
+              ? "Balance Sheet with charts downloaded successfully"
+              : "Report saved as Excel file"
           })
           break
 

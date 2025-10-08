@@ -1,51 +1,192 @@
+"use client"
+
 import { BalanceSheetReport } from "@/components/reporting/balance-sheet-report"
 import { BalanceSheetChart } from "@/components/reporting/balance-sheet-chart"
 import { ReportHeader } from "@/components/reporting/report-header"
+import { useState, useEffect } from "react"
+import { ENDPOINTS } from "@/lib/config"
+
+interface BalanceSheetItem {
+  _id: string;
+  name: string;
+  amount: number;
+  type: 'current-asset' | 'fixed-asset' | 'current-liability' | 'long-term-liability' | 'equity';
+  category?: string;
+}
+
+interface BalanceSheetData {
+  currentAssets: Array<{ name: string; value: number }>;
+  fixedAssets: Array<{ name: string; value: number }>;
+  totalAssets: number;
+  currentLiabilities: Array<{ name: string; value: number }>;
+  longTermLiabilities: Array<{ name: string; value: number }>;
+  totalLiabilities: number;
+  equity: Array<{ name: string; value: number }>;
+  totalEquity: number;
+  totalLiabilitiesAndEquity: number;
+  asOfDate?: Date;
+}
 
 export default function BalanceSheetPage() {
-  const balanceSheetData = {
-    // Current Assets
-    cashInHand: 50000,
-    bankAccount: 285000,
-    receivables: 125000,
-    inventory: 85000,
+  const [balanceSheetItems, setBalanceSheetItems] = useState<BalanceSheetItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Sample data for demo purposes - replace with actual API calls
+  const fetchBalanceSheetData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Simulate API call - replace with actual endpoint
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate loading
+      
+      // Sample balance sheet data
+      const sampleData: BalanceSheetItem[] = [
+        // Current Assets
+        { _id: '1', name: 'Cash in Hand', amount: 50000, type: 'current-asset' },
+        { _id: '2', name: 'Bank Account', amount: 385000, type: 'current-asset' },
+        { _id: '3', name: 'Accounts Receivable', amount: 125000, type: 'current-asset' },
+        { _id: '4', name: 'Inventory', amount: 85000, type: 'current-asset' },
+        
+        // Fixed Assets
+        { _id: '5', name: 'Office Equipment', amount: 150000, type: 'fixed-asset' },
+        { _id: '6', name: 'Furniture & Fixtures', amount: 75000, type: 'fixed-asset' },
+        { _id: '7', name: 'Computer Systems', amount: 120000, type: 'fixed-asset' },
+        
+        // Current Liabilities
+        { _id: '8', name: 'Accounts Payable', amount: 45000, type: 'current-liability' },
+        { _id: '9', name: 'Short Term Loans', amount: 25000, type: 'current-liability' },
+        { _id: '10', name: 'Accrued Expenses', amount: 15000, type: 'current-liability' },
+        
+        // Long Term Liabilities
+        { _id: '11', name: 'Long Term Loan', amount: 200000, type: 'long-term-liability' },
+        { _id: '12', name: 'Equipment Loan', amount: 50000, type: 'long-term-liability' },
+        
+        // Equity
+        { _id: '13', name: 'Owner Equity', amount: 400000, type: 'equity' },
+        { _id: '14', name: 'Retained Earnings', amount: 255000, type: 'equity' },
+      ];
+      
+      setBalanceSheetItems(sampleData);
+    } catch (error) {
+      console.error('Error fetching balance sheet data:', error);
+      setError('Failed to load balance sheet data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBalanceSheetData();
+  }, []);
+
+  // Process data for reports and charts
+  const processBalanceSheetData = (): BalanceSheetData => {
+    const currentAssets = balanceSheetItems
+      .filter(item => item.type === 'current-asset')
+      .map(item => ({ name: item.name, value: item.amount }));
     
-    // Fixed Assets
-    officeEquipment: 150000,
-    furniture: 75000,
-    computerSystems: 120000,
+    const fixedAssets = balanceSheetItems
+      .filter(item => item.type === 'fixed-asset')
+      .map(item => ({ name: item.name, value: item.amount }));
     
-    // Current Liabilities
-    accountsPayable: 85000,
-    accruedExpenses: 25000,
-    shortTermLoans: 50000,
+    const currentLiabilities = balanceSheetItems
+      .filter(item => item.type === 'current-liability')
+      .map(item => ({ name: item.name, value: item.amount }));
     
-    // Long-term Liabilities
-    longTermDebt: 200000,
-    equipmentLoan: 75000,
+    const longTermLiabilities = balanceSheetItems
+      .filter(item => item.type === 'long-term-liability')
+      .map(item => ({ name: item.name, value: item.amount }));
     
-    // Equity
-    ownersCapital: 400000,
-    retainedEarnings: 150000
+    const equity = balanceSheetItems
+      .filter(item => item.type === 'equity')
+      .map(item => ({ name: item.name, value: item.amount }));
+
+    const totalCurrentAssets = currentAssets.reduce((sum, item) => sum + item.value, 0);
+    const totalFixedAssets = fixedAssets.reduce((sum, item) => sum + item.value, 0);
+    const totalAssets = totalCurrentAssets + totalFixedAssets;
+
+    const totalCurrentLiabilities = currentLiabilities.reduce((sum, item) => sum + item.value, 0);
+    const totalLongTermLiabilities = longTermLiabilities.reduce((sum, item) => sum + item.value, 0);
+    const totalLiabilities = totalCurrentLiabilities + totalLongTermLiabilities;
+
+    const totalEquity = equity.reduce((sum, item) => sum + item.value, 0);
+    const totalLiabilitiesAndEquity = totalLiabilities + totalEquity;
+
+    return {
+      currentAssets,
+      fixedAssets,
+      totalAssets,
+      currentLiabilities,
+      longTermLiabilities,
+      totalLiabilities,
+      equity,
+      totalEquity,
+      totalLiabilitiesAndEquity,
+      asOfDate: new Date()
+    };
+  };
+
+  const balanceSheetData = processBalanceSheetData();
+
+  // Extract chart data for export
+  const extractChartData = () => {
+    return {
+      totalAssets: balanceSheetData.totalAssets,
+      totalCurrentAssets: balanceSheetData.currentAssets.reduce((sum, item) => sum + item.value, 0),
+      totalFixedAssets: balanceSheetData.fixedAssets.reduce((sum, item) => sum + item.value, 0),
+      totalLiabilities: balanceSheetData.totalLiabilities,
+      totalCurrentLiabilities: balanceSheetData.currentLiabilities.reduce((sum, item) => sum + item.value, 0),
+      totalLongTermLiabilities: balanceSheetData.longTermLiabilities.reduce((sum, item) => sum + item.value, 0),
+      totalEquity: balanceSheetData.totalEquity,
+      assetBreakdown: [
+        ...balanceSheetData.currentAssets.map(item => ({ category: item.name, amount: item.value, type: 'Current Asset' })),
+        ...balanceSheetData.fixedAssets.map(item => ({ category: item.name, amount: item.value, type: 'Fixed Asset' }))
+      ],
+      liabilityBreakdown: [
+        ...balanceSheetData.currentLiabilities.map(item => ({ category: item.name, amount: item.value, type: 'Current Liability' })),
+        ...balanceSheetData.longTermLiabilities.map(item => ({ category: item.name, amount: item.value, type: 'Long Term Liability' })),
+        ...balanceSheetData.equity.map(item => ({ category: item.name, amount: item.value, type: 'Equity' }))
+      ]
+    };
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold text-red-600 mb-2">Error Loading Balance Sheet</h2>
+          <p className="text-gray-600">{error}</p>
+          <button 
+            onClick={fetchBalanceSheetData}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      <ReportHeader
+      <ReportHeader 
         title="Balance Sheet"
-        description="Assets, liabilities, and equity as of the selected date"
+        description="Assets, Liabilities, and Equity"
         reportType="balance-sheet"
-        reportData={balanceSheetData}
+        reportData={extractChartData()}
       />
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <BalanceSheetReport />
-        </div>
-        <div>
-          <BalanceSheetChart />
-        </div>
-      </div>
+      <BalanceSheetReport data={balanceSheetData} />
+      <BalanceSheetChart data={balanceSheetData} />
     </div>
   )
 }
