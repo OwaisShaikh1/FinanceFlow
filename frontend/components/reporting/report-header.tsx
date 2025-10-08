@@ -198,6 +198,45 @@ export function ReportHeader({ title, description, reportType, reportData }: Rep
               window.print();
             }
           }
+          // Generate Tax Pro branded PDF for Cash Flow Statement
+          else if (reportType === 'cash-flow') {
+            try {
+              const token = localStorage.getItem("token");
+              const response = await fetch(`${API_BASE_URL}/api/reports/cash-flow/pdf?businessName=${encodeURIComponent(reportData?.businessName || 'Your Business')}&periodEnding=${encodeURIComponent(new Date().toLocaleDateString('en-GB'))}`, {
+                headers: {
+                  "Authorization": `Bearer ${token}`,
+                }
+              });
+
+              if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `cash-flow-statement-${new Date().getTime()}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                toast({
+                  title: "PDF Generated",
+                  description: "Tax Pro Cash Flow Statement downloaded successfully"
+                });
+              } else {
+                throw new Error('Failed to generate PDF');
+              }
+            } catch (error) {
+              console.error('Cash Flow PDF generation failed:', error);
+              toast({
+                title: "PDF Generation Failed",
+                description: "Using browser print as fallback"
+              });
+              // Fallback to browser print
+              window.print();
+            }
+          }
           else {
             // Default browser print for other report types
             window.print();
@@ -242,6 +281,14 @@ export function ReportHeader({ title, description, reportType, reportData }: Rep
                 "Authorization": `Bearer ${token}`,
               }
             });
+          } else if (reportType === 'cash-flow') {
+            // Use dedicated cash flow Excel endpoint
+            const token = localStorage.getItem("token");
+            excelResponse = await fetch(`${API_BASE_URL}/api/reports/cash-flow/excel?businessName=${encodeURIComponent(reportData?.businessName || 'Your Business')}&periodEnding=${encodeURIComponent(new Date().toLocaleDateString('en-GB'))}`, {
+              headers: {
+                "Authorization": `Bearer ${token}`,
+              }
+            });
           } else {
             // Use generic export endpoint for other report types
             excelResponse = await fetch(`${API_BASE_URL}/api/export`, {
@@ -280,6 +327,8 @@ export function ReportHeader({ title, description, reportType, reportData }: Rep
           excelLink.href = excelUrl
           excelLink.download = reportType === 'balance-sheet' 
             ? `balance-sheet-${new Date().getTime()}.xlsx`
+            : reportType === 'cash-flow'
+            ? `cash-flow-statement-${new Date().getTime()}.xlsx`
             : `${reportType}_${new Date().toISOString().split('T')[0]}.xlsx`
           document.body.appendChild(excelLink)
           excelLink.click()
@@ -290,6 +339,8 @@ export function ReportHeader({ title, description, reportType, reportData }: Rep
             title: "Excel Downloaded",
             description: reportType === 'balance-sheet' 
               ? "Balance Sheet with charts downloaded successfully"
+              : reportType === 'cash-flow'
+              ? "Cash Flow Statement with charts downloaded successfully"
               : "Report saved as Excel file"
           })
           break

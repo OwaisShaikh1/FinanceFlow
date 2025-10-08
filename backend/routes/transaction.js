@@ -179,5 +179,82 @@ router.get('/chart-data', auth, async (req, res) => {
   }
 });
 
+// PUT /api/transactions/:id - Update a transaction
+router.put('/:id', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type, amount, date, category, description, notes, paymentMethod } = req.body;
+
+    // Validate required fields
+    if (!type) return res.status(400).json({ message: "Type is required" });
+    if (!amount || isNaN(Number(amount))) {
+      return res.status(400).json({ message: "Amount must be a number" });
+    }
+
+    const amountNum = Number(amount);
+
+    // Find the transaction to update
+    const transaction = await Transaction.findOne({ 
+      id: id, 
+      user: req.user.id 
+    });
+
+    if (!transaction) {
+      return res.status(404).json({ message: "Transaction not found" });
+    }
+
+    // Update the transaction
+    const updatedTransaction = await Transaction.findOneAndUpdate(
+      { id: id, user: req.user.id },
+      {
+        type,
+        amount: amountNum,
+        date: new Date(date),
+        category: category || 'General',
+        description: description || '',
+        notes: notes || '',
+        paymentMethod: paymentMethod || 'Cash',
+        updatedAt: new Date()
+      },
+      { new: true }
+    );
+
+    res.json({
+      message: "Transaction updated successfully",
+      transaction: updatedTransaction
+    });
+
+  } catch (error) {
+    console.error('Update transaction error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// DELETE /api/transactions/:id - Delete a transaction
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find and delete the transaction
+    const transaction = await Transaction.findOneAndDelete({ 
+      id: id, 
+      user: req.user.id 
+    });
+
+    if (!transaction) {
+      return res.status(404).json({ message: "Transaction not found" });
+    }
+
+    res.json({
+      message: "Transaction deleted successfully",
+      transaction: transaction
+    });
+
+  } catch (error) {
+    console.error('Delete transaction error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 console.log('Transaction routes loaded');
 module.exports = router;

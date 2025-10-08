@@ -22,6 +22,15 @@ export const ENDPOINTS = {
     DASHBOARD: `${API_BASE_URL}/api/gst/dashboard`,
     SUMMARY: `${API_BASE_URL}/api/gst/summary`,
   },
+  INVOICES: {
+    BASE: `${API_BASE_URL}/api/invoice`,
+    LIST: `${API_BASE_URL}/api/invoice`,
+    CREATE: `${API_BASE_URL}/api/invoice`,
+    UPDATE: (id: string) => `${API_BASE_URL}/api/invoice/${id}`,
+    DELETE: (id: string) => `${API_BASE_URL}/api/invoice/${id}`,
+    PDF: (id: string) => `${API_BASE_URL}/api/invoice/${id}/pdf`,
+    STATUS: (id: string) => `${API_BASE_URL}/api/invoice/${id}/status`,
+  },
   REPORTS: {
     BALANCE_SHEET: {
       PDF: `${API_BASE_URL}/api/reports/balance-sheet/pdf`,

@@ -265,13 +265,141 @@ async function generateCashFlowPDF(reportData) {
       }
       
       @media print {
+        body {
+          margin: 0;
+          padding: 0;
+          font-size: 12px;
+          line-height: 1.4;
+          color: #000 !important;
+          background: white !important;
+        }
+        
         .container {
           max-width: 100%;
-          padding: 10px;
+          padding: 15px;
+          margin: 0;
+        }
+        
+        .header {
+          margin-bottom: 20px;
+          page-break-after: avoid;
+        }
+        
+        .taxpro-brand {
+          font-size: 20px !important;
+          color: #000 !important;
+        }
+        
+        .company-name {
+          font-size: 22px !important;
+          color: #000 !important;
+        }
+        
+        .report-title {
+          font-size: 18px !important;
+          color: #000 !important;
         }
         
         .section {
           page-break-inside: avoid;
+          margin-bottom: 25px;
+          background: white !important;
+          border: 1px solid #ccc !important;
+        }
+        
+        .section-title {
+          background: #f0f0f0 !important;
+          color: #000 !important;
+          font-size: 14px !important;
+          padding: 10px !important;
+          border-bottom: 2px solid #000 !important;
+        }
+        
+        table {
+          border-collapse: collapse !important;
+          width: 100% !important;
+        }
+        
+        th, td {
+          border: 1px solid #ccc !important;
+          padding: 8px !important;
+          font-size: 11px !important;
+          color: #000 !important;
+          background: white !important;
+        }
+        
+        th {
+          background: #f5f5f5 !important;
+          font-weight: bold !important;
+        }
+        
+        .total-row {
+          background: #f0f0f0 !important;
+          font-weight: bold !important;
+          border-top: 2px solid #000 !important;
+        }
+        
+        .net-increase-section {
+          background: #f0f0f0 !important;
+          color: #000 !important;
+          border: 2px solid #000 !important;
+          padding: 15px !important;
+          text-align: center !important;
+          page-break-inside: avoid;
+        }
+        
+        .net-increase-title {
+          font-size: 14px !important;
+          color: #000 !important;
+        }
+        
+        .net-increase-amount {
+          font-size: 18px !important;
+          color: #000 !important;
+        }
+        
+        .summary-stats {
+          display: table !important;
+          width: 100% !important;
+          page-break-inside: avoid;
+        }
+        
+        .stat-card {
+          display: table-cell !important;
+          background: #f8f8f8 !important;
+          border: 1px solid #ccc !important;
+          padding: 10px !important;
+          text-align: center !important;
+          width: 33.33% !important;
+        }
+        
+        .stat-title {
+          font-size: 10px !important;
+          color: #000 !important;
+        }
+        
+        .stat-amount {
+          font-size: 14px !important;
+          color: #000 !important;
+        }
+        
+        .positive {
+          color: #000 !important;
+        }
+        
+        .negative {
+          color: #000 !important;
+        }
+        
+        .footer {
+          page-break-inside: avoid;
+          font-size: 10px !important;
+          color: #666 !important;
+        }
+        
+        /* Hide any decorative elements that shouldn't print */
+        .no-print {
+          display: none !important;
         }
       }
     </style>
@@ -422,12 +550,16 @@ async function generateCashFlowPDF(reportData) {
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
+      preferCSSPageSize: false,
+      displayHeaderFooter: false,
       margin: {
-        top: '20px',
-        bottom: '20px',
-        left: '20px',
-        right: '20px'
-      }
+        top: '15mm',
+        bottom: '15mm',
+        left: '10mm',
+        right: '10mm'
+      },
+      // Add scale to ensure content fits properly
+      scale: 0.8
     });
 
     await browser.close();
