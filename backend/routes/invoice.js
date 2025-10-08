@@ -1,9 +1,8 @@
    const express = require('express');
 
-
 // Import the correct model
 const GenInvoice = require('../models/GenInvoice'); 
-
+const { generateTaxProInvoicePDF } = require('../utils/invoicePdfGenerator');
 
 const router = express.Router();
 // Simulated auth middleware
@@ -140,6 +139,96 @@ router.patch('/:id/status', auth, async (req, res) => {
   } catch (e) {
     console.error('Status update error:', e);
     return res.status(500).json({ message: e.message });
+  }
+});
+
+// Update invoice
+router.put('/:id', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Check if invoice exists
+    const existingInvoice = await GenInvoice.findById(id);
+    if (!existingInvoice) {
+      return res.status(404).json({ message: 'Invoice not found' });
+    }
+
+    // Check if user has access to this invoice
+    if (existingInvoice.business !== req.user.biz) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    // Prepare update data
+    const updateData = {
+      invoiceNumber: req.body.invoiceNumber,
+      clientName: req.body.clientName,
+      clientGstin: req.body.clientGstin,
+      items: req.body.items,
+      status: req.body.status,
+      invoiceDate: req.body.invoiceDate,
+      dueDate: req.body.dueDate,
+      business: req.body.business,
+      pdfUrl: req.body.pdfUrl,
+      ewayBillNo: req.body.ewayBillNo,
+    };
+
+    console.log('Updating invoice:', id, updateData);
+
+    const updatedInvoice = await GenInvoice.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    res.json(updatedInvoice);
+  } catch (error) {
+    console.error('Invoice update error:', error);
+    return res.status(400).json({ 
+      message: 'Error updating invoice', 
+      error: error.message 
+    });
+  }
+});
+
+// Generate and download PDF
+router.get('/:id/pdf', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Fetch invoice data
+    const invoice = await GenInvoice.findById(id);
+    if (!invoice) {
+      return res.status(404).json({ message: 'Invoice not found' });
+    }
+
+    // Check if user has access to this invoice
+    if (invoice.business !== req.user.biz) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    console.log('Generating PDF for invoice:', invoice.invoiceNumber);
+
+    // Generate PDF
+    const pdfBuffer = await generateTaxProInvoicePDF(invoice);
+    
+    // Set headers for PDF download
+    const filename = `TaxPro_Invoice_${invoice.invoiceNumber}_${new Date().toISOString().split('T')[0]}.pdf`;
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    
+    // Send PDF buffer
+    res.send(pdfBuffer);
+    
+    console.log(`PDF generated and sent for invoice ${invoice.invoiceNumber}`);
+    
+  } catch (error) {
+    console.error('PDF generation error:', error);
+    return res.status(500).json({ 
+      message: 'Error generating PDF', 
+      error: error.message 
+    });
   }
 });
 

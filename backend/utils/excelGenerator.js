@@ -49,37 +49,39 @@ class ExcelGenerator {
     ];
 
     // Add title and headers
-    this.addSheetTitle(worksheet, 'PROFIT & LOSS STATEMENT', 'For the period: December 31, 2024');
+    const businessName = data.businessName || 'Your Business';
+    const period = data.pageTitle ? data.pageTitle.replace('Profit & Loss Statement', '').trim() : 'Financial Period';
+    this.addSheetTitle(worksheet, `${businessName.toUpperCase()} - PROFIT & LOSS STATEMENT`, `Generated on: ${new Date().toLocaleDateString()}`);
 
-    // Revenue Section
-    const serviceRevenue = data.revenue || 287000;
-    const otherIncome = data.otherIncome || 5000;
-    const totalRevenue = serviceRevenue + otherIncome;
+    // Use summary data if available, otherwise use default values
+    const summary = data.summary || {};
+    const totalIncome = summary.totalIncome || data.revenue || 287000;
+    const totalExpensesAmount = summary.totalExpenses || data.expenses || 150000;
+    const totalRevenue = totalIncome;
 
     worksheet.addRow(['REVENUE', '', '']);
-    worksheet.addRow(['Service Revenue', serviceRevenue, this.calculatePercentage(serviceRevenue, totalRevenue)]);
-    worksheet.addRow(['Other Income', otherIncome, this.calculatePercentage(otherIncome, totalRevenue)]);
-    worksheet.addRow(['Total Revenue', totalRevenue, '100.0%']);
+    worksheet.addRow(['Total Income', totalIncome, '100.0%']);
     worksheet.addRow(['', '', '']);
 
-    // Expenses Section
-    const expenses = this.getDetailedExpenses(data);
-    const totalExpenses = expenses.reduce((sum, exp) => sum + exp.value, 0);
-
+    // Expenses Section - Use summary or default breakdown
+    const expenseBreakdown = this.getDetailedExpenses(data);
+    
     worksheet.addRow(['EXPENSES', '', '']);
-    expenses.forEach(expense => {
+    expenseBreakdown.forEach(expense => {
       worksheet.addRow([expense.name, expense.value, this.calculatePercentage(expense.value, totalRevenue)]);
     });
-    worksheet.addRow(['Total Expenses', totalExpenses, this.calculatePercentage(totalExpenses, totalRevenue)]);
+    worksheet.addRow(['Total Expenses', totalExpensesAmount, this.calculatePercentage(totalExpensesAmount, totalRevenue)]);
     worksheet.addRow(['', '', '']);
 
     // Net Profit
-    const netProfit = totalRevenue - totalExpenses;
+    const netProfit = totalRevenue - totalExpensesAmount;
     worksheet.addRow(['NET PROFIT', netProfit, this.calculatePercentage(netProfit, totalRevenue)]);
 
     // Apply formatting
     this.formatFinancialSheet(worksheet);
-    this.addChartData(worksheet, 'expenses', expenses);
+    
+    // Add charts to separate worksheets for better visualization
+    await this.addIncomeExpenseCharts(totalIncome, totalExpensesAmount, expenseBreakdown);
   }
 
   // Generate Balance Sheet
@@ -350,7 +352,132 @@ class ExcelGenerator {
     });
   }
 
+  // Add Income vs Expenses Charts to separate sheets
+  async addIncomeExpenseCharts(totalIncome, totalExpenses, expenseBreakdown) {
+    // Create Charts worksheet
+    const chartSheet = this.workbook.addWorksheet('Charts & Analysis');
+    
+    // Set up the chart sheet layout
+    chartSheet.columns = [
+      { header: 'Category', key: 'category', width: 25 },
+      { header: 'Amount (₹)', key: 'amount', width: 20 },
+      { header: 'Percentage', key: 'percentage', width: 15 }
+    ];
+
+    // Add title
+    chartSheet.getCell('A1').value = 'FINANCIAL ANALYSIS CHARTS';
+    chartSheet.getCell('A1').font = { bold: true, size: 16, color: { argb: 'FF0066CC' } };
+    chartSheet.mergeCells('A1:C1');
+    chartSheet.getRow(1).height = 30;
+    
+    // Income vs Expenses Overview
+    chartSheet.addRow(['', '', '']);
+    chartSheet.getCell('A3').value = 'INCOME vs EXPENSES OVERVIEW';
+    chartSheet.getCell('A3').font = { bold: true, size: 14 };
+    chartSheet.mergeCells('A3:C3');
+    
+    const overviewData = [
+      ['Income', totalIncome, this.calculatePercentage(totalIncome, totalIncome + totalExpenses)],
+      ['Expenses', totalExpenses, this.calculatePercentage(totalExpenses, totalIncome + totalExpenses)]
+    ];
+    
+    chartSheet.addRow(['Category', 'Amount (₹)', 'Percentage']);
+    overviewData.forEach(row => {
+      chartSheet.addRow(row);
+    });
+    
+    // Add some spacing
+    chartSheet.addRow(['', '', '']);
+    chartSheet.addRow(['', '', '']);
+    
+    // Expense Breakdown Section
+    chartSheet.getCell('A9').value = 'EXPENSE BREAKDOWN';
+    chartSheet.getCell('A9').font = { bold: true, size: 14 };
+    chartSheet.mergeCells('A9:C9');
+    
+    chartSheet.addRow(['Expense Category', 'Amount (₹)', '% of Total Income']);
+    expenseBreakdown.forEach(expense => {
+      chartSheet.addRow([
+        expense.name, 
+        expense.value, 
+        this.calculatePercentage(expense.value, totalIncome)
+      ]);
+    });
+    
+    // Add chart creation instructions
+    const instructionsStartRow = 11 + expenseBreakdown.length;
+    chartSheet.addRow(['', '', '']);
+    chartSheet.addRow(['', '', '']);
+    
+    chartSheet.getCell(`A${instructionsStartRow + 2}`).value = 'CHART CREATION GUIDE:';
+    chartSheet.getCell(`A${instructionsStartRow + 2}`).font = { bold: true, color: { argb: 'FF0066CC' } };
+    
+    const instructions = [
+      '1. PIE CHART (Income vs Expenses):',
+      `   • Select range A5:B6`,
+      '   • Insert > Charts > Pie Chart',
+      '',
+      '2. BAR CHART (Expense Breakdown):',
+      `   • Select range A11:B${10 + expenseBreakdown.length}`,
+      '   • Insert > Charts > Column Chart',
+      '',
+      '3. For better visualization:',
+      '   • Add chart titles and data labels',
+      '   • Use different colors for each category',
+      '   • Consider adding a combo chart for trends'
+    ];
+    
+    instructions.forEach((instruction, index) => {
+      const row = instructionsStartRow + 3 + index;
+      chartSheet.getCell(`A${row}`).value = instruction;
+      if (instruction.includes('•')) {
+        chartSheet.getCell(`A${row}`).font = { italic: true };
+      }
+    });
+    
+    // Apply formatting to the chart sheet
+    this.formatChartSheet(chartSheet);
+  }
+
+  // Format the charts worksheet
+  formatChartSheet(worksheet) {
+    // Style header rows
+    const headerRows = [5, 11];
+    headerRows.forEach(rowNum => {
+      for (let col = 1; col <= 3; col++) {
+        const cell = worksheet.getCell(rowNum, col);
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF0066CC' }
+        };
+      }
+    });
+    
+    // Add borders to data sections
+    const rowCount = worksheet.rowCount;
+    for (let row = 5; row <= rowCount; row++) {
+      for (let col = 1; col <= 3; col++) {
+        const cell = worksheet.getCell(row, col);
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+        
+        // Format currency cells
+        if (col === 2 && cell.value && typeof cell.value === 'number') {
+          cell.numFmt = '₹#,##0';
+        }
+      }
+    }
+  }
+
   addChartData(worksheet, chartType, data) {
+    // This method is kept for backward compatibility
+    // The new chart functionality is in addIncomeExpenseCharts
     const startCol = worksheet.columnCount + 2;
     const colLetter = String.fromCharCode(65 + startCol - 1);
     
@@ -368,14 +495,6 @@ class ExcelGenerator {
       worksheet.getCell(`${colLetter}${row}`).value = item.name;
       worksheet.getCell(`${String.fromCharCode(65 + startCol)}${row}`).value = item.value;
     });
-
-    // Add chart instructions
-    const instructionsRow = 4 + data.length + 2;
-    worksheet.getCell(`${colLetter}${instructionsRow}`).value = 'CHART INSTRUCTIONS:';
-    worksheet.getCell(`${colLetter}${instructionsRow}`).font = { bold: true };
-    worksheet.getCell(`${colLetter}${instructionsRow + 1}`).value = `1. Select range ${colLetter}3:${String.fromCharCode(65 + startCol)}${3 + data.length}`;
-    worksheet.getCell(`${colLetter}${instructionsRow + 2}`).value = '2. Insert > Charts > Pie Chart';
-    worksheet.getCell(`${colLetter}${instructionsRow + 3}`).value = '3. Customize as needed';
   }
 }
 

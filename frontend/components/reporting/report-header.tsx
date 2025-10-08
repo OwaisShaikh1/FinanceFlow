@@ -20,13 +20,34 @@ export function ReportHeader({ title, description, reportType, reportData }: Rep
   // Function to extract chart data from the current page
   const extractChartData = () => {
     console.log('ReportData received:', reportData)
+    
+    // Create optimized data object without large arrays
     const chartData: any = {
-      ...reportData,
       extractedAt: new Date().toISOString(),
       pageTitle: title,
-      reportType: reportType
+      reportType: reportType,
+      businessName: reportData?.businessName || 'Your Business'
     }
-    console.log('Final chartData:', chartData)
+    
+    // Only include summary data, not full transaction arrays
+    if (reportData?.transactions && Array.isArray(reportData.transactions)) {
+      const transactions = reportData.transactions;
+      
+      // Process summary statistics instead of sending full data
+      const summary = {
+        totalTransactions: transactions.length,
+        totalIncome: transactions.filter((t: any) => t.type === 'income').reduce((sum: number, t: any) => sum + (t.amount || 0), 0),
+        totalExpenses: transactions.filter((t: any) => t.type === 'expense').reduce((sum: number, t: any) => sum + Math.abs(t.amount || 0), 0),
+        dateRange: {
+          start: transactions.length > 0 ? Math.min(...transactions.map((t: any) => new Date(t.date).getTime())) : null,
+          end: transactions.length > 0 ? Math.max(...transactions.map((t: any) => new Date(t.date).getTime())) : null
+        }
+      };
+      
+      chartData.summary = summary;
+    }
+    
+    console.log('Optimized chartData:', chartData)
 
     try {
       // Try to extract data from common chart containers
@@ -93,18 +114,58 @@ export function ReportHeader({ title, description, reportType, reportData }: Rep
     return data
   }
 
-  const handleExportAction = async (action: 'print' | 'share' | 'export-pdf') => {
+  const handleExportAction = async (action: 'print' | 'share' | 'export-pdf' | 'export-excel') => {
     setIsLoading(action)
     
     try {
       switch (action) {
         case 'print':
-          // Open browser print dialog for current page
-          window.print()
-          toast({
-            title: "Print Ready",
-            description: "Print dialog opened"
-          })
+          // Generate Tax Pro branded PDF for Profit & Loss
+          if (reportType === 'profit-loss') {
+            try {
+              const token = localStorage.getItem("token");
+              const response = await fetch(`${API_BASE_URL}/api/reports/profit-loss/pdf?businessName=${encodeURIComponent(reportData?.businessName || 'Your Business')}&period=${encodeURIComponent(description)}`, {
+                headers: {
+                  "Authorization": `Bearer ${token}`,
+                }
+              });
+
+              if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `profit-loss-statement-${new Date().getTime()}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                toast({
+                  title: "PDF Generated",
+                  description: "Tax Pro Profit & Loss Statement downloaded successfully"
+                });
+              } else {
+                throw new Error('Failed to generate PDF');
+              }
+            } catch (error) {
+              console.error('PDF generation failed:', error);
+              toast({
+                title: "PDF Generation Failed",
+                description: "Using browser print as fallback"
+              });
+              // Fallback to browser print
+              window.print();
+            }
+          } else {
+            // For other reports, use browser print dialog
+            window.print()
+            toast({
+              title: "Print Ready",
+              description: "Print dialog opened"
+            })
+          }
           break
 
         case 'share':
@@ -129,10 +190,10 @@ export function ReportHeader({ title, description, reportType, reportData }: Rep
           }
           break
 
-        case 'export-pdf':
+        case 'export-excel':
           // Generate Excel using backend API
 
-          const response = await fetch(`${API_BASE_URL}/api/export`, {
+          const excelResponse = await fetch(`${API_BASE_URL}/api/export`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -145,35 +206,44 @@ export function ReportHeader({ title, description, reportType, reportData }: Rep
             })
           })
 
-          if (!response.ok) {
+          if (!excelResponse.ok) {
             let errorMessage = 'Excel export failed'
             try {
-              const errorResult = await response.json()
+              const errorResult = await excelResponse.json()
               errorMessage = errorResult.error || errorMessage
               console.log('Server error details:', errorResult)
             } catch (e) {
               // If response is not JSON, use status text
-              errorMessage = `Server error: ${response.status} ${response.statusText}`
+              errorMessage = `Server error: ${excelResponse.status} ${excelResponse.statusText}`
             }
             console.log('Full error:', errorMessage)
             throw new Error(errorMessage)
           }
 
           // Download the Excel file
-          const blob = await response.blob()
-          const url = window.URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.style.display = 'none'
-          a.href = url
-          a.download = `${reportType}_${new Date().toISOString().split('T')[0]}.xlsx`
-          document.body.appendChild(a)
-          a.click()
-          window.URL.revokeObjectURL(url)
-          document.body.removeChild(a)
+          const excelBlob = await excelResponse.blob()
+          const excelUrl = window.URL.createObjectURL(excelBlob)
+          const excelLink = document.createElement('a')
+          excelLink.style.display = 'none'
+          excelLink.href = excelUrl
+          excelLink.download = `${reportType}_${new Date().toISOString().split('T')[0]}.xlsx`
+          document.body.appendChild(excelLink)
+          excelLink.click()
+          window.URL.revokeObjectURL(excelUrl)
+          document.body.removeChild(excelLink)
 
           toast({
             title: "Excel Downloaded",
             description: "Report saved as Excel file"
+          })
+          break
+
+        case 'export-pdf':
+          // Generate PDF for non-P&L reports using browser print
+          window.print()
+          toast({
+            title: "PDF Generation",
+            description: "Print dialog opened for PDF generation"
           })
           break
       }
@@ -220,11 +290,11 @@ export function ReportHeader({ title, description, reportType, reportData }: Rep
           {isLoading === 'share' ? 'Sharing...' : 'Share'}
         </Button>
         <Button
-          onClick={() => handleExportAction('export-pdf')}
-          disabled={isLoading === 'export-pdf'}
+          onClick={() => handleExportAction('export-excel')}
+          disabled={isLoading === 'export-excel'}
         >
           <Download className="h-4 w-4 mr-2" />
-          {isLoading === 'export-pdf' ? 'Exporting...' : 'Export Excel'}
+          {isLoading === 'export-excel' ? 'Exporting...' : 'Export Excel'}
         </Button>
       </div>
     </div>

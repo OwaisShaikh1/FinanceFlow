@@ -11,24 +11,17 @@ import { useInvoiceFilters } from "@/contexts/FilterContext"
 import { TableSkeleton } from "@/components/ui/skeleton-presets"
 import { useSkeletonPreview } from "@/hooks/use-skeleton-preview"
 import { API_BASE_URL } from "@/lib/config"
-
-interface Invoice {
-  _id: string
-  invoiceNumber: string
-  invoiceDate: string
-  dueDate: string
-  clientName: string
-  subtotal: number
-  totalGst: number
-  grandTotal: number
-  status: string
-}
+import { InvoiceEditModal } from "./invoice-edit-modal"
+import { Invoice, InvoiceItem } from "@/types/invoice"
 
 export function InvoicesList() {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
+  const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null)
   const { filters } = useInvoiceFilters()
   const skeletonPreview = useSkeletonPreview()
 
@@ -105,6 +98,70 @@ export function InvoicesList() {
     }
   }
 
+  // Handle invoice editing
+  const handleEditInvoice = (invoice: Invoice) => {
+    setEditingInvoice(invoice)
+    setIsEditModalOpen(true)
+  }
+
+  const handleInvoiceUpdated = (updatedInvoice: Invoice) => {
+    const updatedInvoices = invoices.map(inv => 
+      inv._id === updatedInvoice._id ? updatedInvoice : inv
+    )
+    setInvoices(updatedInvoices)
+  }
+
+  // Handle PDF download
+  const handleDownloadPdf = async (invoiceId: string) => {
+    try {
+      setDownloadingPdf(invoiceId)
+      
+      const token = localStorage.getItem("token")
+      const headers: Record<string, string> = {}
+      
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`
+      }
+
+      const response = await fetch(`http://localhost:5000/api/invoice/${invoiceId}/pdf`, {
+        method: 'GET',
+        headers
+      })
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`)
+      }
+
+      // Get filename from response headers or use default
+      const contentDisposition = response.headers.get('content-disposition')
+      let filename = `Invoice-${invoiceId}.pdf`
+      
+      if (contentDisposition) {
+        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition)
+        if (matches != null && matches[1]) {
+          filename = matches[1].replace(/['"]/g, '')
+        }
+      }
+
+      // Create blob and download
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      
+    } catch (error: any) {
+      console.error('Error downloading PDF:', error)
+      alert(`Failed to download PDF: ${error.message}`)
+    } finally {
+      setDownloadingPdf(null)
+    }
+  }
+
   // Apply filters
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch = filters.search
@@ -164,11 +221,12 @@ export function InvoicesList() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Invoice List</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Invoice List</CardTitle>
+        </CardHeader>
+        <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
@@ -249,6 +307,18 @@ export function InvoicesList() {
                     <Button variant="ghost" size="icon">
                       <Download className="h-4 w-4" />
                     </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => handleDownloadPdf(invoice._id)}
+                      disabled={downloadingPdf === invoice._id}
+                    >
+                      {downloadingPdf === invoice._id ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+                      ) : (
+                        <Download className="h-4 w-4" />
+                      )}
+                    </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">
@@ -256,11 +326,11 @@ export function InvoicesList() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Edit className="mr-2 h-4 w-4" /> Edit
+                        <DropdownMenuItem onClick={() => handleEditInvoice(invoice)}>
+                          <Edit className="mr-2 h-4 w-4" /> Edit Invoice
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Download className="mr-2 h-4 w-4" /> Download PDF
+                        <DropdownMenuItem onClick={() => handleDownloadPdf(invoice._id)}>
+                          <Download className="mr-2 h-4 w-4" /> Download Tax Pro PDF
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -272,5 +342,14 @@ export function InvoicesList() {
         </Table>
       </CardContent>
     </Card>
+
+    {/* Edit Modal */}
+    <InvoiceEditModal 
+      isOpen={isEditModalOpen}
+      onClose={() => setIsEditModalOpen(false)}
+      invoice={editingInvoice}
+      onUpdate={handleInvoiceUpdated}
+    />
+  </>
   )
 }
