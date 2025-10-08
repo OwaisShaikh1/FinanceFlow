@@ -45,15 +45,17 @@ export function TDSCalculator() {
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="shadow-sm border-0 bg-gradient-to-br from-white to-purple-50">
+      <CardHeader className="pb-4 border-b border-purple-100">
         <div className="flex items-center space-x-2">
-          <TrendingUp className="h-5 w-5 text-accent" />
-          <CardTitle>TDS Calculator</CardTitle>
+          <div className="p-2 bg-purple-100 rounded-lg">
+            <TrendingUp className="h-5 w-5 text-purple-600" />
+          </div>
+          <CardTitle className="text-purple-900">TDS Calculator</CardTitle>
         </div>
-        <CardDescription>Calculate TDS on various types of payments</CardDescription>
+        <CardDescription className="text-purple-700">Calculate TDS on various types of payments</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pt-4">
         <div className="space-y-2">
           <Label htmlFor="payment-amount">Payment Amount (₹)</Label>
           <Input

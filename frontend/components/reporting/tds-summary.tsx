@@ -31,12 +31,12 @@ const tdsData = [
 
 export function TDSSummary() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>TDS Summary Report</CardTitle>
-        <p className="text-sm text-muted-foreground">Quarterly TDS deductions and deposits</p>
+    <Card className="shadow-sm border-0 bg-gradient-to-br from-white to-purple-50">
+      <CardHeader className="pb-4 border-b border-purple-100">
+        <CardTitle className="text-purple-900">TDS Summary Report</CardTitle>
+        <p className="text-sm text-purple-700">Quarterly TDS deductions and deposits</p>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-4">
         <Table>
           <TableHeader>
             <TableRow>

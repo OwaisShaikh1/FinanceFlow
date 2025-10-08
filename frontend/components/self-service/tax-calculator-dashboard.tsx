@@ -19,43 +19,43 @@ export function TaxCalculatorDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-border hover:shadow-lg transition-shadow">
+        <Card className="border-blue-200 hover:shadow-lg transition-shadow bg-gradient-to-br from-white to-blue-50">
           <CardHeader className="text-center">
-            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <Calculator className="h-6 w-6 text-primary" />
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <Calculator className="h-6 w-6 text-blue-600" />
             </div>
-            <CardTitle className="text-lg">Income Tax</CardTitle>
-            <CardDescription>Calculate your income tax liability</CardDescription>
+            <CardTitle className="text-lg text-blue-900">Income Tax</CardTitle>
+            <CardDescription className="text-blue-700">Calculate your income tax liability</CardDescription>
           </CardHeader>
         </Card>
 
-        <Card className="border-border hover:shadow-lg transition-shadow">
+        <Card className="border-blue-200 hover:shadow-lg transition-shadow bg-gradient-to-br from-white to-blue-50">
           <CardHeader className="text-center">
-            <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <FileText className="h-6 w-6 text-secondary" />
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <FileText className="h-6 w-6 text-blue-600" />
             </div>
-            <CardTitle className="text-lg">GST Calculator</CardTitle>
-            <CardDescription>Calculate GST on goods and services</CardDescription>
+            <CardTitle className="text-lg text-blue-900">GST Calculator</CardTitle>
+            <CardDescription className="text-blue-700">Calculate GST on goods and services</CardDescription>
           </CardHeader>
         </Card>
 
-        <Card className="border-border hover:shadow-lg transition-shadow">
+        <Card className="border-blue-200 hover:shadow-lg transition-shadow bg-gradient-to-br from-white to-blue-50">
           <CardHeader className="text-center">
-            <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <TrendingUp className="h-6 w-6 text-accent" />
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <TrendingUp className="h-6 w-6 text-blue-600" />
             </div>
-            <CardTitle className="text-lg">TDS Calculator</CardTitle>
-            <CardDescription>Calculate TDS on various payments</CardDescription>
+            <CardTitle className="text-lg text-blue-900">TDS Calculator</CardTitle>
+            <CardDescription className="text-blue-700">Calculate TDS on various payments</CardDescription>
           </CardHeader>
         </Card>
 
-        <Card className="border-border hover:shadow-lg transition-shadow">
+        <Card className="border-blue-200 hover:shadow-lg transition-shadow bg-gradient-to-br from-white to-blue-50">
           <CardHeader className="text-center">
-            <div className="w-12 h-12 bg-chart-4/10 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <PiggyBank className="h-6 w-6 text-chart-4" />
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <PiggyBank className="h-6 w-6 text-blue-600" />
             </div>
-            <CardTitle className="text-lg">Tax Saving</CardTitle>
-            <CardDescription>Get personalized tax saving tips</CardDescription>
+            <CardTitle className="text-lg text-blue-900">Tax Saving</CardTitle>
+            <CardDescription className="text-blue-700">Get personalized tax saving tips</CardDescription>
           </CardHeader>
         </Card>
       </div>

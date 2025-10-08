@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Calculator, Receipt } from "lucide-react"
 
 export function GSTCalculator() {
   const [amount, setAmount] = useState<number>(0)
@@ -64,9 +65,17 @@ export function GSTCalculator() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>GST Calculator</CardTitle>
+      <Card className="shadow-sm border-0 bg-gradient-to-br from-green-50 to-emerald-50">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <Calculator className="h-6 w-6 text-green-600" />
+            </div>
+            <div>
+              <CardTitle className="text-green-900">GST Calculator</CardTitle>
+              <p className="text-sm text-green-700 mt-1">Calculate GST amounts and tax implications</p>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <Tabs value={calculationType} onValueChange={(value) => setCalculationType(value as "exclusive" | "inclusive")}>
@@ -77,35 +86,37 @@ export function GSTCalculator() {
 
             <TabsContent value="exclusive" className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount (Excluding GST)</Label>
+                <Label htmlFor="amount" className="text-sm font-medium">Amount (Excluding GST)</Label>
                 <Input
                   id="amount"
                   type="number"
                   placeholder="Enter amount"
                   value={amount || ""}
                   onChange={(e) => setAmount(Number.parseFloat(e.target.value) || 0)}
+                  className="bg-white border-green-200 hover:border-green-300"
                 />
               </div>
             </TabsContent>
 
             <TabsContent value="inclusive" className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount (Including GST)</Label>
+                <Label htmlFor="amount" className="text-sm font-medium">Amount (Including GST)</Label>
                 <Input
                   id="amount"
                   type="number"
                   placeholder="Enter amount"
                   value={amount || ""}
                   onChange={(e) => setAmount(Number.parseFloat(e.target.value) || 0)}
+                  className="bg-white border-green-200 hover:border-green-300"
                 />
               </div>
             </TabsContent>
           </Tabs>
 
           <div className="space-y-2">
-            <Label>Transaction Type</Label>
+            <Label className="text-sm font-medium">Transaction Type</Label>
             <Select value={transactionType} onValueChange={setTransactionType}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-white border-green-200 hover:border-green-300">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -120,9 +131,9 @@ export function GSTCalculator() {
           </div>
 
           <div className="space-y-2">
-            <Label>Product Category (Auto GST Rate)</Label>
+            <Label className="text-sm font-medium">Product Category (Auto GST Rate)</Label>
             <Select value={productCategory} onValueChange={handleCategoryChange}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-white border-green-200 hover:border-green-300">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -135,13 +146,13 @@ export function GSTCalculator() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="gstRate">GST Rate (Auto-selected)</Label>
+            <Label htmlFor="gstRate" className="text-sm font-medium">GST Rate (Auto-selected)</Label>
             <Input
               id="gstRate"
               type="number"
               value={gstRate}
               onChange={(e) => setGstRate(Number.parseFloat(e.target.value) || 0)}
-              className="bg-muted"
+              className="bg-green-50 border-green-200"
             />
             <p className="text-xs text-muted-foreground">
               Rate auto-updated based on product category. You can manually adjust if needed.
@@ -149,9 +160,9 @@ export function GSTCalculator() {
           </div>
 
           <div className="space-y-2">
-            <Label>State of Transaction</Label>
+            <Label className="text-sm font-medium">State of Transaction</Label>
             <Select value={stateType} onValueChange={(value) => setStateType(value as "intrastate" | "interstate")}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-white border-green-200 hover:border-green-300">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -163,9 +174,17 @@ export function GSTCalculator() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Calculation Results</CardTitle>
+      <Card className="shadow-sm border-0 bg-gradient-to-br from-blue-50 to-indigo-50">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Receipt className="h-6 w-6 text-blue-600" />
+            </div>
+            <div>
+              <CardTitle className="text-blue-900">Calculation Results</CardTitle>
+              <p className="text-sm text-blue-700 mt-1">GST breakdown and total amounts</p>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-4">
@@ -213,8 +232,10 @@ export function GSTCalculator() {
           </div>
 
           <div className="space-y-2">
-            <Button className="w-full">Save Calculation</Button>
-            <Button variant="outline" className="w-full bg-transparent">
+            <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5">
+              Save Calculation
+            </Button>
+            <Button variant="outline" className="w-full bg-transparent border-green-300 text-green-700 hover:bg-green-50">
               Generate Invoice
             </Button>
           </div>

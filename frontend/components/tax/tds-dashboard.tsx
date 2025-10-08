@@ -167,14 +167,18 @@ export const TDSDashboard = forwardRef<TDSDashboardRef>((props, ref) => {
       value: `₹${data.totalDeducted.toLocaleString()}`,
       change: `From ${data.totalEntries} transactions`,
       icon: Calculator,
-      color: "text-green-600",
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
+      borderColor: "border-purple-200"
     },
     {
       title: "Total Payment",
       value: `₹${data.totalPayment.toLocaleString()}`,
       change: "Gross payment amount",
       icon: CheckCircle,
-      color: "text-blue-600",
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
+      borderColor: "border-purple-200"
     },
     {
       title: "Total Entries",
@@ -182,38 +186,62 @@ export const TDSDashboard = forwardRef<TDSDashboardRef>((props, ref) => {
       change: "TDS records this year",
       icon: FileText,
       color: "text-purple-600",
+      bgColor: "bg-purple-50",
+      borderColor: "border-purple-200"
     },
     {
       title: "Total Recorded",
       value: (data.statusCounts.recorded || 0).toString(),
       change: "TDS entries recorded",
       icon: AlertTriangle,
-      color: "text-yellow-600",
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
+      borderColor: "border-purple-200"
     },
   ]
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Enhanced TDS Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, index) => (
-          <Card key={index}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">{stat.change}</p>
+          <Card key={index} className={`relative overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border-l-4 ${stat.borderColor} bg-gradient-to-br from-white to-purple-50`}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-3">
+                  <p className="text-sm text-purple-600 font-medium uppercase tracking-wide">
+                    {stat.title}
+                  </p>
+                  <p className="text-2xl font-bold text-purple-900">
+                    {stat.value}
+                  </p>
+                  <p className={`text-sm font-medium ${stat.color} flex items-center gap-1`}>
+                    {stat.change}
+                  </p>
+                </div>
+                <div className={`p-3 rounded-xl ${stat.bgColor} ring-1 ring-white/20`}>
+                  <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                </div>
+              </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent TDS Deductions</CardTitle>
+      {/* Recent TDS Deductions Table */}
+      <Card className="shadow-sm border-0 bg-gradient-to-br from-white to-purple-50">
+        <CardHeader className="pb-4 border-b border-purple-100">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <FileText className="h-6 w-6 text-purple-600" />
+            </div>
+            <div>
+              <CardTitle className="text-purple-900">Recent TDS Deductions</CardTitle>
+              <p className="text-sm text-purple-700 mt-1">Latest TDS transactions and deductions</p>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           <Table>
             <TableHeader>
               <TableRow>

@@ -234,14 +234,16 @@ export function GSTReturns() {
   console.log('Rendering GSTReturns - loading:', loading, 'gstReturns:', gstReturns, 'error:', error);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
+    <Card className="shadow-sm border-0 bg-gradient-to-br from-white to-green-50">
+      <CardHeader className="pb-4 border-b border-green-100">
+        <CardTitle className="flex items-center gap-2 text-green-900">
+          <div className="p-2 bg-green-100 rounded-lg">
+            <FileText className="h-5 w-5 text-green-600" />
+          </div>
           GST Returns
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-4">
         {error ? (
           <div className="text-center text-red-600 p-4">
             <p>{error}</p>
@@ -272,20 +274,20 @@ export function GSTReturns() {
         ) : gstReturns && gstReturns.length > 0 ? (
           <div className="space-y-4">
             {gstReturns.map((returnItem) => (
-            <div key={returnItem.id} className="flex items-center justify-between p-4 border rounded-lg">
+            <div key={returnItem.id} className="flex items-center justify-between p-4 border border-green-200 rounded-lg bg-white hover:bg-green-50 transition-colors">
               <div className="flex items-center gap-3">
                 {getStatusIcon(returnItem.status)}
                 <div>
-                  <div className="font-medium">{returnItem.type}</div>
-                  <div className="text-sm text-muted-foreground">{returnItem.period}</div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="font-medium text-green-900">{returnItem.type}</div>
+                  <div className="text-sm text-green-600">{returnItem.period}</div>
+                  <div className="text-sm text-green-600">
                     Due: {mounted ? formatDate(returnItem.dueDate) : returnItem.dueDate}
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="text-right">
-                  <div className="font-medium">₹{(returnItem.amount / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                  <div className="font-medium text-green-900">₹{(returnItem.amount / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
                   <Badge className={getStatusColor(returnItem.status)}>{returnItem.status}</Badge>
                 </div>
                 <div className="flex gap-1">

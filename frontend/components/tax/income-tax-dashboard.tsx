@@ -16,21 +16,21 @@ export function IncomeTaxDashboard() {
       value: "₹46,800",
       change: "₹1,50,000 invested",
       icon: PiggyBank,
-      color: "text-green-600",
+      color: "text-blue-600",
     },
     {
       title: "Advance Tax Paid",
       value: "₹75,000",
       change: "60% of estimated tax",
       icon: FileText,
-      color: "text-purple-600",
+      color: "text-blue-600",
     },
     {
       title: "Next Due Date",
       value: "15th Mar",
       change: "Q4 advance tax",
       icon: Calendar,
-      color: "text-red-600",
+      color: "text-blue-600",
     },
   ]
 
@@ -70,41 +70,53 @@ export function IncomeTaxDashboard() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
-          <Card key={index}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
+          <Card key={index} className="shadow-sm border-0 bg-gradient-to-br from-white to-blue-50 hover:shadow-md transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 border-b border-blue-100">
+              <CardTitle className="text-sm font-medium text-blue-700">{stat.title}</CardTitle>
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">{stat.change}</p>
+            <CardContent className="pt-4">
+              <div className="text-2xl font-bold text-blue-900">{stat.value}</div>
+              <p className="text-xs text-blue-600">{stat.change}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Tax Saving Progress</CardTitle>
-          <p className="text-sm text-muted-foreground">Track your investments under various tax-saving sections</p>
+      <Card className="shadow-sm border-0 bg-gradient-to-br from-white to-blue-50">
+        <CardHeader className="pb-4 border-b border-blue-100">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <PiggyBank className="h-6 w-6 text-blue-600" />
+            </div>
+            <div>
+              <CardTitle className="text-blue-900">Tax Saving Progress</CardTitle>
+              <p className="text-sm text-blue-700">Track your investments under various tax-saving sections</p>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <div className="space-y-6">
             {taxSavingProgress.map((item, index) => (
-              <div key={index} className="space-y-2">
+              <div key={index} className="space-y-3 p-4 bg-white rounded-lg border border-blue-200">
                 <div className="flex justify-between items-center">
                   <div>
-                    <span className="font-medium">Section {item.section}:   {item.description}</span>
-                    <p className="text-xs text-muted-foreground">{item.description}</p>
-                    <p className="text-sm text-muted-foreground">
+                    <span className="font-medium text-blue-900">Section {item.section}</span>
+                    <p className="text-xs text-blue-600 mt-1">{item.description}</p>
+                    <p className="text-sm text-blue-700 mt-1">
                       ₹{item.invested.toLocaleString()} / ₹{item.limit.toLocaleString()}
                     </p>
                   </div>
                   <div className="text-right">
-                    <span className="text-sm font-medium text-green-600">₹{item.saved.toLocaleString()} saved</span>
+                    <span className="text-sm font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded">₹{item.saved.toLocaleString()} saved</span>
                   </div>
                 </div>
-                <Progress value={(item.invested / item.limit) * 100} className="h-2" />
+                <Progress 
+                  value={(item.invested / item.limit) * 100} 
+                  className="h-3 bg-blue-100 [&_div]:bg-blue-600" 
+                />
               </div>
             ))}
           </div>

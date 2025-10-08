@@ -82,23 +82,25 @@ export function GSTFilingCalendar() {
   })
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calendar className="h-5 w-5" />
+    <Card className="shadow-sm border-0 bg-gradient-to-br from-white to-green-50">
+      <CardHeader className="pb-4 border-b border-green-100">
+        <CardTitle className="flex items-center gap-2 text-green-900">
+          <div className="p-2 bg-green-100 rounded-lg">
+            <Calendar className="h-5 w-5 text-green-600" />
+          </div>
           Filing Calendar
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-4">
         <div className="space-y-3">
           {sortedDates.map((filing, index) => (
-            <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+            <div key={index} className="flex items-center justify-between p-3 border border-green-200 rounded-lg bg-white hover:bg-green-50 transition-colors">
               <div className="flex items-center gap-3">
                 {getStatusIcon(filing.status)}
                 <div>
-                  <div className="font-medium">{filing.type}</div>
-                  <div className="text-sm text-muted-foreground">{filing.description}</div>
-                  <div className="text-sm font-medium">
+                  <div className="font-medium text-green-900">{filing.type}</div>
+                  <div className="text-sm text-green-600">{filing.description}</div>
+                  <div className="text-sm font-medium text-green-700">
                     {mounted ? formatDate(filing.date) : filing.date}
                   </div>
                 </div>

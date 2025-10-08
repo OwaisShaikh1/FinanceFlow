@@ -1,3 +1,4 @@
+"use client";
 import React, { Suspense, lazy } from "react"
 
 const DashboardStats = lazy(() => import("@/components/dashboard/dashboard-stats"))

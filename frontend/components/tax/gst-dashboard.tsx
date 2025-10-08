@@ -183,20 +183,26 @@ export function GSTDashboard() {
       change: "Output GST collected",
       icon: Receipt,
       color: "text-green-600",
+      bgColor: "bg-green-50",
+      borderColor: "border-green-200"
     },
     {
       title: "Input Tax Credit",
       value: `₹${gstData.inputTaxCredit.toLocaleString()}`,
       change: "Available for offset",
       icon: FileText,
-      color: "text-blue-600",
+      color: "text-green-600",
+      bgColor: "bg-green-50",
+      borderColor: "border-green-200"
     },
     {
       title: "Net GST Payable",
       value: `₹${gstData.netGSTPayable.toLocaleString()}`,
       change: `Due by ${new Date().getDate()}th ${new Date().toLocaleString('default', { month: 'short' })}`,
       icon: AlertTriangle,
-      color: "text-red-600",
+      color: "text-green-600",
+      bgColor: "bg-green-50",
+      borderColor: "border-green-200"
     },
     {
       title: "Returns Filed",
@@ -204,6 +210,8 @@ export function GSTDashboard() {
       change: "This financial year",
       icon: CheckCircle,
       color: "text-green-600",
+      bgColor: "bg-green-50",
+      borderColor: "border-green-200"
     },
   ]
 
@@ -216,18 +224,45 @@ export function GSTDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Enhanced GST Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((stat, index) => (
+          <Card key={index} className={`relative overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border-l-4 ${stat.borderColor} bg-gradient-to-br from-white to-green-50`}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-3">
+                  <p className="text-sm text-green-600 font-medium uppercase tracking-wide">
+                    {stat.title}
+                  </p>
+                  <p className="text-2xl font-bold text-green-900">
+                    {stat.value}
+                  </p>
+                  <p className={`text-sm font-medium ${stat.color} flex items-center gap-1`}>
+                    {stat.change}
+                  </p>
+                </div>
+                <div className={`p-3 rounded-xl ${stat.bgColor} ring-1 ring-white/20`}>
+                  <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
       {/* GST Returns Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* GSTR-1 Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
+        <Card className="shadow-sm border-0 bg-gradient-to-br from-white to-green-50">
+          <CardHeader className="pb-4 border-b border-green-100">
+            <CardTitle className="flex items-center gap-2 text-green-900">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <FileText className="h-5 w-5 text-green-600" />
+              </div>
               GSTR-1 (Outward Supplies)
             </CardTitle>
-            <p className="text-sm text-muted-foreground">Monthly return for all sales/services provided</p>
+            <p className="text-sm text-green-700">Monthly return for all sales/services provided</p>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-4">
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Period:</span>
@@ -250,8 +285,8 @@ export function GSTDashboard() {
                 <Badge variant="default">Final</Badge>
               </div>
             </div>
-            <div className="pt-2 border-t">
-              <Button className="w-full" variant="outline">
+            <div className="pt-2 border-t border-green-200">
+              <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
                 <Receipt className="h-4 w-4 mr-2" />
                 Generate GSTR-1
               </Button>
@@ -260,15 +295,17 @@ export function GSTDashboard() {
         </Card>
 
         {/* GSTR-3B Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calculator className="h-5 w-5" />
+        <Card className="shadow-sm border-0 bg-gradient-to-br from-white to-green-50">
+          <CardHeader className="pb-4 border-b border-green-100">
+            <CardTitle className="flex items-center gap-2 text-green-900">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Calculator className="h-5 w-5 text-green-600" />
+              </div>
               GSTR-3B (Monthly Summary)
             </CardTitle>
-            <p className="text-sm text-muted-foreground">Summary return for net GST payment</p>
+            <p className="text-sm text-green-700">Summary return for net GST payment</p>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-4">
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Period:</span>
@@ -291,8 +328,8 @@ export function GSTDashboard() {
                 <Badge variant="default">Final</Badge>
               </div>
             </div>
-            <div className="pt-2 border-t">
-              <Button className="w-full" variant="outline">
+            <div className="pt-2 border-t border-green-200">
+              <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
                 <FileText className="h-4 w-4 mr-2" />
                 Generate GSTR-3B
               </Button>
@@ -302,11 +339,11 @@ export function GSTDashboard() {
       </div>
 
       {/* Upcoming Deadlines */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Upcoming GST Deadlines</CardTitle>
+      <Card className="shadow-sm border-0 bg-gradient-to-br from-white to-green-50">
+        <CardHeader className="pb-4 border-b border-green-100">
+          <CardTitle className="text-green-900">Upcoming GST Deadlines</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 border rounded-lg">
               <div className="flex items-center gap-4">

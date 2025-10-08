@@ -35,6 +35,8 @@ interface DashboardContextType {
   monthlyData: MonthlyData[]         // <-- store exactly as received
   loading: boolean
   error: string | null
+  sidebarCollapsed: boolean
+  setSidebarCollapsed: (collapsed: boolean) => void
   refreshDashboard: () => Promise<void>
 }
 
@@ -52,6 +54,7 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   const fetchDashboard = async () => {
     setLoading(true)
@@ -97,7 +100,16 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <DashboardContext.Provider
-      value={{ dashboardData, transactions, monthlyData, loading, error, refreshDashboard: fetchDashboard }}
+      value={{ 
+        dashboardData, 
+        transactions, 
+        monthlyData, 
+        loading, 
+        error, 
+        sidebarCollapsed, 
+        setSidebarCollapsed,
+        refreshDashboard: fetchDashboard 
+      }}
     >
       {children}
     </DashboardContext.Provider>

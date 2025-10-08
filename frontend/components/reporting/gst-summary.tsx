@@ -34,12 +34,12 @@ const gstData = [
 
 export function GSTSummary() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>GST Summary Report</CardTitle>
-        <p className="text-sm text-muted-foreground">Monthly GST collections and payments</p>
+    <Card className="shadow-sm border-0 bg-gradient-to-br from-white to-green-50">
+      <CardHeader className="pb-4 border-b border-green-100">
+        <CardTitle className="text-green-900">GST Summary Report</CardTitle>
+        <p className="text-sm text-green-700">Monthly GST collections and payments</p>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-4">
         <Table>
           <TableHeader>
             <TableRow>

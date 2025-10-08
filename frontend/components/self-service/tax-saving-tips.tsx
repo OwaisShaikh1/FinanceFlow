@@ -26,25 +26,29 @@ export function TaxSavingTips() {
   ]
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="shadow-sm border-0 bg-gradient-to-br from-white to-blue-50">
+      <CardHeader className="pb-4 border-b border-blue-100">
         <div className="flex items-center space-x-2">
-          <PiggyBank className="h-5 w-5 text-chart-4" />
-          <CardTitle>Tax Saving Tips</CardTitle>
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <PiggyBank className="h-5 w-5 text-blue-600" />
+          </div>
+          <div>
+            <CardTitle className="text-blue-900">Tax Saving Tips</CardTitle>
+            <CardDescription className="text-blue-700">Maximize your tax savings with these deductions</CardDescription>
+          </div>
         </div>
-        <CardDescription>Maximize your tax savings with these deductions</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pt-4">
         {tips.map((tip, index) => (
-          <div key={index} className="p-4 border rounded-lg space-y-2">
+          <div key={index} className="p-4 border border-blue-200 rounded-lg space-y-2 bg-white hover:bg-blue-50 transition-colors">
             <div className="flex items-center justify-between">
-              <h4 className="font-semibold flex items-center">
-                <Lightbulb className="h-4 w-4 mr-2 text-chart-4" />
+              <h4 className="font-semibold flex items-center text-blue-900">
+                <Lightbulb className="h-4 w-4 mr-2 text-blue-600" />
                 {tip.section}
               </h4>
-              <span className="text-sm font-medium text-primary">{tip.limit}</span>
+              <span className="text-sm font-medium text-blue-700">{tip.limit}</span>
             </div>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-blue-600">
               <ul className="list-disc list-inside space-y-1">
                 {tip.options.map((option, optionIndex) => (
                   <li key={optionIndex}>{option}</li>

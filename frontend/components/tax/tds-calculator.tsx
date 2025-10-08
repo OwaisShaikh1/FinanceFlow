@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
+import { Calculator } from "lucide-react"
 import { ENDPOINTS } from "@/lib/config"
 
 const tdsRates = [
@@ -129,26 +130,35 @@ export function TDSCalculator({ onTDSRecorded }: TDSCalculatorProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>TDS Calculator</CardTitle>
+    <Card className="shadow-sm border-0 bg-gradient-to-br from-purple-50 to-indigo-50">
+      <CardHeader className="pb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-purple-100 rounded-lg">
+            <Calculator className="h-6 w-6 text-purple-600" />
+          </div>
+          <div>
+            <CardTitle className="text-purple-900">TDS Calculator</CardTitle>
+            <p className="text-sm text-purple-700 mt-1">Calculate and record TDS deductions</p>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="payeeName">Payee Name</Label>
+              <Label htmlFor="payeeName" className="text-sm font-medium">Payee Name</Label>
               <Input
                 id="payeeName"
                 type="text"
                 placeholder="Enter payee name"
                 value={payeeName}
                 onChange={(e) => setPayeeName(e.target.value)}
+                className="bg-white border-purple-200 hover:border-purple-300"
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="payeePan">Payee PAN</Label>
+              <Label htmlFor="payeePan" className="text-sm font-medium">Payee PAN</Label>
               <Input
                 id="payeePan"
                 type="text"
@@ -158,25 +168,27 @@ export function TDSCalculator({ onTDSRecorded }: TDSCalculatorProps) {
                   setPayeePan(e.target.value)
                   setPanAvailable(e.target.value.length === 10)
                 }}
+                className="bg-white border-purple-200 hover:border-purple-300"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="amount">Payment Amount (₹)</Label>
+            <Label htmlFor="amount" className="text-sm font-medium">Payment Amount (₹)</Label>
             <Input
               id="amount"
               type="number"
               placeholder="Enter payment amount"
               value={amount || ""}
               onChange={(e) => setAmount(Number.parseFloat(e.target.value) || 0)}
+              className="bg-white border-purple-200 hover:border-purple-300"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="section">TDS Section</Label>
+            <Label htmlFor="section" className="text-sm font-medium">TDS Section</Label>
             <Select value={selectedSection} onValueChange={setSelectedSection}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-white border-purple-200 hover:border-purple-300">
                 <SelectValue placeholder="Select TDS section" />
               </SelectTrigger>
               <SelectContent>

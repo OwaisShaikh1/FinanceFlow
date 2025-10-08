@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { useDashboard } from "@/contexts/DashboardContext"
 import {
   LayoutDashboard,
   Calculator,
@@ -34,16 +35,16 @@ import { cn } from "@/lib/utils"
 const navigationItems = [
   {
     title: "Overview",
-    roles: ["Admin", "user", "ca"],
+    roles: ["Admin", "user", "CA"],
     items: [
-      { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["Admin", "user", "ca"] },
+      { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["Admin", "user", "CA"] },
     ],
   },
   {
     title: "Accounting & Bookkeeping",
-    roles: ["Admin", "ca", "user"],
+    roles: ["Admin", "CA", "user"],
     items: [
-      { title: "Income & Expenses", href: "/dashboard/transactions", icon: TrendingUp, roles: ["Admin", "ca", "user"] },
+      { title: "Income & Expenses", href: "/dashboard/transactions", icon: TrendingUp, roles: ["Admin", "CA", "user"] },
       { title: "Chart of Accounts", href: "/dashboard/accounts", icon: Calculator, roles: ["Admin"] },
       { title: "Bank Reconciliation", href: "/dashboard/reconciliation", icon: Banknote, roles: ["Admin"] },
     ],
@@ -54,17 +55,17 @@ const navigationItems = [
     items: [
       { title: "Invoices", href: "/dashboard/invoices", icon: FileText, roles: ["Admin", "user"] },
       { title: "Recurring Invoices", href: "/dashboard/recurring-invoices", icon: Calendar, roles: ["Admin"] },
-      { title: "Payments", href: "/dashboard/payments", icon: CreditCard, roles: ["Admin", "ca"] },
+      { title: "Payments", href: "/dashboard/payments", icon: CreditCard, roles: ["Admin", "CA"] },
     ],
   },
   {
     title: "Tax Management",
-    roles: ["Admin", "user", "ca"],
+    roles: ["Admin", "user", "CA"],
     items: [
-      { title: "GST", href: "/dashboard/gst", icon: Receipt, roles: ["Admin", "user", "ca"] },
-      { title: "TDS", href: "/dashboard/tds", icon: Shield, roles: ["Admin", "ca"] },
+      { title: "GST", href: "/dashboard/gst", icon: Receipt, roles: ["Admin", "user", "CA"] },
+      { title: "TDS", href: "/dashboard/tds", icon: Shield, roles: ["Admin", "user", "CA"] },
       { title: "Income Tax", href: "/dashboard/income-tax", icon: Calculator, roles: ["Admin", "user"] },
-      { title: "Tax Management", href: "/dashboard/tax", icon: FileText, roles: ["Admin", "ca"] },
+      { title: "Tax Management", href: "/dashboard/tax", icon: FileText, roles: ["Admin", "CA"] },
     ],
   },
   {
@@ -77,14 +78,14 @@ const navigationItems = [
   },
   {
     title: "Task Management",
-    roles: ["Admin", "ca"],
+    roles: ["Admin", "CA"],
     items: [
-      { title: "Tasks", href: "/dashboard/tasks", icon: CheckSquare, roles: ["Admin", "ca"] },
+      { title: "Tasks", href: "/dashboard/tasks", icon: CheckSquare, roles: ["Admin", "CA"] },
     ],
   },
   {
     title: "Client Management",
-    roles: ["Admin", "ca"],
+    roles: ["Admin", "CA"],
     items: [
       { title: "Clients", href: "/dashboard/clients", icon: Users, roles: ["Admin"] },
       { title: "Organizations", href: "/dashboard/organizations", icon: Building, roles: ["Admin"] },
@@ -93,7 +94,7 @@ const navigationItems = [
 ]
 
 export function DashboardSidebar() {
-  const [collapsed, setCollapsed] = useState(false)
+  const { sidebarCollapsed, setSidebarCollapsed } = useDashboard()
   const [role, setRole] = useState<string>("user")
   const pathname = usePathname()
 
@@ -104,18 +105,21 @@ export function DashboardSidebar() {
   }, [])
 
   return (
-    <div className={cn("border-r bg-card transition-all duration-300", collapsed ? "w-16" : "w-64")}>
-      <div className="flex flex-col min-h-[calc(100vh-82px)]">
+    <div className={cn(
+      "fixed left-0 top-0 z-40 border-r bg-card transition-all duration-300 h-screen", 
+      sidebarCollapsed ? "w-16" : "w-64"
+    )}>
+      <div className="flex flex-col h-full pt-[82px]">
         {/* Sidebar header */}
         <div className="flex items-center justify-between p-4">
-          {!collapsed && <h2 className="text-lg font-semibold text-primary">Navigation</h2>}
+          {!sidebarCollapsed && <h2 className="text-lg font-semibold text-primary">Navigation</h2>}
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setCollapsed(!collapsed)}
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
             className="h-8 w-8"
           >
-            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </Button>
         </div>
 
@@ -126,7 +130,7 @@ export function DashboardSidebar() {
               .filter((section) => !role || section.roles.includes(role))
               .map((section, index) => (
                 <div key={index}>
-                  {!collapsed && (
+                  {!sidebarCollapsed && (
                     <h3 className="mb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                       {section.title}
                     </h3>
@@ -140,17 +144,17 @@ export function DashboardSidebar() {
                             variant={pathname === item.href ? "secondary" : "ghost"}
                             className={cn(
                               "w-full justify-start",
-                              collapsed ? "px-2" : "px-3",
+                              sidebarCollapsed ? "px-2" : "px-3",
                               pathname === item.href && "bg-primary/10 text-primary"
                             )}
                           >
                             <item.icon className="h-4 w-4" />
-                            {!collapsed && <span className="ml-3">{item.title}</span>}
+                            {!sidebarCollapsed && <span className="ml-3">{item.title}</span>}
                           </Button>
                         </Link>
                       ))}
                   </div>
-                  {index < navigationItems.length - 1 && !collapsed && <Separator className="my-4" />}
+                  {index < navigationItems.length - 1 && !sidebarCollapsed && <Separator className="my-4" />}
                 </div>
               ))}
           </div>
@@ -161,10 +165,10 @@ export function DashboardSidebar() {
           <Link href="/dashboard/settings">
             <Button
               variant="ghost"
-              className={cn("w-full justify-start", collapsed ? "px-2" : "px-3")}
+              className={cn("w-full justify-start", sidebarCollapsed ? "px-2" : "px-3")}
             >
               <Settings className="h-4 w-4" />
-              {!collapsed && <span className="ml-3">Settings</span>}
+              {!sidebarCollapsed && <span className="ml-3">Settings</span>}
             </Button>
           </Link>
         </div>

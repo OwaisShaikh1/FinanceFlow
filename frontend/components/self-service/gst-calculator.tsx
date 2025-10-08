@@ -46,15 +46,17 @@ export function GSTCalculator() {
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="shadow-sm border-0 bg-gradient-to-br from-white to-green-50">
+      <CardHeader className="pb-4 border-b border-green-100">
         <div className="flex items-center space-x-2">
-          <FileText className="h-5 w-5 text-secondary" />
-          <CardTitle>GST Calculator</CardTitle>
+          <div className="p-2 bg-green-100 rounded-lg">
+            <FileText className="h-5 w-5 text-green-600" />
+          </div>
+          <CardTitle className="text-green-900">GST Calculator</CardTitle>
         </div>
-        <CardDescription>Calculate GST amount for goods and services</CardDescription>
+        <CardDescription className="text-green-700">Calculate GST amount for goods and services</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pt-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="amount">Amount (₹)</Label>

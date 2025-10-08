@@ -102,14 +102,16 @@ export function TDSReturns() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
+    <Card className="shadow-sm border-0 bg-gradient-to-br from-white to-purple-50">
+      <CardHeader className="pb-4 border-b border-purple-100">
+        <CardTitle className="flex items-center gap-2 text-purple-900">
+          <div className="p-2 bg-purple-100 rounded-lg">
+            <FileText className="h-5 w-5 text-purple-600" />
+          </div>
           TDS Returns
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-4">
         {loading ? (
           <div className="flex items-center justify-center h-32">
             <Loader2 className="h-6 w-6 animate-spin" />
@@ -124,21 +126,21 @@ export function TDSReturns() {
         ) : (
           <div className="space-y-4">
             {tdsReturns.map((returnItem: TDSReturn) => (
-            <div key={returnItem.id} className="flex items-center justify-between p-4 border rounded-lg">
+            <div key={returnItem.id} className="flex items-center justify-between p-4 border border-purple-200 rounded-lg bg-white hover:bg-purple-50 transition-colors">
               <div className="flex items-center gap-3">
                 {getStatusIcon(returnItem.status)}
                 <div>
-                  <div className="font-medium">{returnItem.type}</div>
-                  <div className="text-sm text-muted-foreground">{returnItem.quarter}</div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="font-medium text-purple-900">{returnItem.type}</div>
+                  <div className="text-sm text-purple-600">{returnItem.quarter}</div>
+                  <div className="text-sm text-purple-600">
                     Due: {new Date(returnItem.dueDate).toLocaleDateString()}
                   </div>
-                  <div className="text-sm text-muted-foreground">{returnItem.deductees} deductees</div>
+                  <div className="text-sm text-purple-600">{returnItem.deductees} deductees</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="text-right">
-                  <div className="font-medium">₹{returnItem.amount.toLocaleString()}</div>
+                  <div className="font-medium text-purple-900">₹{returnItem.amount.toLocaleString()}</div>
                   <Badge className={getStatusColor(returnItem.status)}>{returnItem.status}</Badge>
                 </div>
                 <div className="flex gap-1">
