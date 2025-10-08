@@ -77,11 +77,11 @@ export function RecurringInvoicesList() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Recurring Invoice Templates</CardTitle>
+    <Card className="shadow-sm border-0 bg-gradient-to-br from-white to-blue-50">
+      <CardHeader className="border-b border-blue-100">
+        <CardTitle className="text-blue-900">Recurring Invoice Templates</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         <Table>
           <TableHeader>
             <TableRow>

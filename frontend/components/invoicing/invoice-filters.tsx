@@ -21,23 +21,23 @@ export function InvoiceFilters() {
         <div className="flex-1">
           <Input 
             placeholder="Search invoices..." 
-            className="max-w-sm" 
+            className="max-w-sm bg-white border-blue-200 hover:border-blue-300 focus:border-blue-400" 
             value={filters.search}
             onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
           />
         </div>
-        <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
+        <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="border-blue-200 hover:bg-blue-50 text-blue-700">
           <Filter className="h-4 w-4 mr-2" />
           Filters
         </Button>
       </div>
 
       {showFilters && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 border rounded-lg bg-card">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 border border-blue-200 rounded-lg bg-gradient-to-br from-white to-blue-50">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Status</label>
+            <label className="text-sm font-medium text-blue-700">Status</label>
             <Select value={filters.status} onValueChange={(val) => setFilters(prev => ({ ...prev, status: val }))}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-white border-blue-200 hover:border-blue-300">
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>

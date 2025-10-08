@@ -125,22 +125,58 @@ export function GSTDashboard() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[1, 2].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader>
-                <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="animate-pulse bg-gradient-to-br from-white to-green-50 border-green-100">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="h-4 w-24 bg-green-200 rounded"></div>
+                  <div className="h-8 w-8 bg-green-200 rounded-lg"></div>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  <div className="h-4 bg-gray-200 rounded"></div>
-                  <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-                  <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                <div className="space-y-3">
+                  <div className="h-8 w-20 bg-green-200 rounded"></div>
+                  <div className="h-3 w-16 bg-green-100 rounded"></div>
                 </div>
               </CardContent>
             </Card>
           ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="animate-pulse bg-gradient-to-br from-white to-green-50 border-green-100">
+            <CardHeader>
+              <div className="h-6 w-32 bg-green-200 rounded"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {[1, 2, 3].map((j) => (
+                  <div key={j} className="flex items-center justify-between p-3 bg-green-50 rounded-md">
+                    <div className="flex items-center gap-3">
+                      <div className="h-4 w-4 bg-green-200 rounded-full"></div>
+                      <div className="space-y-1">
+                        <div className="h-4 w-20 bg-green-200 rounded"></div>
+                        <div className="h-3 w-16 bg-green-100 rounded"></div>
+                      </div>
+                    </div>
+                    <div className="h-6 w-16 bg-green-200 rounded-full"></div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="animate-pulse bg-gradient-to-br from-white to-green-50 border-green-100">
+            <CardHeader>
+              <div className="h-6 w-40 bg-green-200 rounded"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map((j) => (
+                  <div key={j} className="h-12 w-full bg-green-100 rounded-md"></div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );

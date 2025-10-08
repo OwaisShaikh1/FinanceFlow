@@ -14,7 +14,7 @@ import { API_BASE_URL } from "@/lib/config"
 import { InvoiceEditModal } from "./invoice-edit-modal"
 import { Invoice, InvoiceItem } from "@/types/invoice"
 
-export function InvoicesList() {
+export function     InvoicesList() {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -202,9 +202,9 @@ export function InvoicesList() {
 
   if (loading) {
     return (
-      <Card>
+      <Card className="bg-gradient-to-br from-white to-blue-50 border-blue-100">
         <CardHeader>
-          <CardTitle>Invoice List</CardTitle>
+          <CardTitle className="text-blue-900">Invoice List</CardTitle>
         </CardHeader>
         <CardContent>
           <TableSkeleton
@@ -222,14 +222,14 @@ export function InvoicesList() {
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Invoice List</CardTitle>
+      <Card className="shadow-sm border-0 bg-gradient-to-br from-white to-blue-50">
+        <CardHeader className="border-b border-blue-100">
+          <CardTitle className="text-blue-900">Invoice List</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="hover:bg-blue-50/50">
               <TableHead>Invoice #</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Due Date</TableHead>
@@ -243,7 +243,7 @@ export function InvoicesList() {
           </TableHeader>
           <TableBody>
             {filteredInvoices.map((invoice, index) => (
-              <TableRow key={index}>
+              <TableRow key={index} className="hover:bg-blue-50/50">
                 <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
                 <TableCell>{invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleDateString("en-IN") : "-"}</TableCell>
                 <TableCell>{invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString("en-IN") : "-"}</TableCell>

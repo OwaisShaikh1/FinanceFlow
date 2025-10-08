@@ -36,14 +36,14 @@ export function InvoiceStats() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {stats.map((stat, index) => (
-        <Card key={index}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
+        <Card key={index} className="shadow-sm border-0 bg-gradient-to-br from-white to-blue-50 transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 border-b border-blue-100">
+            <CardTitle className="text-sm font-medium text-blue-700">{stat.title}</CardTitle>
             <stat.icon className={`h-4 w-4 ${stat.color}`} />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stat.value}</div>
-            <p className="text-xs text-muted-foreground">{stat.change}</p>
+          <CardContent className="pt-4">
+            <div className="text-2xl font-bold text-blue-900">{stat.value}</div>
+            <p className="text-xs text-blue-600">{stat.change}</p>
           </CardContent>
         </Card>
       ))}

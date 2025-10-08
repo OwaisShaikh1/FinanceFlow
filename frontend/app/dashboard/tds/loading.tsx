@@ -16,21 +16,21 @@ export default function Loading() {
           </div>
           <div className="flex flex-col gap-3">
             <Skeleton className="h-9 w-32 bg-blue-200 rounded-md" />
-            <Skeleton className="h-9 w-32 bg-blue-200 rounded-md" />
+            <Skeleton className="h-9 w-36 bg-blue-200 rounded-md" />
             <Skeleton className="h-9 w-28 bg-blue-200 rounded-md" />
           </div>
         </div>
       </div>
 
       {/* Dashboard Section Skeleton */}
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-sm border border-blue-100 p-6">
+      <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-sm border border-blue-100 p-6">
         <div className="space-y-6">
           <Skeleton className="h-7 w-48 bg-blue-200" />
           
           {/* Stats Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-white rounded-lg p-4 space-y-3">
+              <div key={i} className="bg-gradient-to-br from-white to-blue-50 border border-blue-100 rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <Skeleton className="h-4 w-24 bg-blue-100" />
                   <Skeleton className="h-8 w-8 bg-blue-200 rounded-lg" />
@@ -41,17 +41,18 @@ export default function Loading() {
             ))}
           </div>
 
-          {/* Tax Saving Progress */}
-          <div className="bg-white rounded-lg p-6 space-y-4">
+          {/* TDS Records Table */}
+          <div className="bg-gradient-to-br from-white to-blue-50 border border-blue-100 rounded-lg p-6 space-y-4">
             <Skeleton className="h-6 w-40 bg-blue-200" />
-            <div className="space-y-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="p-4 bg-blue-50 rounded-lg space-y-3">
-                  <div className="flex justify-between items-center">
+            <div className="space-y-3">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-center justify-between p-3 bg-blue-50 rounded-md">
+                  <div className="flex items-center gap-4">
                     <Skeleton className="h-4 w-24 bg-blue-200" />
-                    <Skeleton className="h-6 w-20 bg-blue-200 rounded-full" />
+                    <Skeleton className="h-4 w-32 bg-blue-100" />
+                    <Skeleton className="h-4 w-20 bg-blue-100" />
                   </div>
-                  <Skeleton className="h-3 w-full bg-blue-200 rounded-full" />
+                  <Skeleton className="h-6 w-16 bg-blue-200 rounded-full" />
                 </div>
               ))}
             </div>
@@ -59,7 +60,7 @@ export default function Loading() {
         </div>
       </div>
 
-      {/* Calculators Section Skeleton */}
+      {/* Calculator and Returns Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-gradient-to-br from-white to-blue-50 rounded-lg p-6 space-y-4 border border-blue-100">
           <div className="flex items-center gap-3">

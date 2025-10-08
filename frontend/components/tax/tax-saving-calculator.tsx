@@ -9,7 +9,6 @@ import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
 import { Slider } from "@/components/ui/slider"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AlertTriangle, TrendingUp, Calculator, Target, Download, Lightbulb, PieChart } from "lucide-react"
 import { getSectionsForRegime, SectionDef, TaxRegime } from "@/lib/tax/taxapi"
 import { computeAfterInvestments, generateInvestmentPlan } from "@/lib/tax/calculate"
@@ -20,7 +19,6 @@ export function TaxSavingCalculator() {
   const [baseDeductions, setBaseDeductions] = useState<number>(50000)
   const [investments, setInvestments] = useState<Record<string, number>>({})
   const [showAdvanced, setShowAdvanced] = useState(false)
-  const [activeInvestmentTab, setActiveInvestmentTab] = useState("manual")
   const { toast } = useToast()
 
   const sections = useMemo<SectionDef[]>(() => getSectionsForRegime(regime), [regime])
@@ -81,7 +79,7 @@ export function TaxSavingCalculator() {
   }
 
   return (
-    <div className="space-y-6">
+    <div id="tax-saving-planner" className="space-y-6 transition-all duration-300">
       {/* Main Calculator Card */}
       <Card className="shadow-sm border-0 bg-gradient-to-br from-blue-50 to-indigo-50">
         <CardHeader className="pb-4">
@@ -190,85 +188,86 @@ export function TaxSavingCalculator() {
             </div>
           </CardHeader>
           <CardContent className="pt-4">
-            <Tabs value={activeInvestmentTab} onValueChange={setActiveInvestmentTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-blue-100 border border-blue-200">
-                <TabsTrigger value="manual" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-blue-700 hover:bg-blue-200">Manual Entry</TabsTrigger>
-                <TabsTrigger value="sliders" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-blue-700 hover:bg-blue-200">Smart Sliders</TabsTrigger>
-              </TabsList>
+            {/* Unified Investment Planning - Manual + Sliders */}
+            <div className="space-y-6">
+              {sections.map((section) => {
+                const invested = investments[section.code] || 0
+                const limit = section.limit
+                const progress = limit !== null ? (invested / limit) * 100 : 0
+                const isOverLimit = limit !== null && invested > limit
 
-              <TabsContent value="manual" className="space-y-4">
-                {sections.map((section) => {
-                  const invested = investments[section.code] || 0
-                  const limit = section.limit
-                  const progress = limit !== null ? (invested / limit) * 100 : 0
-                  const isOverLimit = limit !== null && invested > limit
-
-                  return (
-                    <div key={section.code} className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <Label className="font-medium">Section {section.code}</Label>
-                        {limit !== null && (
-                          <span className="text-xs text-blue-600">Limit: ₹{limit.toLocaleString()}</span>
-                        )}
+                return (
+                  <div key={section.code} className="space-y-3 p-4 bg-white rounded-lg border border-blue-200 hover:border-blue-300 transition-all duration-200" data-section={section.code}>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <Label className="font-semibold text-blue-900">Section {section.code}</Label>
+                        <p className="text-xs text-blue-600 mt-1">{section.description}</p>
+                      </div>
+                      {limit !== null && (
+                        <div className="text-right">
+                          <span className="text-sm font-medium text-blue-700">₹{invested.toLocaleString()}</span>
+                          <p className="text-xs text-blue-500">Limit: ₹{limit.toLocaleString()}</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Combined Input and Slider Interface */}
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                        {/* Manual Input */}
+                        <div className="space-y-2">
+                          <Label className="text-xs text-gray-600">Manual Entry</Label>
+                          <Input
+                            type="number"
+                            value={invested || ""}
+                            placeholder={`Max ₹${limit?.toLocaleString() || "No limit"}`}
+                            onChange={(e) => updateInvestment(section.code, parseFloat(e.target.value) || 0)}
+                            className={`${isOverLimit ? "border-red-300 focus:border-red-400" : "border-blue-300 focus:border-blue-400"} text-sm`}
+                          />
+                        </div>
+                        
+                        {/* Smart Slider */}
+                        <div className="space-y-2">
+                          <Label className="text-xs text-gray-600">Smart Slider</Label>
+                          <Slider
+                            value={[invested]}
+                            onValueChange={(value) => updateInvestment(section.code, value[0])}
+                            max={limit || 100000}
+                            step={1000}
+                            className="w-full [&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-blue-600 [&_.bg-primary]:bg-blue-600 [&_[data-orientation=horizontal]]:bg-blue-200"
+                          />
+                        </div>
                       </div>
                       
-                      <div className="space-y-3">
-                        <Input
-                          type="number"
-                          value={invested || ""}
-                          placeholder={`Max ₹${limit?.toLocaleString() || "No limit"}`}
-                          onChange={(e) => updateInvestment(section.code, parseFloat(e.target.value) || 0)}
-                          className={`${isOverLimit ? "border-red-300" : "border-blue-300"}`}
-                        />
-                        
-                        {limit !== null && (
-                          <div className="space-y-2">
-                            <Progress 
-                              value={Math.min(progress, 100)} 
-                              className={`h-2 ${progress > 100 ? "bg-red-100 [&_div]:bg-red-500" : "bg-blue-100 [&_div]:bg-blue-600"}`} 
-                            />
-                            <div className="flex justify-between text-xs">
-                              <span className={isOverLimit ? "text-red-600" : "text-blue-600"} >
-                                ₹{invested.toLocaleString()}
+                      {/* Progress Indicator */}
+                      {limit !== null && (
+                        <div className="space-y-2">
+                          <Progress 
+                            value={Math.min(progress, 100)} 
+                            className={`h-2 ${progress > 100 ? "bg-red-100 [&_div]:bg-red-500" : "bg-blue-100 [&_div]:bg-blue-600"}`} 
+                          />
+                          <div className="flex justify-between text-xs">
+                            <span className={isOverLimit ? "text-red-600" : "text-blue-600"}>
+                              {progress.toFixed(1)}% utilized
+                            </span>
+                            {invested < limit && (
+                              <span className="text-orange-600">
+                                ₹{(limit - invested).toLocaleString()} remaining
                               </span>
-                              <span className="text-blue-500">
-                                {progress.toFixed(1)}% utilized
+                            )}
+                            {isOverLimit && (
+                              <span className="text-red-600">
+                                ₹{(invested - limit).toLocaleString()} over limit
                               </span>
-                              <span className="text-blue-500">₹{limit.toLocaleString()}</span>
-                            </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      <p className="text-xs text-blue-600">{section.description}</p>
+                        </div>
+                      )}
                     </div>
-                  )
-                })}
-              </TabsContent>
-
-              <TabsContent value="sliders" className="space-y-6">
-                {sections.map((section) => {
-                  const invested = investments[section.code] || 0
-                  const limit = section.limit || 100000
-
-                  return (
-                    <div key={section.code} className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <Label className="font-medium text-blue-900">Section {section.code}</Label>
-                        <span className="text-sm font-medium text-blue-700">₹{invested.toLocaleString()}</span>
-                      </div>
-                      <Slider
-                        value={[invested]}
-                        onValueChange={(value) => updateInvestment(section.code, value[0])}
-                        max={limit}
-                        step={1000}
-                        className="w-full [&_[role=slider]]:bg-blue-600 [&_[role=slider]]:border-blue-600 [&_.bg-primary]:bg-blue-600 [&_[data-orientation=horizontal]]:bg-blue-200"
-                      />
-                      <p className="text-xs text-blue-600">{section.description}</p>
-                    </div>
-                  )
-                })}
-              </TabsContent>
-            </Tabs>
+                  </div>
+                )
+              })}
+            </div>
           </CardContent>
         </Card>
       )}

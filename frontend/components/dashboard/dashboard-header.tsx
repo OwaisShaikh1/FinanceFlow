@@ -44,28 +44,28 @@ export function DashboardHeader() {
   }
 
   return (
-    <header className="border-b bg-card sticky top-0 z-50">
+    <header className="border-b border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 sticky top-0 z-50">
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-4">
           <div>
-            <h1 className="text-xl font-bold text-primary">TaxPro Accounting</h1>
-            <p className="text-sm text-muted-foreground">Professional Accounting & Tax Management</p>
+            <h1 className="text-xl font-bold text-blue-900">TaxPro Accounting</h1>
+            <p className="text-sm text-blue-700">Professional Accounting & Tax Management</p>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
           {/* Search */}
           <div className="relative hidden md:block">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search transactions, invoices..." className="pl-10 w-64" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-600" />
+            <Input placeholder="Search transactions, invoices..." className="pl-10 w-64 bg-white border-blue-200 hover:border-blue-300 focus:border-blue-400" />
           </div>
 
           {/* Notifications */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="relative bg-transparent">
+              <Button variant="outline" size="icon" className="relative bg-white border-blue-200 hover:bg-blue-50 text-blue-600">
                 <Bell className="h-4 w-4" />
-                <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 text-xs">3</Badge>
+                <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 text-xs bg-blue-600">3</Badge>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80">
@@ -91,7 +91,7 @@ export function DashboardHeader() {
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2 bg-transparent">
+              <Button variant="outline" className="flex items-center gap-2 bg-white border-blue-200 hover:bg-blue-50 text-blue-700">
                 <User className="h-4 w-4" />
                 <span className="hidden md:inline">{user?.name || "User"}</span>
               </Button>

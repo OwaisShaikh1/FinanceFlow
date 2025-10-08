@@ -227,7 +227,7 @@ export function GSTReturns() {
       case "overdue":
         return "bg-red-100 text-red-800 border-red-200"
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200"
+        return "bg-green-100 text-green-800 border-green-200"
     }
   }
 
@@ -247,26 +247,26 @@ export function GSTReturns() {
         {error ? (
           <div className="text-center text-red-600 p-4">
             <p>{error}</p>
-            <p className="text-sm text-gray-500 mt-2">Showing fallback data</p>
+            <p className="text-sm text-green-600 mt-2">Showing fallback data</p>
           </div>
         ) : loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center justify-between p-4 border rounded-lg animate-pulse">
+              <div key={i} className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg animate-pulse">
                 <div className="flex items-center gap-3">
-                  <div className="h-4 w-4 bg-gray-300 rounded-full"></div>
+                  <div className="h-4 w-4 bg-green-300 rounded-full"></div>
                   <div>
-                    <div className="h-4 w-20 bg-gray-300 rounded mb-2"></div>
-                    <div className="h-3 w-24 bg-gray-300 rounded mb-1"></div>
-                    <div className="h-3 w-16 bg-gray-300 rounded"></div>
+                    <div className="h-4 w-20 bg-green-300 rounded mb-2"></div>
+                    <div className="h-3 w-24 bg-green-200 rounded mb-1"></div>
+                    <div className="h-3 w-16 bg-green-200 rounded"></div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <div className="h-4 w-16 bg-gray-300 rounded mb-2"></div>
-                    <div className="h-6 w-12 bg-gray-300 rounded"></div>
+                    <div className="h-4 w-16 bg-green-300 rounded mb-2"></div>
+                    <div className="h-6 w-12 bg-green-300 rounded-full"></div>
                   </div>
-                  <div className="h-8 w-8 bg-gray-300 rounded"></div>
+                  <div className="h-8 w-8 bg-green-300 rounded"></div>
                 </div>
               </div>
             ))}

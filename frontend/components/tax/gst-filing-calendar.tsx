@@ -60,7 +60,7 @@ export function GSTFilingCalendar() {
       case "overdue":
         return "bg-red-100 text-red-800 border-red-200"
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200"
+        return "bg-green-100 text-green-800 border-green-200"
     }
   }
 
@@ -71,7 +71,7 @@ export function GSTFilingCalendar() {
       case "overdue":
         return <AlertTriangle className="h-4 w-4 text-red-600" />
       default:
-        return <Calendar className="h-4 w-4 text-blue-600" />
+        return <Calendar className="h-4 w-4 text-green-600" />
     }
   }
 

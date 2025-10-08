@@ -64,7 +64,7 @@ const navigationItems = [
     items: [
       { title: "GST", href: "/dashboard/gst", icon: Receipt, roles: ["Admin", "user", "CA"] },
       { title: "TDS", href: "/dashboard/tds", icon: Shield, roles: ["Admin", "user", "CA"] },
-      { title: "Income Tax", href: "/dashboard/income-tax", icon: Calculator, roles: ["Admin", "user"] },
+      { title: "My Income Tax", href: "/dashboard/income-tax", icon: Calculator, roles: ["Admin", "user"] },
       { title: "Tax Management", href: "/dashboard/tax", icon: FileText, roles: ["Admin", "CA"] },
     ],
   },
@@ -106,18 +106,18 @@ export function DashboardSidebar() {
 
   return (
     <div className={cn(
-      "fixed left-0 top-0 z-40 border-r bg-card transition-all duration-300 h-screen", 
+      "fixed left-0 top-0 z-40 border-r border-blue-100 bg-gradient-to-b from-blue-50 to-indigo-50 overflow-y-auto transition-all duration-300 h-screen", 
       sidebarCollapsed ? "w-16" : "w-64"
     )}>
       <div className="flex flex-col h-full pt-[82px]">
         {/* Sidebar header */}
         <div className="flex items-center justify-between p-4">
-          {!sidebarCollapsed && <h2 className="text-lg font-semibold text-primary">Navigation</h2>}
+          {!sidebarCollapsed && <h2 className="text-lg font-semibold text-blue-900">Navigation</h2>}
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="h-8 w-8"
+            className="h-8 w-8 text-blue-600 hover:bg-blue-100"
           >
             {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </Button>
@@ -131,7 +131,7 @@ export function DashboardSidebar() {
               .map((section, index) => (
                 <div key={index}>
                   {!sidebarCollapsed && (
-                    <h3 className="mb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <h3 className="mb-2 px-3 text-xs font-semibold text-blue-700 uppercase tracking-wider">
                       {section.title}
                     </h3>
                   )}
@@ -143,9 +143,9 @@ export function DashboardSidebar() {
                           <Button
                             variant={pathname === item.href ? "secondary" : "ghost"}
                             className={cn(
-                              "w-full justify-start",
+                              "w-full justify-start text-blue-700 hover:bg-blue-100 hover:text-blue-900",
                               sidebarCollapsed ? "px-2" : "px-3",
-                              pathname === item.href && "bg-primary/10 text-primary"
+                              pathname === item.href && "bg-blue-200 text-blue-900 shadow-sm"
                             )}
                           >
                             <item.icon className="h-4 w-4" />
@@ -154,18 +154,21 @@ export function DashboardSidebar() {
                         </Link>
                       ))}
                   </div>
-                  {index < navigationItems.length - 1 && !sidebarCollapsed && <Separator className="my-4" />}
+                  {index < navigationItems.length - 1 && !sidebarCollapsed && <Separator className="my-4 bg-blue-200" />}
                 </div>
               ))}
           </div>
         </ScrollArea>
 
         {/* Settings button at the bottom */}
-        <div className="p-3">
+        <div className="p-3 border-t border-blue-200">
           <Link href="/dashboard/settings">
             <Button
               variant="ghost"
-              className={cn("w-full justify-start", sidebarCollapsed ? "px-2" : "px-3")}
+              className={cn(
+                "w-full justify-start text-blue-700 hover:bg-blue-100 hover:text-blue-900", 
+                sidebarCollapsed ? "px-2" : "px-3"
+              )}
             >
               <Settings className="h-4 w-4" />
               {!sidebarCollapsed && <span className="ml-3">Settings</span>}
