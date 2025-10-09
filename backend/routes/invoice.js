@@ -232,4 +232,68 @@ router.get('/:id/pdf', auth, async (req, res) => {
   }
 });
 
+// Get invoice statistics
+router.get('/stats', auth, async (req, res) => {
+  try {
+    const invoices = await GenInvoice.find({ business: req.user.biz });
+    
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+    
+    // Calculate current month invoices
+    const currentMonthInvoices = invoices.filter(inv => {
+      const invoiceDate = new Date(inv.invoiceDate);
+      return invoiceDate.getMonth() === currentMonth && invoiceDate.getFullYear() === currentYear;
+    });
+    
+    // Calculate last month invoices for growth
+    const lastMonthInvoices = invoices.filter(inv => {
+      const invoiceDate = new Date(inv.invoiceDate);
+      return invoiceDate.getMonth() === lastMonth && invoiceDate.getFullYear() === lastMonthYear;
+    });
+    
+    // Count by status
+    const paidInvoices = invoices.filter(inv => inv.status?.toLowerCase() === 'paid');
+    const pendingInvoices = invoices.filter(inv => inv.status?.toLowerCase() === 'pending');
+    const overdueInvoices = invoices.filter(inv => {
+      const dueDate = new Date(inv.dueDate);
+      const now = new Date();
+      return inv.status?.toLowerCase() !== 'paid' && dueDate < now;
+    });
+    
+    // Calculate amounts
+    const pendingAmount = pendingInvoices.reduce((sum, inv) => {
+      return sum + (inv.items?.reduce((itemSum, item) => itemSum + (item.amount || 0), 0) || 0);
+    }, 0);
+    
+    const overdueAmount = overdueInvoices.reduce((sum, inv) => {
+      return sum + (inv.items?.reduce((itemSum, item) => itemSum + (item.amount || 0), 0) || 0);
+    }, 0);
+    
+    // Calculate payment rate
+    const paymentRate = invoices.length > 0 ? (paidInvoices.length / invoices.length) * 100 : 0;
+    
+    // Calculate monthly growth
+    const monthlyGrowth = currentMonthInvoices.length - lastMonthInvoices.length;
+    
+    const stats = {
+      total: invoices.length,
+      paid: paidInvoices.length,
+      pending: pendingInvoices.length,
+      overdue: overdueInvoices.length,
+      pendingAmount: Math.round(pendingAmount),
+      overdueAmount: Math.round(overdueAmount),
+      paymentRate: Math.round(paymentRate),
+      monthlyGrowth
+    };
+    
+    res.json(stats);
+  } catch (error) {
+    console.error('Error fetching invoice stats:', error);
+    res.status(500).json({ message: 'Error fetching statistics', error: error.message });
+  }
+});
+
 module.exports = router;

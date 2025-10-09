@@ -43,19 +43,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="w-full max-w-md">
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-primary">TaxPro Accounting</CardTitle>
-            <CardDescription>Sign in to your accounting dashboard</CardDescription>
+        <Card className="bg-white border-blue-200 shadow-xl shadow-blue-100/50">
+          <CardHeader className="text-center space-y-3">
+            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">TaxPro</CardTitle>
+            <CardDescription className="text-slate-600 text-base">Sign in to your accounting dashboard</CardDescription>
           </CardHeader>
           <CardContent>
             <LoginForm onSubmit={handleLogin} />
-            {message && <p className="mt-4 text-center text-sm">{message}</p>}
+            {message && <p className="mt-4 text-center text-sm text-slate-600">{message}</p>}
           </CardContent>
-          <div onClick={() => router.push("/auth/register")} className="cursor-pointer text-center text-sm text-muted-foreground hover:underline">
-            Don't have an account? Sign up
+          <div onClick={() => router.push("/auth/register")} className="cursor-pointer text-center text-sm text-blue-600 hover:text-blue-800 hover:underline pb-6">
+            Don't have an account? <span className="font-medium">Sign up</span>
           </div>
         </Card>
       </div>

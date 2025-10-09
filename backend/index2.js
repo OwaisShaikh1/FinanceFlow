@@ -23,6 +23,7 @@ const gstRoutes = require('./routes/gst');
 const authroutes=require('./routes/myfirebase')
 const gstInvoicesRoutes = require('./routes/gstInvoices');
 const gstReturnsRoutes = require('./routes/gstReturns');
+const settingsRoutes = require('./routes/settings');
 
 const app = express();
 
@@ -172,6 +173,7 @@ app.use('/api/tds', tdsRoutes);              // /api/tds → TDS management
 app.use('/api/gst', gstRoutes);              // /api/gst → GST summary and periods
 app.use('/api/invoices', gstInvoicesRoutes); // /api/invoices → GST invoice management
 app.use('/api/returns', gstReturnsRoutes);   // /api/returns → GST returns management
+app.use('/api/user', settingsRoutes);       // /api/user → User settings management
 
 // User Tax Data Routes (for Combined Tax Calculator)
 app.get('/api/user/:userId/tax-data', async (req, res) => {

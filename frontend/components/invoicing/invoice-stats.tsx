@@ -1,33 +1,91 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { FileText, Clock, CheckCircle, AlertCircle } from "lucide-react"
 
+interface InvoiceStats {
+  total: number
+  paid: number
+  pending: number
+  overdue: number
+  pendingAmount: number
+  overdueAmount: number
+  paymentRate: number
+  monthlyGrowth: number
+}
+
 export function InvoiceStats() {
-  const stats = [
+  const [stats, setStats] = useState<InvoiceStats>({
+    total: 0,
+    paid: 0,
+    pending: 0,
+    overdue: 0,
+    pendingAmount: 0,
+    overdueAmount: 0,
+    paymentRate: 0,
+    monthlyGrowth: 0
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchInvoiceStats = async () => {
+      try {
+        const token = localStorage.getItem("token")
+        const headers: Record<string, string> = { "Content-Type": "application/json" }
+        
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`
+        }
+
+        const response = await fetch(`http://localhost:5000/api/invoice/stats`, {
+          method: "GET",
+          headers,
+        })
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`)
+        }
+
+        const data = await response.json()
+        setStats(data)
+      } catch (error) {
+        console.error("Error fetching invoice stats:", error)
+        // Keep default values on error
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchInvoiceStats()
+  }, [])
+
+  const statsCards = [
     {
       title: "Total Invoices",
-      value: "45",
-      change: "+5 this month",
+      value: loading ? "..." : stats.total.toString(),
+      change: loading ? "Loading..." : `${stats.monthlyGrowth >= 0 ? '+' : ''}${stats.monthlyGrowth} this month`,
       icon: FileText,
       color: "text-blue-600",
     },
     {
       title: "Paid Invoices",
-      value: "38",
-      change: "84% payment rate",
+      value: loading ? "..." : stats.paid.toString(),
+      change: loading ? "Loading..." : `${Math.round(stats.paymentRate)}% payment rate`,
       icon: CheckCircle,
       color: "text-green-600",
     },
     {
       title: "Pending Invoices",
-      value: "5",
-      change: "₹1,25,000 pending",
+      value: loading ? "..." : stats.pending.toString(),
+      change: loading ? "Loading..." : `₹${stats.pendingAmount.toLocaleString()} pending`,
       icon: Clock,
-      color: "text-yellow-600",
+      color: "text-blue-600",
     },
     {
       title: "Overdue Invoices",
-      value: "2",
-      change: "₹45,000 overdue",
+      value: loading ? "..." : stats.overdue.toString(),
+      change: loading ? "Loading..." : `₹${stats.overdueAmount.toLocaleString()} overdue`,
       icon: AlertCircle,
       color: "text-red-600",
     },
@@ -35,7 +93,7 @@ export function InvoiceStats() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {stats.map((stat, index) => (
+      {statsCards.map((stat, index) => (
         <Card key={index} className="shadow-sm border-0 bg-gradient-to-br from-white to-blue-50 transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 border-b border-blue-100">
             <CardTitle className="text-sm font-medium text-blue-700">{stat.title}</CardTitle>

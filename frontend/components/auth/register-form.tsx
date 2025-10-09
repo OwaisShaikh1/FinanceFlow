@@ -235,13 +235,13 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
           checked={agreedToTerms}
           onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
         />
-        <Label htmlFor="terms" className="text-sm">
+        <Label htmlFor="terms" className="text-sm text-slate-600">
           I agree to the{" "}
-          <a href="/terms" className="text-primary hover:underline">
+          <a href="/terms" className="text-blue-600 hover:text-blue-800 hover:underline font-medium">
             Terms and Conditions
           </a>{" "}
           and{" "}
-          <a href="/privacy" className="text-primary hover:underline">
+          <a href="/privacy" className="text-blue-600 hover:text-blue-800 hover:underline font-medium">
             Privacy Policy
           </a>
         </Label>

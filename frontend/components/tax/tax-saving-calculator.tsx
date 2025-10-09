@@ -150,7 +150,7 @@ export function TaxSavingCalculator() {
                 </div>
                 <div className="text-center">
                   <p className="text-sm text-gray-600">Tax After Investments</p>
-                  <p className="text-2xl font-bold text-orange-600">₹{savings.taxAfterInvestments.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-blue-600">₹{savings.taxAfterInvestments.toLocaleString()}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-sm text-gray-600">Total Tax Saved</p>
@@ -251,7 +251,7 @@ export function TaxSavingCalculator() {
                               {progress.toFixed(1)}% utilized
                             </span>
                             {invested < limit && (
-                              <span className="text-orange-600">
+                              <span className="text-blue-600">
                                 ₹{(limit - invested).toLocaleString()} remaining
                               </span>
                             )}

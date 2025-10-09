@@ -11,7 +11,17 @@ const userSchema = new mongoose.Schema({
   // Contact info
   phone: { type: String },
   address: { type: String },
+  city: { type: String },
+  state: { type: String },
+  pincode: { type: String },
   company: { type: String },
+  
+  // Business info
+  businessName: { type: String },
+  businessType: { type: String },
+  pan: { type: String },
+  avatar: { type: String },
+  defaultTaxRate: { type: Number, default: 18 },
   
   // Firebase authentication
   firebaseUid: { type: String, unique: true, sparse: true },
@@ -53,15 +63,19 @@ const userSchema = new mongoose.Schema({
 
   // Preferences
   preferences: {
-    theme: { type: String, enum: ['light', 'dark'], default: 'light' },
+    theme: { type: String, enum: ['light', 'dark', 'auto'], default: 'light' },
+    language: { type: String, default: 'en' },
     currency: { type: String, default: 'INR' },
     dateFormat: { type: String, default: 'DD/MM/YYYY' },
-    notifications: {
-      email: { type: Boolean, default: true },
-      push: { type: Boolean, default: true },
-      taxReminders: { type: Boolean, default: true },
-      invoiceReminders: { type: Boolean, default: true }
-    }
+    emailNotifications: { type: Boolean, default: true },
+    smsNotifications: { type: Boolean, default: false },
+    reminderNotifications: { type: Boolean, default: true }
+  },
+  
+  // Security settings
+  security: {
+    twoFactorAuth: { type: Boolean, default: false },
+    sessionTimeout: { type: Number, default: 30 }
   },
 
   // Status

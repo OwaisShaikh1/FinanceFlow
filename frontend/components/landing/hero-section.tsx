@@ -4,14 +4,14 @@ import { ArrowRight, Calculator, FileText, Shield } from "lucide-react"
 
 export function HeroSection() {
   return (
-    <section className="py-20 px-4 bg-gradient-to-b from-background to-muted/20">
+    <section className="py-20 px-4 bg-gradient-to-b from-blue-50 to-white">
       <div className="container mx-auto text-center">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-6xl font-bold text-balance mb-6">
-            Simplify Your <span className="text-primary">Tax Filing</span> &
-            <span className="text-secondary"> Accounting</span>
+          <h1 className="text-4xl md:text-6xl font-bold text-balance mb-6 text-slate-900">
+            Simplify Your <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Tax Filing</span> &
+            <span className="bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent"> Accounting</span>
           </h1>
-          <p className="text-xl text-muted-foreground text-pretty mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-slate-600 text-pretty mb-8 max-w-2xl mx-auto">
             Complete tax management solution for individuals and businesses. Calculate taxes, file returns, manage
             accounts - all in one place.
           </p>
@@ -33,31 +33,31 @@ export function HeroSection() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto">
             <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                <Calculator className="h-8 w-8 text-primary" />
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                <Calculator className="h-8 w-8 text-blue-600" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Easy Tax Calculator</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className="text-lg font-semibold mb-2 text-slate-900">Easy Tax Calculator</h3>
+              <p className="text-sm text-slate-600">
                 Calculate income tax, GST, and TDS with our smart calculators
               </p>
             </div>
 
             <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mb-4">
-                <FileText className="h-8 w-8 text-secondary" />
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                <FileText className="h-8 w-8 text-blue-600" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Complete Accounting</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className="text-lg font-semibold mb-2 text-slate-900">Complete Accounting</h3>
+              <p className="text-sm text-slate-600">
                 Manage invoices, expenses, and financial reports effortlessly
               </p>
             </div>
 
             <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mb-4">
-                <Shield className="h-8 w-8 text-accent" />
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                <Shield className="h-8 w-8 text-blue-600" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">GST Compliance</h3>
-              <p className="text-sm text-muted-foreground">Stay compliant with automated GST filing and calculations</p>
+              <h3 className="text-lg font-semibold mb-2 text-slate-900">GST Compliance</h3>
+              <p className="text-sm text-slate-600">Stay compliant with automated GST filing and calculations</p>
             </div>
           </div>
         </div>
