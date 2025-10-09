@@ -301,17 +301,24 @@ export function     InvoicesList() {
                       </Button>
                     )}
                     
-                    <Button variant="ghost" size="icon">
-                      <Eye className="h-4 w-4" />
+                    {/* Direct Action Buttons */}
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => handleEditInvoice(invoice)}
+                      className="hover:bg-blue-50 hover:text-blue-600"
+                      title="Edit Invoice"
+                    >
+                      <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon">
-                      <Download className="h-4 w-4" />
-                    </Button>
+                    
                     <Button 
                       variant="ghost" 
                       size="icon"
                       onClick={() => handleDownloadPdf(invoice._id)}
                       disabled={downloadingPdf === invoice._id}
+                      className="hover:bg-green-50 hover:text-green-600"
+                      title="Download TaxPro PDF"
                     >
                       {downloadingPdf === invoice._id ? (
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
@@ -319,9 +326,10 @@ export function     InvoicesList() {
                         <Download className="h-4 w-4" />
                       )}
                     </Button>
+
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" className="hover:bg-gray-50">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -329,8 +337,18 @@ export function     InvoicesList() {
                         <DropdownMenuItem onClick={() => handleEditInvoice(invoice)}>
                           <Edit className="mr-2 h-4 w-4" /> Edit Invoice
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDownloadPdf(invoice._id)}>
-                          <Download className="mr-2 h-4 w-4" /> Download Tax Pro PDF
+                        <DropdownMenuItem 
+                          onClick={() => handleDownloadPdf(invoice._id)}
+                          disabled={downloadingPdf === invoice._id}
+                        >
+                          <Download className="mr-2 h-4 w-4" /> 
+                          {downloadingPdf === invoice._id ? 'Downloading...' : 'Download TaxPro PDF'}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Eye className="mr-2 h-4 w-4" /> View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Send className="mr-2 h-4 w-4" /> Send via Email
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

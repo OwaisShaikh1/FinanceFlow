@@ -36,14 +36,14 @@ export function ClientStats() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {stats.map((stat) => (
-        <Card key={stat.title}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">{stat.title}</CardTitle>
+        <Card key={stat.title} className="bg-gradient-to-br from-white to-blue-50 border-blue-100 hover:border-blue-200 transition-all duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 rounded-t-lg">
+            <CardTitle className="text-sm font-medium text-blue-700">{stat.title}</CardTitle>
             <stat.icon className={`h-4 w-4 ${stat.color}`} />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-            <p className="text-xs text-gray-500 mt-1">{stat.change}</p>
+          <CardContent className="pt-4">
+            <div className="text-2xl font-bold text-blue-900">{stat.value}</div>
+            <p className="text-xs text-blue-600 mt-1">{stat.change}</p>
           </CardContent>
         </Card>
       ))}

@@ -93,20 +93,20 @@ export function ClientsList() {
   return (
     <div className="space-y-4">
       {filteredClients.map((client) => (
-        <Card key={client.id} className="hover:shadow-md transition-shadow">
+        <Card key={client.id} className="bg-gradient-to-br from-white to-blue-50 border-blue-100 hover:shadow-md hover:border-blue-200 transition-all duration-200">
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-4">
                 <Avatar className="h-12 w-12">
-                  <AvatarFallback className="bg-emerald-100 text-emerald-700">
+                  <AvatarFallback className="bg-blue-100 text-blue-700">
                     <AvatarInitials name={client.name} />
                   </AvatarFallback>
                 </Avatar>
 
                 <div className="space-y-2">
                   <div>
-                    <h3 className="font-semibold text-lg text-gray-900">{client.name}</h3>
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <h3 className="font-semibold text-lg text-blue-900">{client.name}</h3>
+                    <div className="flex items-center gap-4 text-sm text-blue-600">
                       <span className="flex items-center gap-1">
                         <Building2 className="h-3 w-3" />
                         {client.type}
@@ -115,7 +115,7 @@ export function ClientsList() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                  <div className="flex items-center gap-4 text-sm text-blue-600">
                     <span className="flex items-center gap-1">
                       <Mail className="h-3 w-3" />
                       {client.email}
@@ -134,29 +134,29 @@ export function ClientsList() {
               </div>
 
               <div className="text-right space-y-2">
-                <div className="text-lg font-semibold text-gray-900">{client.revenue}</div>
-                <div className="text-sm text-gray-600">Annual Revenue</div>
-                <div className="flex items-center gap-1 text-xs text-gray-500">
+                <div className="text-lg font-semibold text-blue-900">{client.revenue}</div>
+                <div className="text-sm text-blue-600">Annual Revenue</div>
+                <div className="flex items-center gap-1 text-xs text-blue-500">
                   <Calendar className="h-3 w-3" />
                   Next: {client.nextDeadline}
                 </div>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" className="hover:bg-blue-50">
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem>
+                    <DropdownMenuItem className="hover:bg-blue-50">
                       <Eye className="h-4 w-4 mr-2" />
                       View Details
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem className="hover:bg-blue-50">
                       <Edit className="h-4 w-4 mr-2" />
                       Edit Client
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem className="hover:bg-blue-50">
                       <FileText className="h-4 w-4 mr-2" />
                       Generate Report
                     </DropdownMenuItem>

@@ -8,10 +8,11 @@ import { Edit, Trash2, Paperclip, Eye } from "lucide-react"
 import { useState } from "react"
 import { useTransactionFilters } from "@/contexts/FilterContext"
 import { useSkeletonPreview } from "@/hooks/use-skeleton-preview"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { useDashboard, Transaction } from "@/contexts/DashboardContext"
 import { TableSkeleton } from "@/components/ui/skeleton-presets"
 import { API_BASE_URL } from "@/lib/config"
+import { TransactionEditModal } from "@/components/accounting/transaction-edit-modal"
 
 export function TransactionsList() {
   const { filters } = useTransactionFilters()
@@ -22,6 +23,23 @@ export function TransactionsList() {
 
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false) // optional: for skeleton when deleting
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+
+  const handleEdit = (transaction: Transaction) => {
+    setEditingTransaction(transaction)
+    setIsEditModalOpen(true)
+  }
+
+  const handleEditModalClose = () => {
+    setIsEditModalOpen(false)
+    setEditingTransaction(null)
+  }
+
+  const handleTransactionUpdate = () => {
+    refreshDashboard()
+    handleEditModalClose()
+  }
 
   const handleDelete = async (id: string) => {
     if (!id) return
@@ -148,7 +166,11 @@ export function TransactionsList() {
                     <Button variant="ghost" size="icon">
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon">
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => handleEdit(transaction)}
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
@@ -167,6 +189,13 @@ export function TransactionsList() {
           </TableBody>
         </Table>
       </CardContent>
+      
+      <TransactionEditModal
+        isOpen={isEditModalOpen}
+        onClose={handleEditModalClose}
+        transaction={editingTransaction}
+        onUpdate={handleTransactionUpdate}
+      />
     </Card>
   )
 }
