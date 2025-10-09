@@ -9,12 +9,9 @@ import { Calculator, FileText, TrendingUp, Download, AlertTriangle, CheckCircle 
 import { API_BASE_URL } from "@/lib/config";
 import { toast } from "@/hooks/use-toast";
 
-// Lazy load heavy components
-const AdvanceTaxCalculator = lazy(() => 
-  import("@/components/tax/advance-tax-calculator").then(m => ({ default: m.AdvanceTaxCalculator }))
-);
-const TaxSavingCalculator = lazy(() => 
-  import("@/components/tax/tax-saving-calculator").then(m => ({ default: m.TaxSavingCalculator }))
+// Import the combined tax calculator
+const CombinedTaxCalculator = lazy(() => 
+  import("@/components/tax/combined-tax-calculator")
 );
 
 // Enhanced loading skeleton component
@@ -240,42 +237,37 @@ export default function TaxDashboardPage() {
 
           <div className="p-6">
             <TabsContent value="overview" className="mt-0 space-y-6">
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <h3 className="text-xl font-semibold text-blue-900 mb-4">Quick Calculations</h3>
-                  <Suspense fallback={<CalculatorSkeleton />}>
-                    <AdvanceTaxCalculator />
-                  </Suspense>
+              <div className="max-w-full">
+                <div className="mb-6">
+                  <h3 className="text-xl font-semibold text-blue-900 mb-2">Complete Tax Calculator</h3>
+                  <p className="text-gray-600">Calculate taxes, plan investments, and manage advance tax payments - all in one place</p>
                 </div>
-                <div className="space-y-4">
-                  <h3 className="text-xl font-semibold text-blue-900 mb-4">Investment Planning</h3>
-                  <Suspense fallback={<CalculatorSkeleton />}>
-                    <TaxSavingCalculator />
-                  </Suspense>
-                </div>
+                <Suspense fallback={<CalculatorSkeleton />}>
+                  <CombinedTaxCalculator />
+                </Suspense>
               </div>
             </TabsContent>
 
             <TabsContent value="advance-tax" className="mt-0">
-              <div className="max-w-4xl">
+              <div className="max-w-full">
                 <div className="mb-6">
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Advance Tax Calculator</h3>
                   <p className="text-gray-600">Calculate your quarterly advance tax payments based on estimated income</p>
                 </div>
                 <Suspense fallback={<CalculatorSkeleton />}>
-                  <AdvanceTaxCalculator />
+                  <CombinedTaxCalculator />
                 </Suspense>
               </div>
             </TabsContent>
 
             <TabsContent value="tax-saving" className="mt-0">
-              <div className="max-w-4xl">
+              <div className="max-w-full">
                 <div className="mb-6">
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Tax Saving Calculator</h3>
                   <p className="text-gray-600">Optimize your investments across various tax-saving sections to minimize tax liability</p>
                 </div>
                 <Suspense fallback={<CalculatorSkeleton />}>
-                  <TaxSavingCalculator />
+                  <CombinedTaxCalculator />
                 </Suspense>
               </div>
             </TabsContent>

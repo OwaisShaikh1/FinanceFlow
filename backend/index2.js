@@ -17,8 +17,10 @@ const assignCARoutes = require('./routes/cabussiness');
 const transactionRoutes = require('./routes/transaction');
 const taxcalcRoute = require('./routes/taxcalc');
 const exportRoutes = require('./routes/export');
+const extraRoutes=require('./routes/extra')
 const tdsRoutes = require('./routes/tds');
 const gstRoutes = require('./routes/gst');
+const authroutes=require('./routes/myfirebase')
 const gstInvoicesRoutes = require('./routes/gstInvoices');
 const gstReturnsRoutes = require('./routes/gstReturns');
 
@@ -160,15 +162,83 @@ app.post('/auth/register', async (req, res) => {
 
 app.use('/api/business', businessRoutes);      // /api/business → create/list business
 app.use('/api/business', assignCARoutes);      // /api/business/:id/assign-ca/:caId → assign CA
-
+app.use('/api/firebaselogin', authroutes)
 app.use('/api/invoice', invoiceRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/taxcalc', taxcalcRoute);
 app.use('/api/export', exportRoutes);
+app.use('/api/extra', extraRoutes);  
 app.use('/api/tds', tdsRoutes);              // /api/tds → TDS management
 app.use('/api/gst', gstRoutes);              // /api/gst → GST summary and periods
 app.use('/api/invoices', gstInvoicesRoutes); // /api/invoices → GST invoice management
 app.use('/api/returns', gstReturnsRoutes);   // /api/returns → GST returns management
+
+// User Tax Data Routes (for Combined Tax Calculator)
+app.get('/api/user/:userId/tax-data', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log('📊 Fetching tax data for user:', userId);
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Return user tax data or defaults if empty
+    const taxData = user.taxData || {
+      annualIncome: 0,
+      taxRegime: 'new',
+      section80C: 0,
+      section80D: 0,
+      section80G: 0,
+      section80E: 0,
+      section80EE: 0,
+      section80GGC: 0,
+      otherDeductions: 0,
+      taxBeforeInvestments: 0,
+      taxAfterInvestments: 0,
+      totalTaxSaved: 0,
+      estimatedAnnualTax: 0,
+      advanceTaxPaid: 0,
+      nextDueDate: '',
+      paymentReminders: []
+    };
+    
+    res.json({ success: true, taxData });
+  } catch (error) {
+    console.error('Error fetching user tax data:', error);
+    res.status(500).json({ message: 'Error fetching tax data', error: error.message });
+  }
+});
+
+app.put('/api/user/:userId/tax-data', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const taxData = req.body;
+    
+    console.log('💾 Updating tax data for user:', userId);
+    console.log('Tax data received:', taxData);
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Update user tax data
+    user.taxData = {
+      ...user.taxData,
+      ...taxData,
+      lastCalculatedAt: new Date()
+    };
+    
+    await user.save();
+    
+    res.json({ success: true, message: 'Tax data updated successfully', taxData: user.taxData });
+  } catch (error) {
+    console.error('Error updating user tax data:', error);
+    res.status(500).json({ message: 'Error updating tax data', error: error.message });
+  }
+});
 
 // P&L Statement PDF Generation
 app.get('/api/reports/profit-loss/pdf', auth, async (req, res) => {

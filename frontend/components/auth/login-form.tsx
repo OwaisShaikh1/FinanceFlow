@@ -1,10 +1,16 @@
 "use client";
+import app from "@/firebase"
 import { useState } from "react";
 import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useRouter } from "next/navigation";
+
+
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 
 interface LoginFormProps {
   onSubmit: (data: { loginMethod: "email" | "phone"; email?: string; password?: string; phone?: string; role: string }) => void;
@@ -18,24 +24,69 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const auth = getAuth(app);
+  const googleProvider = new GoogleAuthProvider();
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+    const handleSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      setIsLoading(true);
 
-    const formData = {
-      loginMethod,
-      email: loginMethod === "email" ? email : undefined,
-      password: loginMethod === "email" ? password : undefined,
-      phone: loginMethod === "phone" ? phone : undefined,
-      role,
+      const formData = {
+        loginMethod,
+        email: loginMethod === "email" ? email : undefined,
+        password: loginMethod === "email" ? password : undefined,
+        phone: loginMethod === "phone" ? phone : undefined,
+        role,
+      };
+
+      // Save data locally
+      localStorage.setItem("loginData", JSON.stringify(formData));
+
+      onSubmit(formData);
+      setIsLoading(false);
     };
+    
+   const signInWithGoogle = async () => {
+    setIsLoading(true);
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const firebaseUser = result.user;
 
-    // Save data locally
-    localStorage.setItem("loginData", JSON.stringify(formData));
+      // Send Firebase user data to backend
+      const res = await fetch(`http://localhost:5000/api/firebaselogin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firebaseUid: firebaseUser.uid,
+          displayName: firebaseUser.displayName,
+          email: firebaseUser.email,
+          photoURL: firebaseUser.photoURL,
+          provider: "google",
+        }),
+      });
 
-    onSubmit(formData);
-    setIsLoading(false);
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
+      const data = await res.json();
+
+      if (data.isNewUser) {
+        // First-time user → redirect to extra info page
+        localStorage.setItem("firebaseUser", JSON.stringify(firebaseUser));
+
+        router.push("/extra-info");
+      } else {
+        // Existing user → go to dashboard
+        router.push("/dashboard");
+      }
+
+    } catch (error) {
+      console.error("Google sign-in error:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -133,6 +184,17 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? "Processing..." : loginMethod === "phone" ? "Send OTP" : "Sign In"}
       </Button>
+
+      <Button
+  type="button"
+  onClick={signInWithGoogle}
+  className="w-full bg-red-500 text-white"
+>
+  Sign in with Google
+</Button>
+
+      
     </form>
+    
   );
 }
