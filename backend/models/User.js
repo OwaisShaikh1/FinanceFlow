@@ -28,6 +28,9 @@ const userSchema = new mongoose.Schema({
   displayName: { type: String },
   photoURL: { type: String },
   provider: { type: String, enum: ['email', 'google', 'facebook'], default: 'email' },
+  isGoogleUser: { type: Boolean, default: false },
+  profileCompleted: { type: Boolean, default: false },
+  username: { type: String },
   
   // Business reference
   business: { type: mongoose.Schema.Types.ObjectId, ref: "Business" },

@@ -1,5 +1,6 @@
 "use client";
-import React, { Suspense, lazy } from "react"
+import React, { Suspense, lazy, useEffect } from "react"
+import { useToast } from "@/hooks/use-toast"
 
 const DashboardStats = lazy(() => import("@/components/dashboard/dashboard-stats"))
 const RecentActivity = lazy(() => import("@/components/dashboard/recent-activity"))
@@ -10,6 +11,29 @@ const MetricsOverview = lazy(() => import("@/components/dashboard/metrics-overvi
 
 
 export default function DashboardPage() {
+  const { toast } = useToast()
+
+  useEffect(() => {
+    // Check if this is a new user and show welcome message
+    const showWelcome = localStorage.getItem("showWelcome")
+    const user = localStorage.getItem("user")
+    
+    if (showWelcome === "true" && user) {
+      try {
+        const userData = JSON.parse(user)
+        toast({
+          title: "Welcome to TaxPro! 🎉",
+          description: `Hello ${userData.displayName || userData.name || "there"}! Your account has been created successfully. Let's get started with managing your finances.`,
+          duration: 5000,
+        })
+        // Clear the welcome flag
+        localStorage.removeItem("showWelcome")
+      } catch (error) {
+        console.error("Error parsing user data:", error)
+      }
+    }
+  }, [toast])
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Enhanced Header Section */}

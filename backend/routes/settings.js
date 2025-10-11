@@ -2,10 +2,18 @@ const express = require('express');
 const User = require('../models/User');
 const router = express.Router();
 
-// Simulated auth middleware
+// JWT auth middleware
+const jwt = require('jsonwebtoken');
 const auth = (req, res, next) => {
-  req.user = { biz: 'business-1' };
-  next();
+  const hdr = req.headers.authorization || '';
+  const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
+  if (!token) return res.status(401).json({ message: 'No token' });
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    next();
+  } catch {
+    return res.status(401).json({ message: 'Invalid/expired token' });
+  }
 };
 
 // Get user settings
@@ -121,6 +129,72 @@ router.put('/:userId/settings', auth, async (req, res) => {
   } catch (error) {
     console.error('Error updating user settings:', error);
     res.status(500).json({ message: 'Error updating settings', error: error.message });
+  }
+});
+
+// Complete user profile after Google login
+router.post('/complete-profile', async (req, res) => {
+  try {
+    const { username, phone, role, company } = req.body;
+    
+    // Get user from token
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ success: false, error: 'No token provided' });
+    }
+
+    const jwt = require('jsonwebtoken');
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+      return res.status(401).json({ success: false, error: 'Invalid token' });
+    }
+
+    const userId = decoded.id;
+    
+    // Validate input
+    if (!username || !phone || !role || !company) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Username, phone, role, and company are required' 
+      });
+    }
+
+    // Update user with additional information
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        username: username,
+        phone: phone,
+        role: role,
+        company: company,
+        businessName: company, // Also set as business name
+        profileCompleted: true,
+        updatedAt: new Date()
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    console.log(`Profile completed for user: ${updatedUser.email}`);
+
+    res.json({
+      success: true,
+      message: 'Profile completed successfully',
+      user: updatedUser.toObject()
+    });
+
+  } catch (error) {
+    console.error('Error completing profile:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Server error during profile completion',
+      details: error.message 
+    });
   }
 });
 

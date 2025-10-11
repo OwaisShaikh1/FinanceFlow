@@ -10,7 +10,6 @@ import { useRouter } from "next/navigation";
 
 
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
 
 interface LoginFormProps {
   onSubmit: (data: { loginMethod: "email" | "phone"; email?: string; password?: string; phone?: string; role: string }) => void;
@@ -52,41 +51,69 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const firebaseUser = result.user;
+      
+      console.log("Firebase user data:", {
+        uid: firebaseUser.uid,
+        displayName: firebaseUser.displayName,
+        email: firebaseUser.email,
+        photoURL: firebaseUser.photoURL
+      });
 
       // Send Firebase user data to backend
+      const requestData = {
+        firebaseUid: firebaseUser.uid,
+        displayName: firebaseUser.displayName,
+        email: firebaseUser.email,
+        photoURL: firebaseUser.photoURL,
+        provider: "google",
+      };
+      
+      console.log("Sending request to backend:", requestData);
+      
       const res = await fetch(`http://localhost:5000/api/firebaselogin`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firebaseUid: firebaseUser.uid,
-          displayName: firebaseUser.displayName,
-          email: firebaseUser.email,
-          photoURL: firebaseUser.photoURL,
-          provider: "google",
-        }),
+        body: JSON.stringify(requestData),
       });
 
+      console.log("Response status:", res.status);
+      console.log("Response ok:", res.ok);
+      
+      const data = await res.json();
+      console.log("Response data:", data);
+
       if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
+        console.error("HTTP Error - Status:", res.status);
+        console.error("HTTP Error - StatusText:", res.statusText);
+        throw new Error(data?.error || data?.details || `HTTP error! status: ${res.status}`);
+      }
+      
+      if (!data.success) {
+        console.error("Backend Error:", data);
+        throw new Error(data.error || data.details || "Authentication failed");
       }
 
-      const data = await res.json();
-
-      // Store user data in localStorage for both new and existing users
+      // Store authentication data in localStorage
+      localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("firebaseUser", JSON.stringify(firebaseUser));
 
-      if (data.isNewUser) {
-        // First-time user → redirect to dashboard with welcome message
-        localStorage.setItem("showWelcome", "true");
-        router.push("/dashboard");
+      // Check if user needs onboarding (new user or incomplete profile)
+      if (data.needsOnboarding) {
+        localStorage.setItem("needsOnboarding", "true");
+        console.log("User needs onboarding, redirecting to complete profile");
+        router.push("/onboarding");
       } else {
-        // Existing user → go to dashboard
+        // Complete user → go to dashboard
+        localStorage.setItem("showWelcome", data.isNewUser ? "true" : "false");
+        console.log("User profile complete, redirecting to dashboard");
         router.push("/dashboard");
       }
 
     } catch (error) {
       console.error("Google sign-in error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Please try again.";
+      alert(`Login failed: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
