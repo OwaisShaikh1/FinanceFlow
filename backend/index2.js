@@ -175,6 +175,238 @@ app.use('/api/invoices', gstInvoicesRoutes); // /api/invoices → GST invoice ma
 app.use('/api/returns', gstReturnsRoutes);   // /api/returns → GST returns management
 app.use('/api/user', settingsRoutes);       // /api/user → User settings management
 
+// Clients Stats API
+app.get('/api/clients/stats', auth, async (req, res) => {
+  try {
+    console.log('📊 Fetching client statistics');
+    
+    // Only count users with role "user" as clients
+    const totalClients = await User.countDocuments({ role: 'user' });
+    const activeClients = await User.countDocuments({ 
+      role: 'user',
+      $or: [
+        { gstin: { $exists: true, $ne: null, $ne: '' } },
+        { pan: { $exists: true, $ne: null, $ne: '' } }
+      ]
+    });
+    
+    // Calculate pending tasks (users with role "user" without GST/PAN)
+    const pendingTasks = totalClients - activeClients;
+    
+    // Calculate overdue items (users with role "user" created more than 30 days ago without GST/PAN)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const overdueItems = await User.countDocuments({
+      role: 'user',
+      createdAt: { $lt: thirtyDaysAgo },
+      $and: [
+        { $or: [{ gstin: { $exists: false } }, { gstin: null }, { gstin: '' }] },
+        { $or: [{ pan: { $exists: false } }, { pan: null }, { pan: '' }] }
+      ]
+    });
+
+    const stats = {
+      totalClients,
+      activeClients,
+      pendingTasks,
+      overdueItems,
+      activePercentage: totalClients > 0 ? ((activeClients / totalClients) * 100).toFixed(1) : '0'
+    };
+
+    res.json({ 
+      success: true, 
+      stats 
+    });
+  } catch (error) {
+    console.error('Error fetching client stats:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching client stats', 
+      error: error.message 
+    });
+  }
+});
+
+// Clients Management API
+app.get('/api/clients', auth, async (req, res) => {
+  try {
+    console.log('📊 Fetching all clients/users');
+    
+    // Fetch only users with role "user" from database with relevant fields
+    const clients = await User.find({ role: 'user' }, {
+      name: 1,
+      email: 1,
+      phone: 1,
+      company: 1,
+      businessName: 1,
+      businessType: 1,
+      gstin: 1,
+      role: 1,
+      createdAt: 1,
+      pan: 1,
+      city: 1,
+      state: 1,
+      filingScheme: 1,
+      taxData: 1
+    }).sort({ createdAt: -1 });
+
+    // Transform the data to match the frontend structure
+    const transformedClients = clients.map(user => ({
+      id: user._id,
+      name: user.businessName || user.company || user.name,
+      type: user.businessType || (user.role === 'ca' ? 'CA' : 'Individual'),
+      gstin: user.gstin || 'Not Available',
+      email: user.email,
+      phone: user.phone || 'Not Available',
+      status: 'active', // You can add a status field to User model if needed
+      compliance: determineComplianceStatus(user),
+      lastActivity: calculateLastActivity(user.createdAt),
+      nextDeadline: getNextDeadline(user),
+      revenue: calculateRevenue(user.taxData),
+      pan: user.pan || 'Not Available',
+      city: user.city || 'Not Available',
+      state: user.state || 'Not Available',
+      filingScheme: user.filingScheme || 'monthly'
+    }));
+
+    res.json({ 
+      success: true, 
+      clients: transformedClients,
+      total: transformedClients.length 
+    });
+  } catch (error) {
+    console.error('Error fetching clients:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching clients', 
+      error: error.message 
+    });
+  }
+});
+
+// Get specific client details
+app.get('/api/clients/:clientId', auth, async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    console.log('📊 Fetching client details for:', clientId);
+    
+    // Find user with role "user" by ID
+    const user = await User.findOne({ 
+      _id: clientId, 
+      role: 'user' 
+    });
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Client not found' 
+      });
+    }
+
+    // Transform user data to detailed client information
+    const clientDetails = {
+      id: user._id,
+      // Basic Information
+      name: user.name,
+      email: user.email,
+      phone: user.phone || 'Not Available',
+      
+      // Business Information
+      businessName: user.businessName || 'Not Available',
+      businessType: user.businessType || 'Individual',
+      company: user.company || 'Not Available',
+      
+      // Tax Information
+      gstin: user.gstin || 'Not Available',
+      pan: user.pan || 'Not Available',
+      filingScheme: user.filingScheme || 'monthly',
+      
+      // Address Information
+      address: user.address || 'Not Available',
+      city: user.city || 'Not Available',
+      state: user.state || 'Not Available',
+      pincode: user.pincode || 'Not Available',
+      
+      // Tax Data
+      taxData: user.taxData || {
+        annualIncome: 0,
+        taxRegime: 'new',
+        section80C: 0,
+        section80D: 0,
+        totalTaxSaved: 0,
+        estimatedAnnualTax: 0
+      },
+      
+      // Account Information
+      role: user.role,
+      provider: user.provider || 'email',
+      createdAt: user.createdAt,
+      
+      // Calculated Fields
+      status: 'active',
+      compliance: determineComplianceStatus(user),
+      lastActivity: calculateLastActivity(user.createdAt),
+      nextDeadline: getNextDeadline(user),
+      revenue: calculateRevenue(user.taxData)
+    };
+
+    res.json({ 
+      success: true, 
+      client: clientDetails
+    });
+  } catch (error) {
+    console.error('Error fetching client details:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching client details', 
+      error: error.message 
+    });
+  }
+});
+
+// Helper functions for client data transformation
+function determineComplianceStatus(user) {
+  // Simple logic - you can enhance this based on your requirements
+  if (user.gstin && user.pan) {
+    return 'up-to-date';
+  } else if (user.gstin || user.pan) {
+    return 'pending';
+  } else {
+    return 'overdue';
+  }
+}
+
+function calculateLastActivity(createdAt) {
+  const now = new Date();
+  const created = new Date(createdAt);
+  const diffTime = Math.abs(now - created);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 1) return '1 day ago';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+  return `${Math.floor(diffDays / 30)} months ago`;
+}
+
+function getNextDeadline(user) {
+  // Simple logic for next deadline based on filing scheme
+  if (user.filingScheme === 'monthly') {
+    return 'GST Return - Next Month';
+  } else if (user.filingScheme === 'qrmp') {
+    return 'GST Return - Next Quarter';
+  } else {
+    return 'ITR Filing - Mar 31';
+  }
+}
+
+function calculateRevenue(taxData) {
+  if (taxData && taxData.annualIncome) {
+    return `₹${taxData.annualIncome.toLocaleString()}`;
+  }
+  return '₹0';
+}
+
 // User Tax Data Routes (for Combined Tax Calculator)
 app.get('/api/user/:userId/tax-data', async (req, res) => {
   try {

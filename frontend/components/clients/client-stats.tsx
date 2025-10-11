@@ -1,33 +1,80 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, AlertTriangle, CheckCircle, Clock } from "lucide-react"
+import { Users, AlertTriangle, CheckCircle, Clock, Loader2 } from "lucide-react"
+
+interface ClientStatsData {
+  totalClients: number
+  activeClients: number  
+  pendingTasks: number
+  overdueItems: number
+  activePercentage: string
+}
 
 export function ClientStats() {
+  const [statsData, setStatsData] = useState<ClientStatsData>({
+    totalClients: 0,
+    activeClients: 0,
+    pendingTasks: 0,
+    overdueItems: 0,
+    activePercentage: '0'
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const token = localStorage.getItem("token")
+        const response = await fetch('http://localhost:5000/api/clients/stats', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success) {
+            setStatsData(data.stats)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching client stats:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [])
+
   const stats = [
     {
       title: "Total Clients",
-      value: "24",
-      change: "+2 this month",
+      value: loading ? "..." : statsData.totalClients.toString(),
+      change: loading ? "Loading..." : "Registered users",
       icon: Users,
       color: "text-blue-600",
     },
     {
-      title: "Active Clients",
-      value: "22",
-      change: "91.7% active",
+      title: "Active Clients", 
+      value: loading ? "..." : statsData.activeClients.toString(),
+      change: loading ? "Loading..." : `${statsData.activePercentage}% active`,
       icon: CheckCircle,
       color: "text-emerald-600",
     },
     {
       title: "Pending Tasks",
-      value: "8",
-      change: "3 due today",
+      value: loading ? "..." : statsData.pendingTasks.toString(),
+      change: loading ? "Loading..." : "Setup incomplete",
       icon: Clock,
       color: "text-amber-600",
     },
     {
       title: "Overdue Items",
-      value: "2",
-      change: "Needs attention",
+      value: loading ? "..." : statsData.overdueItems.toString(),
+      change: loading ? "Loading..." : "Needs attention",
       icon: AlertTriangle,
       color: "text-red-600",
     },

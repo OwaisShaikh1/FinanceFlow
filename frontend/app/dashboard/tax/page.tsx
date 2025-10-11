@@ -183,7 +183,7 @@ export default function TaxDashboardPage() {
         </div>
       </div>
 
-      {/* Enhanced Tax Stats Overview with better cards */}
+      {/* Enhanced Tax Stats Overview with better cards 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {taxStats.map((stat, index) => (
           <Card key={index} className={`relative overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border-l-4 ${stat.borderColor} bg-gradient-to-br from-white to-blue-50`}>
@@ -207,7 +207,7 @@ export default function TaxDashboardPage() {
             </CardContent>
           </Card>
         ))}
-      </div>
+      </div>*/}
 
       {/* Enhanced Tabbed Interface */}
       <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-sm border border-blue-100">

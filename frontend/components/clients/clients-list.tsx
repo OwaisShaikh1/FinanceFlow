@@ -1,56 +1,111 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarInitials } from "@/components/ui/avatar"
-import { Building2, Mail, Phone, Calendar, MoreHorizontal, Eye, Edit, FileText } from "lucide-react"
+import { Building2, Mail, Phone, Calendar, MoreHorizontal, Eye, Edit, FileText, Loader2 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useClientFilters } from "@/contexts/FilterContext"
+import { ClientDetailsModal } from "./client-details-modal"
+
+interface Client {
+  id: string
+  name: string
+  type: string
+  gstin: string
+  email: string
+  phone: string
+  status: string
+  compliance: string
+  lastActivity: string
+  nextDeadline: string
+  revenue: string
+}
 
 export function ClientsList() {
   const { filters } = useClientFilters()
-  const clients = [
-    {
-      id: 1,
-      name: "Sharma Enterprises",
-      type: "Partnership",
-      gstin: "27AABCS1234C1Z5",
-      email: "contact@sharmaent.com",
-      phone: "+91 98765 43210",
-      status: "active",
-      compliance: "up-to-date",
-      lastActivity: "2 days ago",
-      nextDeadline: "GST Return - Mar 20",
-      revenue: "₹12,50,000",
-    },
-    {
-      id: 2,
-      name: "Tech Solutions Pvt Ltd",
-      type: "Company",
-      gstin: "29AABCT1234C1Z6",
-      email: "admin@techsol.com",
-      phone: "+91 87654 32109",
-      status: "active",
-      compliance: "pending",
-      lastActivity: "1 day ago",
-      nextDeadline: "TDS Return - Mar 15",
-      revenue: "₹25,75,000",
-    },
-    {
-      id: 3,
-      name: "Rajesh Kumar",
-      type: "Individual",
-      gstin: "27AABCP1234C1Z7",
-      email: "rajesh.k@email.com",
-      phone: "+91 76543 21098",
-      status: "active",
-      compliance: "overdue",
-      lastActivity: "5 days ago",
-      nextDeadline: "ITR Filing - Overdue",
-      revenue: "₹8,25,000",
-    },
-  ]
+  const [clients, setClients] = useState<Client[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null)
+  const [showClientDetails, setShowClientDetails] = useState(false)
+
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        setLoading(true)
+        const token = localStorage.getItem("token")
+        const response = await fetch('http://localhost:5000/api/clients', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        const data = await response.json()
+        if (data.success) {
+          setClients(data.clients)
+        } else {
+          throw new Error(data.message || 'Failed to fetch clients')
+        }
+      } catch (error) {
+        console.error('Error fetching clients:', error)
+        setError(error instanceof Error ? error.message : 'Failed to fetch clients')
+        // Fallback to sample data for development
+        setClients([
+          {
+            id: "1",
+            name: "Sharma Enterprises",
+            type: "Partnership",
+            gstin: "27AABCS1234C1Z5",
+            email: "contact@sharmaent.com",
+            phone: "+91 98765 43210",
+            status: "active",
+            compliance: "up-to-date",
+            lastActivity: "2 days ago",
+            nextDeadline: "GST Return - Mar 20",
+            revenue: "₹12,50,000",
+          },
+          {
+            id: "2",
+            name: "Tech Solutions Pvt Ltd",
+            type: "Company",
+            gstin: "29AABCT1234C1Z6",
+            email: "admin@techsol.com",
+            phone: "+91 87654 32109",
+            status: "active",
+            compliance: "pending",
+            lastActivity: "1 day ago",
+            nextDeadline: "TDS Return - Mar 15",
+            revenue: "₹25,75,000",
+          },
+          {
+            id: "3",
+            name: "Rajesh Kumar",
+            type: "Individual",
+            gstin: "27AABCP1234C1Z7",
+            email: "rajesh.k@email.com",
+            phone: "+91 76543 21098",
+            status: "active",
+            compliance: "overdue",
+            lastActivity: "5 days ago",
+            nextDeadline: "ITR Filing - Overdue",
+            revenue: "₹8,25,000",
+          },
+        ])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchClients()
+  }, [])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -78,6 +133,16 @@ export function ClientsList() {
     }
   }
 
+  const handleViewDetails = (clientId: string) => {
+    setSelectedClientId(clientId)
+    setShowClientDetails(true)
+  }
+
+  const handleCloseDetails = () => {
+    setSelectedClientId(null)
+    setShowClientDetails(false)
+  }
+
   // Apply filters
   const filteredClients = clients.filter((client) => {
     const matchesSearch = filters.search
@@ -90,10 +155,48 @@ export function ClientsList() {
     return matchesSearch && matchesStatus && matchesBusinessType
   })
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <span className="ml-2 text-blue-600">Loading clients...</span>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-red-600 mb-4">
+          <p className="font-medium">Error loading clients</p>
+          <p className="text-sm">{error}</p>
+        </div>
+        <Button 
+          onClick={() => window.location.reload()} 
+          variant="outline"
+          className="border-red-200 text-red-600 hover:bg-red-50"
+        >
+          Retry
+        </Button>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4">
-      {filteredClients.map((client) => (
-        <Card key={client.id} className="bg-gradient-to-br from-white to-blue-50 border-blue-100 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+      {filteredClients.length === 0 ? (
+        <div className="text-center py-12">
+          <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">No clients found</p>
+          <p className="text-sm text-gray-500">Try adjusting your search filters</p>
+        </div>
+      ) : (
+        filteredClients.map((client) => (
+        <Card 
+          key={client.id} 
+          className="bg-gradient-to-br from-white to-blue-50 border-blue-100 hover:shadow-md hover:border-blue-200 transition-all duration-200 cursor-pointer"
+          onClick={() => handleViewDetails(client.id)}
+        >
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-4">
@@ -143,12 +246,23 @@ export function ClientsList() {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="hover:bg-blue-50">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="hover:bg-blue-50"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem className="hover:bg-blue-50">
+                    <DropdownMenuItem 
+                      className="hover:bg-blue-50 cursor-pointer" 
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleViewDetails(client.id)
+                      }}
+                    >
                       <Eye className="h-4 w-4 mr-2" />
                       View Details
                     </DropdownMenuItem>
@@ -166,7 +280,14 @@ export function ClientsList() {
             </div>
           </CardContent>
         </Card>
-      ))}
+        ))
+      )}
+
+      <ClientDetailsModal 
+        clientId={selectedClientId}
+        isOpen={showClientDetails}
+        onClose={handleCloseDetails}
+      />
     </div>
   )
 }

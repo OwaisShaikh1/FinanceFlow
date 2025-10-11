@@ -87,7 +87,7 @@ const navigationItems = [
     title: "Client Management",
     roles: ["Admin", "CA"],
     items: [
-      { title: "Clients", href: "/dashboard/clients", icon: Users, roles: ["Admin"] },
+      { title: "Clients", href: "/dashboard/clients", icon: Users, roles: ["Admin", "CA"] },
       { title: "Organizations", href: "/dashboard/organizations", icon: Building, roles: ["Admin"] },
     ],
   },
