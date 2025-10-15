@@ -64,20 +64,40 @@ export function PricingSection() {
           {plans.map((plan, index) => (
             <Card
               key={index}
-              className={`relative bg-white ${plan.popular ? "border-blue-500 shadow-lg shadow-blue-100/50 scale-105" : "border-blue-200"} hover:shadow-lg transition-all duration-300`}
+              className={`group relative bg-white/80 backdrop-blur-sm ${
+                plan.popular 
+                  ? "border-blue-500 shadow-2xl shadow-blue-100/50 scale-105 bg-gradient-to-br from-blue-50 to-indigo-50" 
+                  : "border-blue-200 hover:border-blue-300"
+              } hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl overflow-hidden`}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium">
-                    Most Popular
-                  </span>
-                </div>
+                <>
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                    <span className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-1 rounded-full text-sm font-medium shadow-lg animate-pulse-glow">
+                      🔥 Most Popular
+                    </span>
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-indigo-600/10 pointer-events-none"></div>
+                </>
               )}
 
-              <CardHeader className="text-center">
-                <CardTitle className="text-2xl text-slate-900">{plan.name}</CardTitle>
-                <div className="text-3xl font-bold text-blue-600 mb-2">{plan.price}</div>
-                <CardDescription className="text-slate-600">{plan.description}</CardDescription>
+              <CardHeader className="text-center relative z-10">
+                <CardTitle className="text-2xl font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
+                  {plan.name}
+                </CardTitle>
+                <div className={`text-4xl font-bold mb-2 ${
+                  plan.popular 
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"
+                    : "text-blue-600"
+                }`}>
+                  {plan.price}
+                </div>
+                {plan.name === "Small Business" && (
+                  <div className="text-sm text-green-600 font-medium mb-2">
+                    💰 Save ₹2,000 annually!
+                  </div>
+                )}
+                <CardDescription className="text-slate-600 leading-relaxed">{plan.description}</CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-4">
@@ -91,8 +111,16 @@ export function PricingSection() {
                 </ul>
 
                 <Link href={plan.href} className="block">
-                  <Button className="w-full" variant={plan.popular ? "default" : "outline"} size="lg">
-                    {plan.cta}
+                  <Button 
+                    className={`w-full transform transition-all duration-200 ${
+                      plan.popular 
+                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl hover:scale-105" 
+                        : "hover:scale-105 hover:shadow-lg"
+                    }`}
+                    variant={plan.popular ? "default" : "outline"} 
+                    size="lg"
+                  >
+                    {plan.popular ? "🚀 " : ""}{plan.cta}
                   </Button>
                 </Link>
               </CardContent>
