@@ -235,7 +235,10 @@ router.get('/:id/pdf', auth, async (req, res) => {
 // Get invoice statistics
 router.get('/stats', auth, async (req, res) => {
   try {
-    const invoices = await GenInvoice.find({ business: req.user.biz });
+    // Support filtering by business ID (for CA viewing client data)
+    const businessId = req.query.business || req.user.biz;
+    
+    const invoices = await GenInvoice.find({ business: businessId });
     
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();

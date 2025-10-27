@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react"
 import { API_BASE_URL } from "@/lib/config"
+import { useClientContext } from "./ClientContext"
 
 export interface Transaction {
   id: string
@@ -55,21 +56,27 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const { selectedClient } = useClientContext()
 
   const fetchDashboard = async () => {
     setLoading(true)
     try {
       const token = localStorage.getItem("token")
 
+      // Build query params for client filtering
+      const queryParams = selectedClient?.businessId 
+        ? `?business=${selectedClient.businessId}` 
+        : ''
+
       // Fetch stats, transactions, and chart data
       const [statsRes, txnRes, chartRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/transactions/dashboard-stats`, {
+        fetch(`${API_BASE_URL}/api/transactions/dashboard-stats${queryParams}`, {
           headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         }),
-        fetch(`${API_BASE_URL}/api/transactions`, {
+        fetch(`${API_BASE_URL}/api/transactions${queryParams}`, {
           headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         }),
-        fetch(`${API_BASE_URL}/api/transactions/chart-data`, {
+        fetch(`${API_BASE_URL}/api/transactions/chart-data${queryParams}`, {
           headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         }),
       ])
@@ -96,7 +103,7 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     fetchDashboard()
-  }, [])
+  }, [selectedClient]) // Re-fetch when client selection changes
 
   return (
     <DashboardContext.Provider

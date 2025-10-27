@@ -1,32 +1,97 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Repeat, Calendar, DollarSign, Clock } from "lucide-react"
+import { useClientContext } from "@/contexts/ClientContext"
+
+interface RecurringInvoice {
+  _id: string
+  everyDays: number
+  nextRun: string
+  status?: string
+  template: {
+    amount?: number
+  }
+}
 
 export function RecurringInvoiceStats() {
+  const [invoices, setInvoices] = useState<RecurringInvoice[]>([])
+  const [loading, setLoading] = useState(true)
+  const { selectedClient } = useClientContext()
+
+  useEffect(() => {
+    const fetchRecurringInvoices = async () => {
+      try {
+        setLoading(true)
+        const token = localStorage.getItem("token")
+        
+        // Build query params for client filtering
+        const queryParams = selectedClient?.businessId 
+          ? `?business=${selectedClient.businessId}` 
+          : ''
+        
+        const response = await fetch(`http://localhost:5000/invoices/recurring${queryParams}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setInvoices(data)
+        }
+      } catch (err) {
+        console.error("Error fetching recurring invoices:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchRecurringInvoices()
+  }, [selectedClient])
+
+  // Calculate stats from real data
+  const activeCount = invoices.filter(inv => inv.status !== 'paused').length
+  const pausedCount = invoices.filter(inv => inv.status === 'paused').length
+  const monthlyRevenue = invoices
+    .filter(inv => inv.status !== 'paused' && inv.everyDays === 30)
+    .reduce((sum, inv) => sum + (inv.template?.amount || 0), 0)
+  
+  // Calculate next generation (invoices due in next 7 days)
+  const today = new Date()
+  const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+  const dueNextWeek = invoices.filter(inv => {
+    const nextRun = new Date(inv.nextRun)
+    return nextRun >= today && nextRun <= nextWeek && inv.status !== 'paused'
+  }).length
+
   const stats = [
     {
       title: "Active Recurring",
-      value: "12",
-      change: "+2 this month",
+      value: loading ? "..." : activeCount.toString(),
+      change: loading ? "Loading..." : `${invoices.length} total templates`,
       icon: Repeat,
       color: "text-blue-600",
     },
     {
       title: "Monthly Revenue",
-      value: "₹2,45,000",
+      value: loading ? "..." : `₹${monthlyRevenue.toLocaleString()}`,
       change: "From recurring invoices",
       icon: DollarSign,
       color: "text-green-600",
     },
     {
       title: "Next Generation",
-      value: "5",
-      change: "Due in 3 days",
+      value: loading ? "..." : dueNextWeek.toString(),
+      change: "Due in next 7 days",
       icon: Calendar,
       color: "text-yellow-600",
     },
     {
       title: "Paused Templates",
-      value: "2",
+      value: loading ? "..." : pausedCount.toString(),
       change: "Temporarily inactive",
       icon: Clock,
       color: "text-red-600",

@@ -3,9 +3,13 @@ import type React from "react"
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { DashboardProvider, useDashboard } from "@/contexts/DashboardContext"
+import { ClientSelectorBanner } from "@/components/clients/client-selector-banner"
+import { ClientNotification } from "@/components/clients/client-notification"
+import { useClientContext } from "@/contexts/ClientContext"
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const { sidebarCollapsed } = useDashboard()
+  const { isViewingAsClient } = useClientContext()
   
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -19,9 +23,12 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           }`}
           style={{ height: 'calc(100vh - 82px)' }}
         >
+          {isViewingAsClient && <ClientSelectorBanner />}
           {children}
         </main>
       </div>
+      {/* Floating notification at bottom */}
+      <ClientNotification />
     </div>
   )
 }

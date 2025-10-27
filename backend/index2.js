@@ -474,6 +474,38 @@ app.put('/api/user/:userId/tax-data', async (req, res) => {
   }
 });
 
+// Recurring Invoice Templates Routes
+app.post('/invoices/recurring', auth, async (req, res) => {
+  try {
+    const tpl = await RecurringTemplate.create({
+      business: req.user.biz,
+      template: req.body.template,
+      everyDays: req.body.everyDays || 30,
+      nextRun: new Date(Date.now() + (req.body.everyDays || 30) * 24 * 60 * 60 * 1000),
+      status: req.body.status || 'active'
+    });
+    return res.status(201).json(tpl);
+  } catch (error) {
+    console.error('Error creating recurring template:', error);
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+app.get('/invoices/recurring', auth, async (req, res) => {
+  try {
+    // Support filtering by business ID (for CA viewing client data)
+    const businessId = req.query.business || req.user.biz;
+    const templates = await RecurringTemplate.find({ business: businessId })
+      .populate('business', 'name')
+      .sort({ createdAt: -1 })
+      .lean();
+    return res.json(templates);
+  } catch (error) {
+    console.error('Error fetching recurring templates:', error);
+    return res.status(500).json({ message: error.message });
+  }
+});
+
 // P&L Statement PDF Generation
 app.get('/api/reports/profit-loss/pdf', auth, async (req, res) => {
   console.log('📊 P&L PDF request received');

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -58,6 +58,13 @@ export function IncomeTaxCalculator() {
     })
   }
 
+  // Auto-calculate tax when values change
+  useEffect(() => {
+    if (income && age) {
+      calculateTax()
+    }
+  }, [income, age, deductions])
+
   return (
     <Card>
       <CardHeader>
@@ -106,8 +113,8 @@ export function IncomeTaxCalculator() {
           />
         </div>
 
-        <Button onClick={calculateTax} className="w-full">
-          Calculate Tax
+        <Button onClick={calculateTax} className="w-full" variant="outline">
+          Recalculate Tax
         </Button>
 
         {result && (

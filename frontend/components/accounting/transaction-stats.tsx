@@ -1,8 +1,9 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TrendingUp, TrendingDown, DollarSign, PieChart } from "lucide-react"
-import { useEffect, useState } from "react"
+import { TrendingUp, TrendingDown, ArrowUpRight, DollarSign, FileText } from "lucide-react"
+import { useState, useEffect } from "react"
+import { useClientContext } from "@/contexts/ClientContext"
 
 interface TransactionData {
   totalIncome: number;
@@ -14,11 +15,18 @@ interface TransactionData {
 export function TransactionStats() {
   const [transactionData, setTransactionData] = useState<TransactionData | null>(null)
   const [loading, setLoading] = useState(true)
+  const { selectedClient } = useClientContext()
 
   const fetchTransactionData = async () => {
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch("http://localhost:5000/api/transactions/dashboard-stats", {
+      
+      // Build query params for client filtering
+      const queryParams = selectedClient?.businessId 
+        ? `?business=${selectedClient.businessId}` 
+        : ''
+      
+      const response = await fetch(`http://localhost:5000/api/transactions/dashboard-stats${queryParams}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -27,7 +35,10 @@ export function TransactionStats() {
       if (response.ok) {
         const data = await response.json()
         setTransactionData(data)
-        localStorage.setItem("transactionData", JSON.stringify(data)) // cache it
+        // Only cache if not viewing specific client
+        if (!selectedClient) {
+          localStorage.setItem("transactionData", JSON.stringify(data))
+        }
       }
     } catch (err) {
       console.error("Error fetching transaction data:", err)
@@ -37,16 +48,18 @@ export function TransactionStats() {
   }
 
   useEffect(() => {
-    // Check if cached data exists
-    const cached = localStorage.getItem("transactionData")
-    if (cached) {
-      setTransactionData(JSON.parse(cached))
-      setLoading(false)
+    // Only use cache if not viewing specific client
+    if (!selectedClient) {
+      const cached = localStorage.getItem("transactionData")
+      if (cached) {
+        setTransactionData(JSON.parse(cached))
+        setLoading(false)
+      }
     }
 
-    // Refresh in background
+    // Refresh data
     fetchTransactionData()
-  }, [])
+  }, [selectedClient]) // Re-fetch when client changes
 
   if (!transactionData && loading) {
     return (
@@ -96,7 +109,7 @@ export function TransactionStats() {
       value: transactionData?.transactionCount?.toString() || "0",
       change: "+23",
       trend: "up" as const,
-      icon: PieChart,
+      icon: FileText,
       period: "This month",
     },
   ]

@@ -409,6 +409,21 @@ app.post('/invoices/recurring', auth, async (req, res) => {
   return res.status(201).json(tpl);
 });
 
+app.get('/invoices/recurring', auth, async (req, res) => {
+  try {
+    // Support filtering by business ID (for CA viewing client data)
+    const businessId = req.query.business || req.user.biz;
+    const templates = await RecurringTemplate.find({ business: businessId })
+      .populate('business', 'name')
+      .sort({ createdAt: -1 })
+      .lean();
+    return res.json(templates);
+  } catch (error) {
+    console.error('Error fetching recurring templates:', error);
+    return res.status(500).json({ message: error.message });
+  }
+});
+
 // ----------------------------------------------------------------------------
 // Reports (very simplified aggregations)
 // ----------------------------------------------------------------------------
