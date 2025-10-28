@@ -45,7 +45,7 @@ router.post('/calculate', async (req, res) => {
 // 2. Record TDS Deduction (POST to save data)
 router.post('/record-deduction', async (req, res) => {
   try {
-    const { payeeName, paymentAmount, tdsSection } = req.body;
+    const { payeeName, payeePAN, paymentAmount, tdsSection, paymentDate, notes } = req.body;
 
     console.log('Received TDS record request:', req.body);
 
@@ -81,14 +81,25 @@ router.post('/record-deduction', async (req, res) => {
     // Get the applicable threshold for this TDS section
     const thresholdAmount = TDSCalculator.getThresholdAmount(tdsSection, 'Individual');
 
+    // Mock user and business IDs (replace with actual auth middleware values)
+    const userId = req.user?.id || '650f3f0c8f8c9a12a7654321';
+    const businessId = req.user?.biz || '650f3f0c8f8c9a12a1234567';
+
     const tdsEntry = new TDS({
+      user: userId,
+      business: businessId,
       payeeName: payeeName.trim(),
+      payeePAN: payeePAN ? payeePAN.trim().toUpperCase() : undefined,
       tdsSection,
       paymentAmount: amount,
+      paymentDate: paymentDate ? new Date(paymentDate) : new Date(),
       applicableThreshold: thresholdAmount,
       tdsRate: tdsCalculation.applicable ? tdsCalculation.tdsRate : 0,
       tdsAmount: tdsCalculation.applicable ? (tdsCalculation.basicTDS || tdsCalculation.totalTDS) : 0,
-      netPayment: tdsCalculation.netPayment
+      netPayment: tdsCalculation.netPayment,
+      status: 'pending',
+      notes: notes || '',
+      createdBy: userId
     });
 
     await tdsEntry.save();

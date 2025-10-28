@@ -3,51 +3,51 @@ const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema({
   // Basic user info
-  name: { type: String, required: true, default: "User" },
-  email: { type: String, required: true, unique: true, lowercase: true },
+  name: { type: String, required: true, default: "User", trim: true, index: true },
+  email: { type: String, required: true, unique: true, lowercase: true, trim: true, index: true },
   password: { type: String, required: false }, // Optional for Firebase users
-  role: { type: String, enum: ['user', 'admin', 'ca', 'Admin', 'CA'], default: "user" },
+  role: { type: String, enum: ['user', 'admin', 'ca', 'Admin', 'CA'], default: "user", index: true },
   
   // Contact info
-  phone: { type: String },
-  address: { type: String },
-  city: { type: String },
-  state: { type: String },
-  pincode: { type: String },
-  company: { type: String },
+  phone: { type: String, trim: true },
+  address: { type: String, trim: true },
+  city: { type: String, trim: true },
+  state: { type: String, trim: true },
+  pincode: { type: String, trim: true },
+  company: { type: String, trim: true },
   
   // Business info
-  businessName: { type: String },
-  businessType: { type: String },
-  pan: { type: String },
+  businessName: { type: String, trim: true },
+  businessType: { type: String, trim: true },
+  pan: { type: String, uppercase: true, trim: true, sparse: true, index: true },
   avatar: { type: String },
-  defaultTaxRate: { type: Number, default: 18 },
+  defaultTaxRate: { type: Number, default: 18, min: 0, max: 100 },
   
   // Firebase authentication
-  firebaseUid: { type: String, unique: true, sparse: true },
-  displayName: { type: String },
+  firebaseUid: { type: String, unique: true, sparse: true, index: true },
+  displayName: { type: String, trim: true },
   photoURL: { type: String },
   provider: { type: String, enum: ['email', 'google', 'facebook'], default: 'email' },
   isGoogleUser: { type: Boolean, default: false },
-  profileCompleted: { type: Boolean, default: false },
-  username: { type: String },
+  profileCompleted: { type: Boolean, default: false, index: true },
+  username: { type: String, trim: true, sparse: true, unique: true },
   
   // Business reference
-  business: { type: mongoose.Schema.Types.ObjectId, ref: "Business" },
+  business: { type: mongoose.Schema.Types.ObjectId, ref: "Business", index: true },
 
   // GST & tax data
   filingScheme: { type: String, enum: ['monthly', 'qrmp'], default: 'monthly' },
-  gstin: { type: String },
+  gstin: { type: String, uppercase: true, trim: true, sparse: true, index: true },
   taxData: {
-    annualIncome: { type: Number, default: 0 },
+    annualIncome: { type: Number, default: 0, min: 0 },
     taxRegime: { type: String, enum: ['old', 'new'], default: 'new' },
-    section80C: { type: Number, default: 0 },
-    section80D: { type: Number, default: 0 },
-    section80G: { type: Number, default: 0 },
-    section80E: { type: Number, default: 0 },
-    section80EE: { type: Number, default: 0 },
-    section80GGC: { type: Number, default: 0 },
-    otherDeductions: { type: Number, default: 0 },
+    section80C: { type: Number, default: 0, min: 0 },
+    section80D: { type: Number, default: 0, min: 0 },
+    section80G: { type: Number, default: 0, min: 0 },
+    section80E: { type: Number, default: 0, min: 0 },
+    section80EE: { type: Number, default: 0, min: 0 },
+    section80GGC: { type: Number, default: 0, min: 0 },
+    otherDeductions: { type: Number, default: 0, min: 0 },
     taxBeforeInvestments: { type: Number, default: 0 },
     taxAfterInvestments: { type: Number, default: 0 },
     totalTaxSaved: { type: Number, default: 0 },

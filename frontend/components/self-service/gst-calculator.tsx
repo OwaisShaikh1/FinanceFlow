@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -44,6 +44,13 @@ export function GSTCalculator() {
       totalAmount,
     })
   }
+
+  // Auto-calculate GST when values change
+  useEffect(() => {
+    if (amount && gstRate && calculationType) {
+      calculateGST()
+    }
+  }, [amount, gstRate, calculationType])
 
   return (
     <Card className="shadow-sm border-0 bg-gradient-to-br from-white to-green-50">
@@ -99,8 +106,8 @@ export function GSTCalculator() {
           </Select>
         </div>
 
-        <Button onClick={calculateGST} className="w-full">
-          Calculate GST
+        <Button onClick={calculateGST} className="w-full" variant="outline">
+          Recalculate GST
         </Button>
 
         {result && (

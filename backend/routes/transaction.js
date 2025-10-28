@@ -1,5 +1,6 @@
 const express = require("express");
 const multer = require("multer");
+const jwt = require("jsonwebtoken");
 const Transaction = require("../models/Transaction");
 
 // Add this at the top with your other requires
@@ -7,8 +8,12 @@ const UserCounter = require("../models/UserCounter");
 
 const router = express.Router();
 
+<<<<<<< HEAD
 // JWT auth middleware
 const jwt = require('jsonwebtoken');
+=======
+// Real auth middleware - verify JWT token
+>>>>>>> a77f7d4b8c83b43a09e733c2982d6b7eda104ca6
 const auth = (req, res, next) => {
   const hdr = req.headers.authorization || '';
   const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
@@ -71,12 +76,17 @@ const txData = {
   date: date ? new Date(date) : new Date(),
   type,
   amount: amountNum,
-  category,
-  description,
-  notes,
-  paymentMethod,
-  receipts: files,
-  source: "MANUAL"
+  category: category || 'General',
+  description: description || '',
+  notes: notes || '',
+  paymentMethod: paymentMethod || 'Cash',
+  receipts: files.map(f => ({
+    ...f,
+    uploadDate: new Date()
+  })),
+  source: "MANUAL",
+  createdBy: req.user.id,
+  reconciled: false
 };
 
 // Log the transaction before saving
@@ -96,7 +106,25 @@ const tx = await Transaction.create(txData);
 
 router.get('/', auth, async (req, res) => {
   try {
-    const transactions = await Transaction.find({ business: req.user.biz });
+    // Support filtering by business ID (for CA viewing client data)
+    const businessId = req.query.business;
+    
+    let query = {};
+    if (businessId) {
+      // Specific business requested (CA viewing client data)
+      query = { business: businessId };
+    } else if (req.user.biz) {
+      // Regular user with a business
+      query = { business: req.user.biz };
+    }
+    // If no businessId and no user.biz (CA user), return all transactions
+    
+    console.log('📊 GET /api/transactions - Query params:', req.query);
+    console.log('📊 User info:', { id: req.user.id, biz: req.user.biz, role: req.user.role });
+    console.log('📊 Final query:', query);
+    
+    const transactions = await Transaction.find(query).sort({ date: -1 });
+    console.log('📊 Transactions found:', transactions.length);
     return res.json(transactions);
   } catch (e) {
     return res.status(500).json({ message: e.message });
@@ -106,8 +134,27 @@ router.get('/', auth, async (req, res) => {
 // Dashboard stats endpoint
 router.get('/dashboard-stats', auth, async (req, res) => {
   try {
-    // Get all transactions for the business
-    const transactions = await Transaction.find({ business: req.user.biz }).lean();
+    // Support filtering by business ID (for CA viewing client data)
+    const businessId = req.query.business;
+    
+    let query = {};
+    if (businessId) {
+      // Specific business requested (CA viewing client data)
+      query = { business: businessId };
+    } else if (req.user.biz) {
+      // Regular user with a business
+      query = { business: req.user.biz };
+    }
+    // If no businessId and no user.biz (CA user), return all transactions
+    
+    console.log('📊 GET /api/transactions/dashboard-stats - Query params:', req.query);
+    console.log('📊 User info:', { id: req.user.id, biz: req.user.biz, role: req.user.role });
+    console.log('📊 Final query:', query);
+    
+    // Get all transactions for the business (or all if CA)
+    const transactions = await Transaction.find(query).lean();
+    
+    console.log('📊 Transactions found:', transactions.length);
     
     // Calculate totals (database has lowercase 'income' and 'expense')
     const totalIncome = transactions
@@ -138,7 +185,20 @@ router.get('/dashboard-stats', auth, async (req, res) => {
 // Dashboard chart data endpoint
 router.get('/chart-data', auth, async (req, res) => {
   try {
-    const transactions = await Transaction.find({ business: req.user.biz }).lean();
+    // Support filtering by business ID (for CA viewing client data)
+    const businessId = req.query.business;
+    
+    let query = {};
+    if (businessId) {
+      // Specific business requested (CA viewing client data)
+      query = { business: businessId };
+    } else if (req.user.biz) {
+      // Regular user with a business
+      query = { business: req.user.biz };
+    }
+    // If no businessId and no user.biz (CA user), return all transactions
+    
+    const transactions = await Transaction.find(query).lean();
     
     // Group transactions by month for the last 12 months
     const monthlyData = {};
@@ -218,9 +278,10 @@ router.put('/:id', auth, async (req, res) => {
         description: description || '',
         notes: notes || '',
         paymentMethod: paymentMethod || 'Cash',
+        updatedBy: req.user.id,
         updatedAt: new Date()
       },
-      { new: true }
+      { new: true, runValidators: true }
     );
 
     res.json({

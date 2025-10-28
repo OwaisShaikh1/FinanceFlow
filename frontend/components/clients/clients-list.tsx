@@ -1,14 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarInitials } from "@/components/ui/avatar"
-import { Building2, Mail, Phone, Calendar, MoreHorizontal, Eye, Edit, FileText, Loader2 } from "lucide-react"
+import { Building2, Mail, Phone, Calendar, MoreHorizontal, Eye, Edit, FileText, Loader2, ArrowRight } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useClientFilters } from "@/contexts/FilterContext"
+import { useClientContext } from "@/contexts/ClientContext"
 import { ClientDetailsModal } from "./client-details-modal"
+import { useToast } from "@/hooks/use-toast"
 
 interface Client {
   id: string
@@ -26,6 +29,9 @@ interface Client {
 
 export function ClientsList() {
   const { filters } = useClientFilters()
+  const { selectClient } = useClientContext()
+  const router = useRouter()
+  const { toast } = useToast()
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -143,6 +149,60 @@ export function ClientsList() {
     setShowClientDetails(false)
   }
 
+  const handleViewClientData = async (client: Client) => {
+    try {
+      // Fetch full client details including business info
+      const token = localStorage.getItem("token")
+      const response = await fetch(`http://localhost:5000/api/clients/${client.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch client details')
+      }
+
+      const data = await response.json()
+      if (data.success && data.client) {
+        const clientData = data.client
+        
+        // Set the selected client in context
+        selectClient({
+          id: clientData._id || clientData.id,
+          name: clientData.name,
+          email: clientData.email,
+          businessId: clientData.business?._id || clientData.business,
+          businessName: clientData.businessName || clientData.company || client.name,
+          gstin: clientData.gstin || client.gstin,
+          pan: clientData.pan,
+          businessType: clientData.businessType || client.type
+        })
+
+        // Show success toast
+        toast({
+          title: "Client Selected",
+          description: `Now viewing data for ${clientData.name}`,
+          duration: 3000,
+        })
+
+        // Redirect to dashboard to show client's data
+        router.push('/dashboard')
+      } else {
+        throw new Error('Invalid response data')
+      }
+    } catch (error) {
+      console.error('Error accessing client:', error)
+      toast({
+        title: "Error",
+        description: "Failed to access client data. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      })
+    }
+  }
+
   // Apply filters
   const filteredClients = clients.filter((client) => {
     const matchesSearch = filters.search
@@ -256,6 +316,16 @@ export function ClientsList() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem 
+                      className="bg-blue-50 text-blue-700 hover:bg-blue-100 cursor-pointer font-medium" 
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleViewClientData(client)
+                      }}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      Access Client Data
+                    </DropdownMenuItem>
                     <DropdownMenuItem 
                       className="hover:bg-blue-50 cursor-pointer" 
                       onClick={(e) => {

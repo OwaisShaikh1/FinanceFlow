@@ -38,18 +38,39 @@ export function TestimonialsSection() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {testimonials.map((testimonial, index) => (
-            <Card key={index} className="bg-white border-blue-200 hover:shadow-lg hover:shadow-blue-100/50 transition-all duration-300">
-              <CardContent className="p-6">
-                <div className="flex items-center mb-4">
+            <Card key={index} className="group bg-white/80 backdrop-blur-sm border-blue-200 hover:border-blue-300 hover:shadow-xl hover:shadow-blue-100/50 hover:scale-105 transition-all duration-300 rounded-2xl overflow-hidden">
+              <CardContent className="p-8 relative">
+                {/* Quote decoration */}
+                <div className="absolute -top-2 -left-2 text-6xl text-blue-100 font-serif">"</div>
+                
+                <div className="flex items-center mb-4 relative z-10">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-5 w-5 text-blue-600 fill-current" />
+                    <Star key={i} className="h-5 w-5 text-yellow-500 fill-yellow-500 group-hover:animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
                   ))}
                 </div>
-                <p className="text-slate-600 mb-4 text-pretty">"{testimonial.content}"</p>
-                <div>
-                  <div className="font-semibold text-slate-900">{testimonial.name}</div>
-                  <div className="text-sm text-slate-500">{testimonial.role}</div>
+                
+                <p className="text-slate-700 mb-6 text-pretty leading-relaxed italic relative z-10 group-hover:text-slate-900 transition-colors">
+                  {testimonial.content}
+                </p>
+                
+                <div className="flex items-center space-x-3 relative z-10">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-lg">
+                      {testimonial.name.split(' ').map(n => n[0]).join('')}
+                    </span>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-slate-900 group-hover:text-blue-700 transition-colors">
+                      {testimonial.name}
+                    </div>
+                    <div className="text-sm text-slate-500 group-hover:text-slate-600 transition-colors">
+                      {testimonial.role}
+                    </div>
+                  </div>
                 </div>
+                
+                {/* Hover effect overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-50/0 to-indigo-50/0 group-hover:from-blue-50/30 group-hover:to-indigo-50/30 transition-all duration-300 pointer-events-none"></div>
               </CardContent>
             </Card>
           ))}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -44,6 +44,13 @@ export function TDSCalculator() {
     })
   }
 
+  // Auto-calculate TDS when values change
+  useEffect(() => {
+    if (amount && tdsSection) {
+      calculateTDS()
+    }
+  }, [amount, tdsSection])
+
   return (
     <Card className="shadow-sm border-0 bg-gradient-to-br from-white to-purple-50">
       <CardHeader className="pb-4 border-b border-purple-100">
@@ -83,8 +90,8 @@ export function TDSCalculator() {
           </Select>
         </div>
 
-        <Button onClick={calculateTDS} className="w-full">
-          Calculate TDS
+        <Button onClick={calculateTDS} className="w-full" variant="outline">
+          Recalculate TDS
         </Button>
 
         {result && (
