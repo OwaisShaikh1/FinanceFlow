@@ -7,14 +7,18 @@ const UserCounter = require("../models/UserCounter");
 
 const router = express.Router();
 
-// Mock auth middleware
+// JWT auth middleware
+const jwt = require('jsonwebtoken');
 const auth = (req, res, next) => {
-  req.user = {
-    id: "650f3f0c8f8c9a12a7654321",   // fake user id
-    biz: "650f3f0c8f8c9a12a1234567", // fake business id
-    name: "Demo User"
-  };
-  next();
+  const hdr = req.headers.authorization || '';
+  const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
+  if (!token) return res.status(401).json({ message: 'No token' });
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    next();
+  } catch {
+    return res.status(401).json({ message: 'Invalid/expired token' });
+  }
 };
 
 // Multer setup

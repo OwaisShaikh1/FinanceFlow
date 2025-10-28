@@ -1,53 +1,85 @@
 "use client";
-import app from "@/firebase"
-import { useState } from "react";
-import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { signInWithPopup } from "firebase/auth";
+import { auth, googleProvider } from "@/firebase";
+import { useAuth } from "@/contexts/AuthContext";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useRouter } from "next/navigation";
-
-
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 
 interface LoginFormProps {
   onSubmit: (data: { loginMethod: "email" | "phone"; email?: string; password?: string; phone?: string; role: string }) => void;
 }
 
 export function LoginForm({ onSubmit }: LoginFormProps) {
+  // Use Auth Context for authentication state
+  const { login, loginWithGoogle, isLoading, error, clearError } = useAuth();
+  
+  // Local state management with useState
   const [showPassword, setShowPassword] = useState(false);
   const [loginMethod, setLoginMethod] = useState<"email" | "phone">("email");
   const [role, setRole] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const auth = getAuth(app);
-  const googleProvider = new GoogleAuthProvider();
+  
+  // useRef for form elements and DOM access
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  
   const router = useRouter();
 
-    const handleSubmit = (e: React.FormEvent) => {
-      e.preventDefault();
-      setIsLoading(true);
+  // useEffect for component lifecycle and cleanup
+  useEffect(() => {
+    // Focus on email field when component mounts
+    if (loginMethod === "email" && emailRef.current) {
+      emailRef.current.focus();
+    } else if (loginMethod === "phone" && phoneRef.current) {
+      phoneRef.current.focus();
+    }
+  }, [loginMethod]);
 
-      const formData = {
-        loginMethod,
-        email: loginMethod === "email" ? email : undefined,
-        password: loginMethod === "email" ? password : undefined,
-        phone: loginMethod === "phone" ? phone : undefined,
-        role,
-      };
+  // Clear error when user starts typing
+  useEffect(() => {
+    if (error) {
+      clearError();
+    }
+  }, [email, password, phone, error, clearError]);
 
-      // Save data locally
-      localStorage.setItem("loginData", JSON.stringify(formData));
+  // useCallback to memoize event handlers (prevents unnecessary re-renders)
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
 
-      onSubmit(formData);
-      setIsLoading(false);
-    };
+    try {
+      if (loginMethod === "email") {
+        // Use Auth context login method
+        await login(email, password);
+        
+        console.log("Login successful");
+        
+        // Redirect to dashboard
+        router.push("/dashboard");
+        
+      } else if (loginMethod === "phone") {
+        // Phone/OTP login - implement this later
+        const formData = { loginMethod, phone, role };
+        localStorage.setItem("loginData", JSON.stringify(formData));
+        onSubmit(formData);
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      // Error is already handled by the auth context
+    }
+  }, [email, password, phone, role, loginMethod, router, onSubmit, login]);
     
-   const signInWithGoogle = async () => {
-    setIsLoading(true);
+  // useCallback for Google sign-in to prevent re-creation
+  const signInWithGoogle = useCallback(async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const firebaseUser = result.user;
@@ -59,44 +91,8 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
         photoURL: firebaseUser.photoURL
       });
 
-      // Send Firebase user data to backend
-      const requestData = {
-        firebaseUid: firebaseUser.uid,
-        displayName: firebaseUser.displayName,
-        email: firebaseUser.email,
-        photoURL: firebaseUser.photoURL,
-        provider: "google",
-      };
-      
-      console.log("Sending request to backend:", requestData);
-      
-      const res = await fetch(`http://localhost:5000/api/firebaselogin`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestData),
-      });
-
-      console.log("Response status:", res.status);
-      console.log("Response ok:", res.ok);
-      
-      const data = await res.json();
-      console.log("Response data:", data);
-
-      if (!res.ok) {
-        console.error("HTTP Error - Status:", res.status);
-        console.error("HTTP Error - StatusText:", res.statusText);
-        throw new Error(data?.error || data?.details || `HTTP error! status: ${res.status}`);
-      }
-      
-      if (!data.success) {
-        console.error("Backend Error:", data);
-        throw new Error(data.error || data.details || "Authentication failed");
-      }
-
-      // Store authentication data in localStorage
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      localStorage.setItem("firebaseUser", JSON.stringify(firebaseUser));
+      // Use Auth context loginWithGoogle method
+      const data = await loginWithGoogle(firebaseUser);
 
       // Check if user needs onboarding (new user or incomplete profile)
       if (data.needsOnboarding) {
@@ -112,19 +108,70 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
 
     } catch (error) {
       console.error("Google sign-in error:", error);
-      const errorMessage = error instanceof Error ? error.message : "Please try again.";
-      alert(`Login failed: ${errorMessage}`);
-    } finally {
-      setIsLoading(false);
+      // Error is already handled by the auth context
     }
-  };
+  }, [router, loginWithGoogle]);
+
+  // useCallback for input change handlers
+  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+  }, []);
+
+  const handlePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+  }, []);
+
+  const handlePhoneChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhone(e.target.value);
+  }, []);
+
+  const handleRoleChange = useCallback((value: string) => {
+    setRole(value);
+  }, []);
+
+  const handleLoginMethodChange = useCallback((value: "email" | "phone") => {
+    setLoginMethod(value);
+    // Clear previous inputs when switching methods
+    if (value === "email") {
+      setPhone("");
+    } else {
+      setEmail("");
+      setPassword("");
+    }
+  }, []);
+
+  const togglePasswordVisibility = useCallback(() => {
+    setShowPassword(prev => !prev);
+  }, []);
+
+  // useMemo for computed values
+  const isFormValid = useMemo(() => {
+    if (loginMethod === "email") {
+      return email.trim() && password.trim() && role;
+    } else {
+      return phone.trim() && role;
+    }
+  }, [email, password, phone, role, loginMethod]);
+
+  const buttonText = useMemo(() => {
+    if (isLoading) return "Processing...";
+    if (loginMethod === "phone") return "Send OTP";
+    return "Sign In";
+  }, [isLoading, loginMethod]);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
+      {/* Error Display */}
+      {error && (
+        <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+          {error}
+        </div>
+      )}
+
       {/* Login Method */}
       <div className="space-y-2">
         <Label htmlFor="loginMethod">Login Method</Label>
-        <Select value={loginMethod} onValueChange={(value: "email" | "phone") => setLoginMethod(value)}>
+        <Select value={loginMethod} onValueChange={handleLoginMethodChange}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -143,13 +190,15 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
             <div className="relative">
               <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
+                ref={emailRef}
                 id="email"
                 type="email"
                 placeholder="Enter your email"
                 className="pl-10"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
                 required
+                autoComplete="email"
               />
             </div>
           </div>
@@ -158,20 +207,22 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
             <div className="relative">
               <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
+                ref={passwordRef}
                 id="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 className="pl-10 pr-10"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={handlePasswordChange}
                 required
+                autoComplete="current-password"
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowPassword(!showPassword)}
+                onClick={togglePasswordVisibility}
               >
                 {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
               </Button>
@@ -184,13 +235,15 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
           <div className="relative">
             <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
+              ref={phoneRef}
               id="phone"
               type="tel"
               placeholder="+91 98765 43210"
               className="pl-10"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={handlePhoneChange}
               required
+              autoComplete="tel"
             />
           </div>
         </div>
@@ -199,7 +252,7 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
       {/* Role Selector */}
       <div className="space-y-2">
         <Label htmlFor="role">Role</Label>
-        <Select value={role} onValueChange={(val) => setRole(val)} required>
+        <Select value={role} onValueChange={handleRoleChange} required>
           <SelectTrigger>
             <SelectValue placeholder="Select your role" />
           </SelectTrigger>
@@ -211,8 +264,8 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
         </Select>
       </div>
 
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? "Processing..." : loginMethod === "phone" ? "Send OTP" : "Sign In"}
+      <Button type="submit" className="w-full" disabled={isLoading || !isFormValid}>
+        {buttonText}
       </Button>
 
       <Button

@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useCallback, useMemo, useRef, useEffect, useReducer } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,32 +16,110 @@ import { CalendarIcon, Plus, Trash2 } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { InvoiceItem } from "@/types/invoice"
+import { useAuth } from "@/contexts/AuthContext"
 
 const gstRates = [0, 5, 12, 18, 28]
 
-export function InvoiceForm() {
-  // Invoice Details State
-  const [invoiceNumber, setInvoiceNumber] = useState("")
-  const [poNumber, setPoNumber] = useState("")
-  const [invoiceDate, setInvoiceDate] = useState<Date>()
-  const [dueDate, setDueDate] = useState<Date>()
-  const [paymentTerms, setPaymentTerms] = useState("")
+// Invoice state interface
+interface InvoiceState {
+  // Invoice Details
+  invoiceNumber: string;
+  poNumber: string;
+  invoiceDate: Date | undefined;
+  dueDate: Date | undefined;
+  paymentTerms: string;
+  
+  // Client Details
+  clientName: string;
+  clientGstin: string;
+  clientAddress: string;
+  clientCity: string;
+  clientState: string;
+  clientPincode: string;
+  
+  // Additional Details
+  notes: string;
+  bankDetails: string;
+  pdfUrl: string;
+  ewayBillNo: string;
+  
+  // Meta
+  isLoading: boolean;
+  error: string | null;
+}
 
-  // Client Details State
-  const [clientName, setClientName] = useState("")
-  const [clientGstin, setClientGstin] = useState("")
-  const [clientAddress, setClientAddress] = useState("")
-  const [clientCity, setClientCity] = useState("")
-  const [clientState, setClientState] = useState("")
-  const [clientPincode, setClientPincode] = useState("")
+type InvoiceAction =
+  | { type: 'UPDATE_FIELD'; field: keyof InvoiceState; value: any }
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_ERROR'; payload: string | null }
+  | { type: 'RESET_FORM' };
 
-  // Additional Details State
-  const [notes, setNotes] = useState("")
-  const [bankDetails, setBankDetails] = useState("")
-  const [pdfUrl, setPdfUrl] = useState("")
-  const [ewayBillNo, setEwayBillNo] = useState("")
+// Initial state
+const initialInvoiceState: InvoiceState = {
+  invoiceNumber: "",
+  poNumber: "",
+  invoiceDate: undefined,
+  dueDate: undefined,
+  paymentTerms: "",
+  clientName: "",
+  clientGstin: "",
+  clientAddress: "",
+  clientCity: "",
+  clientState: "",
+  clientPincode: "",
+  notes: "",
+  bankDetails: "",
+  pdfUrl: "",
+  ewayBillNo: "",
+  isLoading: false,
+  error: null,
+};
 
-  // Invoice Items State
+// Reducer for invoice state management
+function invoiceReducer(state: InvoiceState, action: InvoiceAction): InvoiceState {
+  switch (action.type) {
+    case 'UPDATE_FIELD':
+      return {
+        ...state,
+        [action.field]: action.value,
+        error: null, // Clear error when user makes changes
+      };
+    case 'SET_LOADING':
+      return {
+        ...state,
+        isLoading: action.payload,
+      };
+    case 'SET_ERROR':
+      return {
+        ...state,
+        error: action.payload,
+        isLoading: false,
+      };
+    case 'RESET_FORM':
+      return {
+        ...initialInvoiceState,
+      };
+    default:
+      return state;
+  }
+}
+
+interface InvoiceFormProps {
+  onSubmit?: (data: any) => void;
+  initialData?: Partial<InvoiceState>;
+  isEditing?: boolean;
+}
+
+export function InvoiceForm({ onSubmit, initialData, isEditing = false }: InvoiceFormProps) {
+  const { user, token } = useAuth();
+
+  // Use useReducer for complex invoice state management
+  const [state, dispatch] = useReducer(invoiceReducer, {
+    ...initialInvoiceState,
+    ...initialData,
+  });
+
+  // Invoice Items State (separate from main reducer for performance)
   const [items, setItems] = useState<InvoiceItem[]>([
     {
       id: "1",
@@ -53,11 +131,40 @@ export function InvoiceForm() {
       gstAmount: 0,
       total: 0,
     },
-  ])
-  
-  const [isLoading, setIsLoading] = useState(false)
+  ]);
 
-  const calculateItemTotals = (item: Partial<InvoiceItem>): InvoiceItem => {
+  // useRef for form elements
+  const formRef = useRef<HTMLFormElement>(null);
+  const invoiceNumberRef = useRef<HTMLInputElement>(null);
+
+  // useEffect to focus on invoice number when component mounts
+  useEffect(() => {
+    if (invoiceNumberRef.current) {
+      invoiceNumberRef.current.focus();
+    }
+  }, []);
+
+  // Clear error when user types
+  useEffect(() => {
+    if (state.error) {
+      dispatch({ type: 'SET_ERROR', payload: null });
+    }
+  }, [state.invoiceNumber, state.clientName, state.error]);
+
+  // useCallback for state updates to prevent unnecessary re-renders
+  const updateField = useCallback((field: keyof InvoiceState, value: any) => {
+    dispatch({ type: 'UPDATE_FIELD', field, value });
+  }, []);
+
+  const setLoading = useCallback((loading: boolean) => {
+    dispatch({ type: 'SET_LOADING', payload: loading });
+  }, []);
+
+  const setError = useCallback((error: string | null) => {
+    dispatch({ type: 'SET_ERROR', payload: error });
+  }, []);
+
+  const calculateItemTotals = useCallback((item: Partial<InvoiceItem>): InvoiceItem => {
     const quantity = item.quantity || 0
     const rate = item.rate || 0
     const gstRate = item.gstRate || 0
@@ -76,9 +183,9 @@ export function InvoiceForm() {
       gstAmount,
       total,
     }
-  }
+  }, []);
 
-  const updateItem = (index: number, field: keyof InvoiceItem, value: string | number) => {
+  const updateItem = useCallback((index: number, field: keyof InvoiceItem, value: string | number) => {
     const updatedItems = [...items]
     
     // Handle numeric fields properly to avoid "0100" issue
@@ -98,9 +205,9 @@ export function InvoiceForm() {
     }
     updatedItems[index] = calculateItemTotals(updatedItems[index])
     setItems(updatedItems)
-  }
+  }, [items, calculateItemTotals]);
 
-  const addItem = () => {
+  const addItem = useCallback(() => {
     const newItem: InvoiceItem = {
       id: Date.now().toString(),
       description: "",
@@ -112,63 +219,69 @@ export function InvoiceForm() {
       total: 0,
     }
     setItems([...items, newItem])
-  }
+  }, [items]);
 
-  const removeItem = (index: number) => {
+  const removeItem = useCallback((index: number) => {
     if (items.length > 1) {
       setItems(items.filter((_, i) => i !== index))
     }
-  }
+  }, [items]);
 
-  const calculateTotals = () => {
+  const calculateTotals = useMemo(() => {
     const subtotal = items.reduce((sum, item) => sum + item.amount, 0)
     const totalGst = items.reduce((sum, item) => sum + item.gstAmount, 0)
     const grandTotal = subtotal + totalGst
 
     return { subtotal, totalGst, grandTotal }
-  }
+  }, [items]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+    setLoading(true)
 
     try {
       // Prepare form data - all fields are now properly connected
       const formData = {
         // Invoice Details
-        invoiceNumber,
-        poNumber,
-        invoiceDate,
-        dueDate,
-        paymentTerms,
+        invoiceNumber: state.invoiceNumber,
+        poNumber: state.poNumber,
+        invoiceDate: state.invoiceDate,
+        dueDate: state.dueDate,
+        paymentTerms: state.paymentTerms,
         
         // Client Details
-        clientName,
-        clientGstin,
-        clientAddress,
-        clientCity,
-        clientState,
-        clientPincode,
+        clientName: state.clientName,
+        clientGstin: state.clientGstin,
+        clientAddress: state.clientAddress,
+        clientCity: state.clientCity,
+        clientState: state.clientState,
+        clientPincode: state.clientPincode,
         
         // Invoice Items
         items,
         
         // Additional Details
-        notes,
-        bankDetails,
-        pdfUrl,
-        ewayBillNo,
+        notes: state.notes,
+        bankDetails: state.bankDetails,
+        pdfUrl: state.pdfUrl,
+        ewayBillNo: state.ewayBillNo,
         
         // Calculated Totals
-        ...calculateTotals()
+        ...calculateTotals
       }
          console.log("Invoice Data:", formData)
 
       // Send POST request to API
-      const response = await fetch(`${API_BASE_URL}/api/invoice`, {
+      const response = await fetch(`http://localhost:5000/api/invoice`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ...formData,
+          userId: user?.id,
+        })
       })
 
       const data = await response.json()
@@ -177,21 +290,54 @@ export function InvoiceForm() {
 
       console.log('Invoice saved:', data)
 
-      // Redirect to invoice view
-      window.location.href = '/dashboard/invoices'
+      if (onSubmit) {
+        onSubmit(formData);
+      }
+
+      // Reset form if creating new invoice (not editing)
+      if (!isEditing) {
+        dispatch({ type: 'RESET_FORM' });
+        setItems([{
+          id: "1",
+          description: "",
+          quantity: 1,
+          rate: 0,
+          gstRate: 18,
+          amount: 0,
+          gstAmount: 0,
+          total: 0,
+        }]);
+      }
 
     } catch (error: any) {
       console.error('Error creating invoice:', error.message)
-      alert(error.message)
+      setError(error.message || 'An error occurred while saving the invoice');
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
-  }
+  }, [state, items, calculateTotals, token, user?.id, onSubmit, isEditing, setLoading, setError]);
 
-  const { subtotal, totalGst, grandTotal } = calculateTotals()
+  // useMemo for computed values  
+  const { subtotal, totalGst, grandTotal } = calculateTotals;
+
+  // Form validation
+  const isFormValid = useMemo(() => {
+    return (
+      state.invoiceNumber.trim() &&
+      state.clientName.trim() &&
+      items.some(item => item.description.trim() && item.quantity > 0 && item.rate > 0)
+    );
+  }, [state.invoiceNumber, state.clientName, items]);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+      {/* Error Display */}
+      {state.error && (
+        <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+          {state.error}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Invoice Details */}
         <Card>
@@ -203,11 +349,12 @@ export function InvoiceForm() {
               <div className="space-y-2">
                 <Label htmlFor="invoiceNumber">Invoice Number</Label>
                 <Input
+                  ref={invoiceNumberRef}
                   id="invoiceNumber"
                   placeholder="INV-001"
                   required
-                  value={invoiceNumber}
-                  onChange={(e) => setInvoiceNumber(e.target.value)}
+                  value={state.invoiceNumber}
+                  onChange={(e) => updateField('invoiceNumber', e.target.value)}
                 />
               </div>
               <div className="space-y-2">
@@ -215,8 +362,8 @@ export function InvoiceForm() {
                 <Input 
                   id="poNumber" 
                   placeholder="PO-001" 
-                  value={poNumber}
-                  onChange={(e) => setPoNumber(e.target.value)}
+                  value={state.poNumber}
+                  onChange={(e) => updateField('poNumber', e.target.value)}
                 />
               </div>
             </div>
@@ -230,15 +377,15 @@ export function InvoiceForm() {
                       variant="outline"
                       className={cn(
                         "w-full justify-start text-left font-normal",
-                        !invoiceDate && "text-muted-foreground",
+                        !state.invoiceDate && "text-muted-foreground",
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {invoiceDate ? format(invoiceDate, "PPP") : "Pick a date"}
+                      {state.invoiceDate ? format(state.invoiceDate, "PPP") : "Pick a date"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
-                    <Calendar mode="single" selected={invoiceDate} onSelect={setInvoiceDate} initialFocus />
+                    <Calendar mode="single" selected={state.invoiceDate} onSelect={(date) => updateField('invoiceDate', date)} initialFocus />
                   </PopoverContent>
                 </Popover>
               </div>
@@ -249,14 +396,14 @@ export function InvoiceForm() {
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className={cn("w-full justify-start text-left font-normal", !dueDate && "text-muted-foreground")}
+                      className={cn("w-full justify-start text-left font-normal", !state.dueDate && "text-muted-foreground")}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dueDate ? format(dueDate, "PPP") : "Pick a date"}
+                      {state.dueDate ? format(state.dueDate, "PPP") : "Pick a date"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
-                    <Calendar mode="single" selected={dueDate} onSelect={setDueDate} initialFocus />
+                    <Calendar mode="single" selected={state.dueDate} onSelect={(date) => updateField('dueDate', date)} initialFocus />
                   </PopoverContent>
                 </Popover>
               </div>
@@ -264,7 +411,7 @@ export function InvoiceForm() {
 
             <div className="space-y-2">
               <Label htmlFor="paymentTerms">Payment Terms</Label>
-              <Select value={paymentTerms} onValueChange={setPaymentTerms}>
+              <Select value={state.paymentTerms} onValueChange={(value) => updateField('paymentTerms', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select payment terms" />
                 </SelectTrigger>
@@ -291,8 +438,8 @@ export function InvoiceForm() {
                 id="clientName" 
                 placeholder="ABC Corporation" 
                 required 
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
+                value={state.clientName}
+                onChange={(e) => updateField('clientName', e.target.value)}
               />
             </div>
 
@@ -301,8 +448,8 @@ export function InvoiceForm() {
               <Input 
                 id="clientGstin" 
                 placeholder="22AAAAA0000A1Z5" 
-                value={clientGstin}
-                onChange={(e) => setClientGstin(e.target.value)}
+                value={state.clientGstin}
+                onChange={(e) => updateField('clientGstin', e.target.value)}
               />
             </div>
 
@@ -313,8 +460,8 @@ export function InvoiceForm() {
                 placeholder="Enter client address" 
                 rows={3} 
                 required 
-                value={clientAddress}
-                onChange={(e) => setClientAddress(e.target.value)}
+                value={state.clientAddress}
+                onChange={(e) => updateField('clientAddress', e.target.value)}
               />
             </div>
 
@@ -325,13 +472,13 @@ export function InvoiceForm() {
                   id="clientCity" 
                   placeholder="Mumbai" 
                   required 
-                  value={clientCity}
-                  onChange={(e) => setClientCity(e.target.value)}
+                  value={state.clientCity}
+                  onChange={(e) => updateField('clientCity', e.target.value)}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="clientState">State</Label>
-                <Select value={clientState} onValueChange={setClientState}>
+                <Select value={state.clientState} onValueChange={(value) => updateField('clientState', value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select state" />
                   </SelectTrigger>
@@ -352,8 +499,8 @@ export function InvoiceForm() {
                 id="clientPincode" 
                 placeholder="400001" 
                 required 
-                value={clientPincode}
-                onChange={(e) => setClientPincode(e.target.value)}
+                value={state.clientPincode}
+                onChange={(e) => updateField('clientPincode', e.target.value)}
               />
             </div>
           </CardContent>
@@ -484,8 +631,8 @@ export function InvoiceForm() {
               id="notes" 
               placeholder="Additional notes or terms" 
               rows={3} 
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              value={state.notes}
+              onChange={(e) => updateField('notes', e.target.value)}
             />
           </div>
 
@@ -495,8 +642,8 @@ export function InvoiceForm() {
               id="bankDetails"
               placeholder="Bank Name: State Bank of India&#10;Account Number: 1234567890&#10;IFSC Code: SBIN0001234"
               rows={3}
-              value={bankDetails}
-              onChange={(e) => setBankDetails(e.target.value)}
+              value={state.bankDetails}
+              onChange={(e) => updateField('bankDetails', e.target.value)}
             />
           </div>
 
@@ -505,8 +652,8 @@ export function InvoiceForm() {
             <Input 
               id="pdfUrl" 
               placeholder="https://example.com/invoice.pdf" 
-              value={pdfUrl}
-              onChange={(e) => setPdfUrl(e.target.value)}
+              value={state.pdfUrl}
+              onChange={(e) => updateField('pdfUrl', e.target.value)}
             />
           </div>
 
@@ -515,8 +662,8 @@ export function InvoiceForm() {
             <Input 
               id="ewayBillNo" 
               placeholder="123456789012" 
-              value={ewayBillNo}
-              onChange={(e) => setEwayBillNo(e.target.value)}
+              value={state.ewayBillNo}
+              onChange={(e) => updateField('ewayBillNo', e.target.value)}
             />
           </div>
         </CardContent>
@@ -524,8 +671,8 @@ export function InvoiceForm() {
 
       {/* Actions */}
       <div className="flex gap-4">
-        <Button type="submit" disabled={isLoading} className="flex-1">
-          {isLoading ? "Creating..." : "Create Invoice"}
+        <Button type="submit" disabled={state.isLoading || !isFormValid} className="flex-1">
+          {state.isLoading ? "Creating..." : isEditing ? "Update Invoice" : "Create Invoice"}
         </Button>
         <Button type="button" variant="outline" onClick={() => window.history.back()}>
           Cancel
