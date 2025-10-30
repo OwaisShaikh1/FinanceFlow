@@ -45,7 +45,7 @@ const navigationItems = [
     roles: ["Admin", "CA", "user"],
     items: [
       { title: "Income & Expenses", href: "/dashboard/transactions", icon: TrendingUp, roles: ["Admin", "CA", "user"] },
-      { title: "Chart of Accounts", href: "/dashboard/accounts", icon: Calculator, roles: ["Admin"] },
+      { title: "Assets & Liabilities", href: "/dashboard/accounts", icon: Calculator, roles: ["Admin"] },
     ],
   },
   {

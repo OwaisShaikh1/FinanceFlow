@@ -34,6 +34,7 @@ const routes = {
   business: require('./routes/business'),
   invoice: require('./routes/invoice'),
   transaction: require('./routes/transaction'),
+  reports: require('./routes/reports'),
   tax: require('./routes/tax'),
   gst: require('./routes/gst'),
   tds: require('./routes/tds'),

@@ -43,7 +43,7 @@ export function RecurringInvoicesList() {
           ? `?business=${selectedClient.businessId}` 
           : ''
         
-        const response = await fetch(`http://localhost:5000/invoices/recurring${queryParams}`, {
+        const response = await fetch(`http://localhost:5000/api/invoice/recurring${queryParams}`, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",

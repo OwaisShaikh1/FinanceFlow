@@ -125,6 +125,116 @@ router.get('/profit-loss/pdf', auth, async (req, res) => {
   }
 });
 
+// P&L Excel Generation
+router.get('/profit-loss/excel', auth, async (req, res) => {
+  console.log('📊 P&L Excel request received');
+  try {
+    const excelGenerator = require('../utils/excelGenerator');
+    const Transaction = require('../models/Transaction');
+    const User = require('../models/User');
+    const Business = require('../models/Business');
+    
+    // Get query parameters
+    const { businessName, period, clientId, businessId, startDate, endDate } = req.query;
+    
+    // Determine which business to query
+    let targetBusinessId = businessId;
+    let actualBusinessName = businessName || 'Business';
+    
+    // If clientId provided, find their business
+    if (clientId) {
+      const user = await User.findById(clientId);
+      if (user) {
+        const business = await Business.findOne({ owner: user._id });
+        if (business) {
+          targetBusinessId = business._id;
+          actualBusinessName = business.name || user.name || 'Business';
+        }
+      }
+    }
+    
+    // Default to last 3 months if dates not provided
+    const end = endDate ? new Date(endDate) : new Date();
+    const start = startDate ? new Date(startDate) : new Date(end.getFullYear(), end.getMonth() - 3, 1);
+    
+    // Fetch transactions for the period
+    const query = {
+      date: { $gte: start, $lte: end }
+    };
+    
+    if (targetBusinessId) {
+      query.business = targetBusinessId;
+    }
+    
+    const transactions = await Transaction.find(query);
+    console.log(`Found ${transactions.length} transactions for P&L Excel`);
+    
+    // Calculate revenue and expenses from transactions
+    const revenueMap = new Map();
+    const expenseMap = new Map();
+    
+    transactions.forEach(txn => {
+      const category = txn.category || 'Uncategorized';
+      const amount = txn.amount || 0;
+      const type = txn.type || 'expense';
+      
+      if (type === 'income') {
+        revenueMap.set(category, (revenueMap.get(category) || 0) + amount);
+      } else if (type === 'expense') {
+        expenseMap.set(category, (expenseMap.get(category) || 0) + amount);
+      }
+    });
+    
+    // Convert maps to arrays
+    const revenue = Array.from(revenueMap.entries()).map(([account, amount]) => ({
+      account: account.toLowerCase().replace(/\s+/g, '-'),
+      amount: Math.round(amount)
+    }));
+    
+    const expenses = Array.from(expenseMap.entries()).map(([account, amount]) => ({
+      account: account.toLowerCase().replace(/\s+/g, '-'),
+      amount: Math.round(amount)
+    }));
+    
+    // If no data, provide defaults
+    if (revenue.length === 0) {
+      revenue.push({ account: 'no-income', amount: 0 });
+    }
+    if (expenses.length === 0) {
+      expenses.push({ account: 'no-expenses', amount: 0 });
+    }
+    
+    const reportData = {
+      businessName: actualBusinessName,
+      periodDescription: period || `Profit & Loss Statement (${start.toLocaleDateString()} - ${end.toLocaleDateString()})`,
+      revenue,
+      expenses
+    };
+    
+    console.log('📋 Generating P&L Excel with real data:', {
+      business: actualBusinessName,
+      revenueItems: revenue.length,
+      expenseItems: expenses.length,
+      totalRevenue: revenue.reduce((sum, r) => sum + r.amount, 0),
+      totalExpenses: expenses.reduce((sum, e) => sum + e.amount, 0)
+    });
+    
+    const buffer = await excelGenerator.generateFinancialReport(reportData, 'profit-loss');
+    console.log('✅ P&L Excel generated successfully, size:', buffer.length, 'bytes');
+    
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="profit-loss-statement-${Date.now()}.xlsx"`);
+    res.send(buffer);
+  } catch (error) {
+    console.error('❌ P&L Excel generation error:', error.message);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Failed to generate P&L Excel',
+      message: error.message 
+    });
+  }
+});
+
 // Balance Sheet Test endpoint
 router.get('/balance-sheet/test', (req, res) => {
   console.log('📊 Balance Sheet test request received');
@@ -132,7 +242,7 @@ router.get('/balance-sheet/test', (req, res) => {
 });
 
 // Balance Sheet PDF Generation
-router.get('/balance-sheet/pdf', async (req, res) => {
+router.get('/balance-sheet/pdf', auth, async (req, res) => {
   console.log('📊 Balance Sheet PDF request received');
   try {
     const { generateBalanceSheetPDF } = require('../utils/balanceSheetPdfGenerator');
@@ -276,7 +386,7 @@ router.get('/balance-sheet/pdf', async (req, res) => {
 });
 
 // Balance Sheet Excel Generation
-router.get('/balance-sheet/excel', async (req, res) => {
+router.get('/balance-sheet/excel', auth, async (req, res) => {
   console.log('📊 Balance Sheet Excel request received');
   try {
     const { generateBalanceSheetExcel } = require('../utils/balanceSheetExcelGenerator');
@@ -440,7 +550,7 @@ router.get('/cash-flow/test', (req, res) => {
 });
 
 // Cash Flow PDF Generation
-router.get('/cash-flow/pdf', async (req, res) => {
+router.get('/cash-flow/pdf', auth, async (req, res) => {
   console.log('💰 Cash Flow PDF request received');
   try {
     const { generateCashFlowPDF } = require('../utils/cashFlowPdfGenerator');
@@ -570,7 +680,7 @@ router.get('/cash-flow/pdf', async (req, res) => {
 });
 
 // Cash Flow Excel Generation
-router.get('/cash-flow/excel', async (req, res) => {
+router.get('/cash-flow/excel', auth, async (req, res) => {
   console.log('💰 Cash Flow Excel request received');
   try {
     const { generateCashFlowExcel } = require('../utils/cashFlowExcelGenerator');
@@ -784,7 +894,7 @@ router.get('/balance-sheet/data', auth, async (req, res) => {
     });
     
     // Categorize accounts into balance sheet sections
-    // This is a simplified categorization - adjust based on your category naming
+    // Categorize based on category name first, then type/balance
     accountBalances.forEach((account, category) => {
       const categoryLower = category.toLowerCase();
       const amount = Math.abs(account.balance); // Use absolute values for display
@@ -796,38 +906,49 @@ router.get('/balance-sheet/data', auth, async (req, res) => {
         transactionCount: account.transactionCount
       };
       
-      // Categorize based on transaction type and amount
-      if (account.type === 'income' && account.balance > 0) {
-        // Positive income balance could be retained earnings
+      // LIABILITIES - Check category name first (most important)
+      if (categoryLower.includes('payable') || categoryLower.includes('credit card') || 
+          categoryLower.includes('short-term loan') || categoryLower.includes('wages payable') ||
+          categoryLower.includes('taxes payable')) {
+        item.type = 'current-liability';
+        balanceSheet.currentLiabilities.push(item);
+      }
+      else if (categoryLower.includes('loan') || categoryLower.includes('mortgage') ||
+               categoryLower.includes('long-term') || categoryLower.includes('bonds payable')) {
+        item.type = 'long-term-liability';
+        balanceSheet.longTermLiabilities.push(item);
+      }
+      // EQUITY - Check for capital, earnings, investment keywords
+      else if (categoryLower.includes('capital') || categoryLower.includes('equity') ||
+               categoryLower.includes('retained earnings') || categoryLower.includes('investment')) {
         item.type = 'equity';
         balanceSheet.equity.push(item);
-      } else if (account.type === 'expense' && account.balance < 0) {
-        // Negative expense balance means money spent (could be assets or expenses)
-        // For balance sheet, we'll treat significant expenses as assets
-        if (categoryLower.includes('equipment') || categoryLower.includes('furniture') || 
-            categoryLower.includes('vehicle') || categoryLower.includes('building') ||
-            categoryLower.includes('property')) {
-          item.type = 'fixed-asset';
-          balanceSheet.fixedAssets.push(item);
-        } else if (categoryLower.includes('cash') || categoryLower.includes('bank') ||
-                   categoryLower.includes('receivable') || categoryLower.includes('inventory')) {
-          item.type = 'current-asset';
-          balanceSheet.currentAssets.push(item);
-        } else {
-          // Default current assets for other expenses
-          item.type = 'current-asset';
-          balanceSheet.currentAssets.push(item);
-        }
-      } else if (account.balance < 0) {
-        // Negative balances could be liabilities
-        if (categoryLower.includes('loan') || categoryLower.includes('mortgage') ||
-            categoryLower.includes('long-term')) {
-          item.type = 'long-term-liability';
-          balanceSheet.longTermLiabilities.push(item);
-        } else {
-          item.type = 'current-liability';
-          balanceSheet.currentLiabilities.push(item);
-        }
+      }
+      // FIXED ASSETS - Long-term physical assets
+      else if (categoryLower.includes('equipment') || categoryLower.includes('furniture') || 
+               categoryLower.includes('vehicle') || categoryLower.includes('building') ||
+               categoryLower.includes('property') || categoryLower.includes('machinery') ||
+               categoryLower.includes('land')) {
+        item.type = 'fixed-asset';
+        balanceSheet.fixedAssets.push(item);
+      }
+      // CURRENT ASSETS - Short-term assets
+      else if (categoryLower.includes('cash') || categoryLower.includes('bank') ||
+               categoryLower.includes('receivable') || categoryLower.includes('inventory') ||
+               categoryLower.includes('prepaid')) {
+        item.type = 'current-asset';
+        balanceSheet.currentAssets.push(item);
+      }
+      // Fallback categorization based on transaction type
+      else if (account.type === 'expense' && account.balance < 0) {
+        // Money spent - likely an asset
+        item.type = 'current-asset';
+        balanceSheet.currentAssets.push(item);
+      }
+      else if (account.type === 'income' && account.balance > 0) {
+        // Money received - could be equity
+        item.type = 'equity';
+        balanceSheet.equity.push(item);
       }
     });
     
