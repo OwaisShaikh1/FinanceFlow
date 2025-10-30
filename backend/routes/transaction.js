@@ -8,12 +8,11 @@ const UserCounter = require("../models/UserCounter");
 
 const router = express.Router();
 
-<<<<<<< HEAD
 // JWT auth middleware
-const jwt = require('jsonwebtoken');
-=======
+
+
 // Real auth middleware - verify JWT token
->>>>>>> a77f7d4b8c83b43a09e733c2982d6b7eda104ca6
+
 const auth = (req, res, next) => {
   const hdr = req.headers.authorization || '';
   const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;

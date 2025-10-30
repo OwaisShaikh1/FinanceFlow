@@ -263,34 +263,14 @@ const taxDataRoutes = require('./routes/taxdata');
 const reportsRoutes = require('./routes/reports');
 const taxReportsRoutes = require('./routes/taxreports');
 
-<<<<<<< HEAD
+
 // Mount the new routes
 app.use('/api/clients', clientRoutes);           // /api/clients → Client management
 app.use('/api/taxdata', taxDataRoutes);         // /api/taxdata → Tax data management  
 app.use('/api/reports', reportsRoutes);         // /api/reports → Financial reports (P&L, Balance Sheet, Cash Flow)
 app.use('/api/reports/tax', taxReportsRoutes);  // /api/reports/tax → Tax reports (GST, TDS)
-=======
-    const stats = {
-      totalClients,
-      activeClients,
-      pendingTasks,
-      overdueItems,
-      activePercentage: totalClients > 0 ? ((activeClients / totalClients) * 100).toFixed(1) : '0'
-    };
 
-    res.json({ 
-      success: true, 
-      stats 
-    });
-  } catch (error) {
-    console.error('Error fetching client stats:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Error fetching client stats', 
-      error: error.message 
-    });
-  }
-});
+// The orphaned catch block and related code have been removed to fix the syntax error.
 
 // Clients Management API
 app.get('/api/clients', auth, async (req, res) => {
@@ -1059,7 +1039,7 @@ app.get('/transactions', auth, async (req, res) => {
   const list = await Transaction.find(q).sort({ date: -1 }).lean();
   return res.json(list);
 });*/
->>>>>>> a77f7d4b8c83b43a09e733c2982d6b7eda104ca6
+
 
 // --------------------- Server ---------------------
 const PORT = process.env.PORT || 4000;
