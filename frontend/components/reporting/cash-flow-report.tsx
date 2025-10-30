@@ -3,32 +3,29 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TrendingUp, TrendingDown, DollarSign } from "lucide-react"
 
-const cashFlowData = {
-  operatingActivities: {
-    netIncome: 450000,
-    depreciation: 25000,
-    accountsReceivable: -15000,
-    accountsPayable: 8000,
-    inventory: -12000,
-    total: 456000,
-  },
-  investingActivities: {
-    equipmentPurchase: -75000,
-    investmentSale: 20000,
-    total: -55000,
-  },
-  financingActivities: {
-    loanRepayment: -30000,
-    dividendPayment: -25000,
-    total: -55000,
-  },
+interface CashFlowReportProps {
+  data?: {
+    operatingInflows?: number
+    operatingOutflows?: number
+    operatingCashFlow?: number
+    investingInflows?: number
+    investingOutflows?: number
+    investingCashFlow?: number
+    financingInflows?: number
+    financingOutflows?: number
+    financingCashFlow?: number
+    netCashFlow?: number
+    startDate?: Date
+    endDate?: Date
+  }
 }
 
-export function CashFlowReport() {
-  const netCashFlow =
-    cashFlowData.operatingActivities.total +
-    cashFlowData.investingActivities.total +
-    cashFlowData.financingActivities.total
+export function CashFlowReport({ data }: CashFlowReportProps) {
+  // Use provided data or fallback to sample data
+  const operatingTotal = data?.operatingCashFlow ?? 456000
+  const investingTotal = data?.investingCashFlow ?? -55000
+  const financingTotal = data?.financingCashFlow ?? -55000
+  const netCashFlow = data?.netCashFlow ?? (operatingTotal + investingTotal + financingTotal)
 
   const formatCurrency = (amount: number) => {
     const isNegative = amount < 0
@@ -51,30 +48,22 @@ export function CashFlowReport() {
           <h3 className="font-semibold text-lg mb-3 text-blue-900">Cash Flow from Operating Activities</h3>
           <div className="space-y-2 pl-4">
             <div className="flex justify-between text-blue-800">
-              <span>Net Income</span>
-              <span className="font-medium amount">{formatCurrency(cashFlowData.operatingActivities.netIncome)}</span>
+              <span>Cash Inflows (Income)</span>
+              <span className="font-medium amount">{formatCurrency(data?.operatingInflows ?? 0)}</span>
             </div>
             <div className="flex justify-between text-blue-800">
-              <span>Depreciation</span>
-              <span className="font-medium amount">{formatCurrency(cashFlowData.operatingActivities.depreciation)}</span>
-            </div>
-            <div className="flex justify-between text-blue-800">
-              <span>Accounts Receivable</span>
-              <span className="font-medium amount">{formatCurrency(cashFlowData.operatingActivities.accountsReceivable)}</span>
-            </div>
-            <div className="flex justify-between text-blue-800">
-              <span>Accounts Payable</span>
-              <span className="font-medium amount">{formatCurrency(cashFlowData.operatingActivities.accountsPayable)}</span>
-            </div>
-            <div className="flex justify-between text-blue-800">
-              <span>Inventory</span>
-              <span className="font-medium amount">{formatCurrency(cashFlowData.operatingActivities.inventory)}</span>
+              <span>Cash Outflows (Expenses)</span>
+              <span className="font-medium amount">{formatCurrency(-(data?.operatingOutflows ?? 0))}</span>
             </div>
             <div className="flex justify-between border-t border-blue-200 pt-2 font-semibold bg-blue-50/50 px-2 py-1 rounded">
               <span className="text-blue-900">Net Cash from Operating Activities</span>
               <span className="flex items-center gap-1 text-blue-900">
-                <TrendingUp className="h-4 w-4 text-green-600" />
-                {formatCurrency(cashFlowData.operatingActivities.total)}
+                {operatingTotal >= 0 ? (
+                  <TrendingUp className="h-4 w-4 text-green-600" />
+                ) : (
+                  <TrendingDown className="h-4 w-4 text-red-600" />
+                )}
+                {formatCurrency(operatingTotal)}
               </span>
             </div>
           </div>
@@ -85,18 +74,22 @@ export function CashFlowReport() {
           <h3 className="font-semibold text-lg mb-3 text-blue-900">Cash Flow from Investing Activities</h3>
           <div className="space-y-2 pl-4">
             <div className="flex justify-between text-blue-800">
-              <span>Equipment Purchase</span>
-              <span className="font-medium amount">{formatCurrency(cashFlowData.investingActivities.equipmentPurchase)}</span>
+              <span>Cash Inflows (Asset Sales)</span>
+              <span className="font-medium amount">{formatCurrency(data?.investingInflows ?? 0)}</span>
             </div>
             <div className="flex justify-between text-blue-800">
-              <span>Investment Sale</span>
-              <span className="font-medium amount">{formatCurrency(cashFlowData.investingActivities.investmentSale)}</span>
+              <span>Cash Outflows (Asset Purchases)</span>
+              <span className="font-medium amount">{formatCurrency(-(data?.investingOutflows ?? 0))}</span>
             </div>
             <div className="flex justify-between border-t border-blue-200 pt-2 font-semibold bg-blue-50/50 px-2 py-1 rounded">
               <span className="text-blue-900">Net Cash from Investing Activities</span>
               <span className="flex items-center gap-1 text-blue-900">
-                <TrendingDown className="h-4 w-4 text-red-600" />
-                {formatCurrency(cashFlowData.investingActivities.total)}
+                {investingTotal >= 0 ? (
+                  <TrendingUp className="h-4 w-4 text-green-600" />
+                ) : (
+                  <TrendingDown className="h-4 w-4 text-red-600" />
+                )}
+                {formatCurrency(investingTotal)}
               </span>
             </div>
           </div>
@@ -107,18 +100,22 @@ export function CashFlowReport() {
           <h3 className="font-semibold text-lg mb-3 text-blue-900">Cash Flow from Financing Activities</h3>
           <div className="space-y-2 pl-4">
             <div className="flex justify-between text-blue-800">
-              <span>Loan Repayment</span>
-              <span className="font-medium amount">{formatCurrency(cashFlowData.financingActivities.loanRepayment)}</span>
+              <span>Cash Inflows (Loans/Equity)</span>
+              <span className="font-medium amount">{formatCurrency(data?.financingInflows ?? 0)}</span>
             </div>
             <div className="flex justify-between text-blue-800">
-              <span>Dividend Payment</span>
-              <span className="font-medium amount">{formatCurrency(cashFlowData.financingActivities.dividendPayment)}</span>
+              <span>Cash Outflows (Repayments)</span>
+              <span className="font-medium amount">{formatCurrency(-(data?.financingOutflows ?? 0))}</span>
             </div>
             <div className="flex justify-between border-t border-blue-200 pt-2 font-semibold bg-blue-50/50 px-2 py-1 rounded">
               <span className="text-blue-900">Net Cash from Financing Activities</span>
               <span className="flex items-center gap-1 text-blue-900">
-                <TrendingDown className="h-4 w-4 text-red-600" />
-                {formatCurrency(cashFlowData.financingActivities.total)}
+                {financingTotal >= 0 ? (
+                  <TrendingUp className="h-4 w-4 text-green-600" />
+                ) : (
+                  <TrendingDown className="h-4 w-4 text-red-600" />
+                )}
+                {formatCurrency(financingTotal)}
               </span>
             </div>
           </div>

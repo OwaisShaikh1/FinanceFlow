@@ -94,8 +94,7 @@ export function ClientSelectorDropdown() {
         // Select the client using context
         selectClient(clientToSelect)
         
-        // Navigate to dashboard to show client data
-        router.push('/dashboard')
+        // Don't navigate - just update the data
       }
     } catch (error) {
       console.error("Error selecting client:", error)
@@ -104,7 +103,7 @@ export function ClientSelectorDropdown() {
 
   const handleClearClient = () => {
     clearClient()
-    router.push("/dashboard")
+    // Don't navigate - just clear the data
   }
 
   // Don't show if not viewing as client

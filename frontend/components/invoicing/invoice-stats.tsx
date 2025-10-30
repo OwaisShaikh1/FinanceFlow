@@ -40,9 +40,9 @@ export function InvoiceStats() {
           headers["Authorization"] = `Bearer ${token}`
         }
 
-        // Build query params for client filtering
-        const queryParams = selectedClient?.businessId 
-          ? `?business=${selectedClient.businessId}` 
+        // Build query params for client filtering (using clientId for consistency)
+        const queryParams = selectedClient?.id 
+          ? `?clientId=${selectedClient.id}` 
           : ''
 
         const response = await fetch(`http://localhost:5000/api/invoice/stats${queryParams}`, {

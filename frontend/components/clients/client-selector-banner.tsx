@@ -92,7 +92,7 @@ export function ClientSelectorBanner() {
         }
 
         selectClient(clientToSelect)
-        router.push('/dashboard')
+        // Don't navigate - just update the data
       }
     } catch (error) {
       console.error("Error selecting client:", error)
@@ -112,7 +112,8 @@ export function ClientSelectorBanner() {
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold text-blue-900">Viewing Client Data</h3>
+              <h3 className="font-semibold text-blue-900">
+                              </h3>
               <Badge className="bg-blue-600 text-white">CA Mode</Badge>
               
               {/* Client Switcher Dropdown */}

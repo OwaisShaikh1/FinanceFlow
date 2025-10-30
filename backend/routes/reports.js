@@ -20,24 +20,95 @@ router.get('/profit-loss/pdf', auth, async (req, res) => {
   console.log('📊 P&L PDF request received');
   try {
     const { generateProfitLossPDF } = require('../utils/profitLossPdfGenerator');
+    const Transaction = require('../models/Transaction');
+    const User = require('../models/User');
+    const Business = require('../models/Business');
     
-    // Sample P&L data - you can modify this to fetch from your database
-    const reportData = {
-      businessName: req.query.businessName || 'Sample Business',
-      periodDescription: req.query.period || 'October 2025 Profit & Loss (Last 3 Months)',
-      revenue: [
-        { account: 'service-income', amount: 100001 },
-        { account: 'interest-income', amount: 114222 }
-      ],
-      expenses: [
-        { account: 'office-supplies', amount: 25000 },
-        { account: 'rent-expense', amount: 30000 },
-        { account: 'utilities', amount: 8500 },
-        { account: 'marketing', amount: 15000 }
-      ]
+    // Get query parameters
+    const { businessName, period, clientId, businessId, startDate, endDate } = req.query;
+    
+    // Determine which business to query
+    let targetBusinessId = businessId;
+    let actualBusinessName = businessName || 'Business';
+    
+    // If clientId provided, find their business
+    if (clientId) {
+      const user = await User.findById(clientId);
+      if (user) {
+        const business = await Business.findOne({ owner: user._id });
+        if (business) {
+          targetBusinessId = business._id;
+          actualBusinessName = business.name || user.name || 'Business';
+        }
+      }
+    }
+    
+    // Default to last 3 months if dates not provided
+    const end = endDate ? new Date(endDate) : new Date();
+    const start = startDate ? new Date(startDate) : new Date(end.getFullYear(), end.getMonth() - 3, 1);
+    
+    // Fetch transactions for the period
+    const query = {
+      date: { $gte: start, $lte: end }
     };
     
-    console.log('📋 Generating PDF with data:', reportData);
+    if (targetBusinessId) {
+      query.business = targetBusinessId;
+    }
+    
+    const transactions = await Transaction.find(query);
+    console.log(`Found ${transactions.length} transactions for P&L report`);
+    
+    // Calculate revenue and expenses from transactions
+    const revenueMap = new Map();
+    const expenseMap = new Map();
+    
+    transactions.forEach(txn => {
+      const category = txn.category || 'Uncategorized';
+      const amount = txn.amount || 0;
+      const type = txn.type || 'expense';
+      
+      if (type === 'income') {
+        revenueMap.set(category, (revenueMap.get(category) || 0) + amount);
+      } else if (type === 'expense') {
+        expenseMap.set(category, (expenseMap.get(category) || 0) + amount);
+      }
+    });
+    
+    // Convert maps to arrays
+    const revenue = Array.from(revenueMap.entries()).map(([account, amount]) => ({
+      account: account.toLowerCase().replace(/\s+/g, '-'),
+      amount: Math.round(amount)
+    }));
+    
+    const expenses = Array.from(expenseMap.entries()).map(([account, amount]) => ({
+      account: account.toLowerCase().replace(/\s+/g, '-'),
+      amount: Math.round(amount)
+    }));
+    
+    // If no data, provide defaults
+    if (revenue.length === 0) {
+      revenue.push({ account: 'no-income', amount: 0 });
+    }
+    if (expenses.length === 0) {
+      expenses.push({ account: 'no-expenses', amount: 0 });
+    }
+    
+    const reportData = {
+      businessName: actualBusinessName,
+      periodDescription: period || `Profit & Loss Statement (${start.toLocaleDateString()} - ${end.toLocaleDateString()})`,
+      revenue,
+      expenses
+    };
+    
+    console.log('📋 Generating PDF with real data:', {
+      business: actualBusinessName,
+      revenueItems: revenue.length,
+      expenseItems: expenses.length,
+      totalRevenue: revenue.reduce((sum, r) => sum + r.amount, 0),
+      totalExpenses: expenses.reduce((sum, e) => sum + e.amount, 0)
+    });
+    
     const pdf = await generateProfitLossPDF(reportData);
     console.log('✅ PDF generated successfully, size:', pdf.length, 'bytes');
     
@@ -65,38 +136,129 @@ router.get('/balance-sheet/pdf', async (req, res) => {
   console.log('📊 Balance Sheet PDF request received');
   try {
     const { generateBalanceSheetPDF } = require('../utils/balanceSheetPdfGenerator');
+    const Transaction = require('../models/Transaction');
+    const User = require('../models/User');
+    const Business = require('../models/Business');
     
-    // Sample Balance Sheet data
-    const reportData = {
-      businessName: req.query.businessName || 'Sample Business',
-      asOfDate: req.query.asOfDate || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
-      currentAssets: [
-        { name: 'Cash in Hand', amount: 50000 },
-        { name: 'Bank Account', amount: 385000 },
-        { name: 'Accounts Receivable', amount: 125000 },
-        { name: 'Inventory', amount: 85000 }
-      ],
-      fixedAssets: [
-        { name: 'Office Equipment', amount: 150000 },
-        { name: 'Furniture & Fixtures', amount: 75000 },
-        { name: 'Computer Systems', amount: 120000 }
-      ],
-      currentLiabilities: [
-        { name: 'Accounts Payable', amount: 45000 },
-        { name: 'Short Term Loans', amount: 25000 },
-        { name: 'Accrued Expenses', amount: 15000 }
-      ],
-      longTermLiabilities: [
-        { name: 'Long Term Loan', amount: 200000 },
-        { name: 'Equipment Loan', amount: 50000 }
-      ],
-      equity: [
-        { name: 'Owner Equity', amount: 400000 },
-        { name: 'Retained Earnings', amount: 255000 }
-      ]
+    // Get query parameters
+    const { businessName, asOfDate, clientId, businessId } = req.query;
+    
+    // Determine which business to query
+    let targetBusinessId = businessId;
+    let actualBusinessName = businessName || 'Business';
+    
+    // If clientId provided, find their business
+    if (clientId) {
+      const user = await User.findById(clientId);
+      if (user) {
+        const business = await Business.findOne({ owner: user._id });
+        if (business) {
+          targetBusinessId = business._id;
+          actualBusinessName = business.name || user.name || 'Business';
+        }
+      }
+    }
+    
+    // Default to current date if not provided
+    const endDate = asOfDate ? new Date(asOfDate) : new Date();
+    
+    // Fetch all transactions up to the specified date
+    const query = {
+      date: { $lte: endDate }
     };
     
-    console.log('📋 Generating Balance Sheet PDF with data:', reportData);
+    if (targetBusinessId) {
+      query.business = targetBusinessId;
+    }
+    
+    const transactions = await Transaction.find(query).sort({ date: 1 });
+    console.log(`Found ${transactions.length} transactions for Balance Sheet`);
+    
+    // Initialize balance sheet structure
+    const balanceSheet = {
+      currentAssets: [],
+      fixedAssets: [],
+      currentLiabilities: [],
+      longTermLiabilities: [],
+      equity: []
+    };
+    
+    // Group transactions by category and calculate balances
+    const accountBalances = new Map();
+    
+    transactions.forEach(txn => {
+      const category = txn.category || 'Uncategorized';
+      const amount = txn.amount || 0;
+      const type = txn.type || 'expense';
+      
+      if (!accountBalances.has(category)) {
+        accountBalances.set(category, {
+          name: category,
+          balance: 0,
+          type: type
+        });
+      }
+      
+      const account = accountBalances.get(category);
+      
+      if (type === 'income') {
+        account.balance += amount;
+      } else if (type === 'expense') {
+        account.balance -= amount;
+      }
+    });
+    
+    // Categorize accounts into balance sheet sections
+    accountBalances.forEach((account, category) => {
+      const categoryLower = category.toLowerCase();
+      const amount = Math.abs(account.balance);
+      
+      const item = { name: category, amount: Math.round(amount) };
+      
+      if (account.type === 'income' && account.balance > 0) {
+        balanceSheet.equity.push(item);
+      } else if (account.type === 'expense' && account.balance < 0) {
+        if (categoryLower.includes('equipment') || categoryLower.includes('furniture') || 
+            categoryLower.includes('vehicle') || categoryLower.includes('building')) {
+          balanceSheet.fixedAssets.push(item);
+        } else {
+          balanceSheet.currentAssets.push(item);
+        }
+      } else if (account.balance < 0) {
+        if (categoryLower.includes('loan') || categoryLower.includes('mortgage')) {
+          balanceSheet.longTermLiabilities.push(item);
+        } else {
+          balanceSheet.currentLiabilities.push(item);
+        }
+      }
+    });
+    
+    // Add defaults if empty
+    if (balanceSheet.currentAssets.length === 0) {
+      balanceSheet.currentAssets.push({ name: 'Cash & Bank', amount: 0 });
+    }
+    if (balanceSheet.equity.length === 0) {
+      balanceSheet.equity.push({ name: 'Owner Equity', amount: 0 });
+    }
+    
+    const reportData = {
+      businessName: actualBusinessName,
+      asOfDate: endDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+      currentAssets: balanceSheet.currentAssets,
+      fixedAssets: balanceSheet.fixedAssets,
+      currentLiabilities: balanceSheet.currentLiabilities,
+      longTermLiabilities: balanceSheet.longTermLiabilities,
+      equity: balanceSheet.equity
+    };
+    
+    console.log('📋 Generating Balance Sheet PDF with real data:', {
+      business: actualBusinessName,
+      currentAssets: balanceSheet.currentAssets.length,
+      fixedAssets: balanceSheet.fixedAssets.length,
+      currentLiabilities: balanceSheet.currentLiabilities.length,
+      longTermLiabilities: balanceSheet.longTermLiabilities.length,
+      equity: balanceSheet.equity.length
+    });
     const pdf = await generateBalanceSheetPDF(reportData);
     console.log('✅ Balance Sheet PDF generated successfully, size:', pdf.length, 'bytes');
     
@@ -118,45 +280,140 @@ router.get('/balance-sheet/excel', async (req, res) => {
   console.log('📊 Balance Sheet Excel request received');
   try {
     const { generateBalanceSheetExcel } = require('../utils/balanceSheetExcelGenerator');
+    const Transaction = require('../models/Transaction');
+    const User = require('../models/User');
+    const Business = require('../models/Business');
     
-    // Sample Balance Sheet data - same as PDF route
+    // Get query parameters (same logic as PDF route)
+    const { businessName, asOfDate, clientId, businessId } = req.query;
+    
+    // Determine which business to query
+    let targetBusinessId = businessId;
+    let actualBusinessName = businessName || 'Business';
+    
+    // If clientId provided, find their business
+    if (clientId) {
+      const user = await User.findById(clientId);
+      if (user) {
+        const business = await Business.findOne({ owner: user._id });
+        if (business) {
+          targetBusinessId = business._id;
+          actualBusinessName = business.name || user.name || 'Business';
+        }
+      }
+    }
+    
+    // Default to current date if not provided
+    const endDate = asOfDate ? new Date(asOfDate) : new Date();
+    
+    // Fetch all transactions up to the specified date
+    const query = {
+      date: { $lte: endDate }
+    };
+    
+    if (targetBusinessId) {
+      query.business = targetBusinessId;
+    }
+    
+    const transactions = await Transaction.find(query).sort({ date: 1 });
+    console.log(`Found ${transactions.length} transactions for Balance Sheet Excel`);
+    
+    // Initialize balance sheet structure
+    const balanceSheet = {
+      currentAssets: [],
+      fixedAssets: [],
+      currentLiabilities: [],
+      longTermLiabilities: [],
+      equity: []
+    };
+    
+    // Group transactions by category and calculate balances
+    const accountBalances = new Map();
+    
+    transactions.forEach(txn => {
+      const category = txn.category || 'Uncategorized';
+      const amount = txn.amount || 0;
+      const type = txn.type || 'expense';
+      
+      if (!accountBalances.has(category)) {
+        accountBalances.set(category, {
+          name: category,
+          balance: 0,
+          type: type
+        });
+      }
+      
+      const account = accountBalances.get(category);
+      
+      if (type === 'income') {
+        account.balance += amount;
+      } else if (type === 'expense') {
+        account.balance -= amount;
+      }
+    });
+    
+    // Categorize accounts into balance sheet sections
+    accountBalances.forEach((account, category) => {
+      const categoryLower = category.toLowerCase();
+      const amount = Math.abs(account.balance);
+      
+      const item = { name: category, amount: Math.round(amount) };
+      
+      if (account.type === 'income' && account.balance > 0) {
+        balanceSheet.equity.push(item);
+      } else if (account.type === 'expense' && account.balance < 0) {
+        if (categoryLower.includes('equipment') || categoryLower.includes('furniture') || 
+            categoryLower.includes('vehicle') || categoryLower.includes('building')) {
+          balanceSheet.fixedAssets.push(item);
+        } else {
+          balanceSheet.currentAssets.push(item);
+        }
+      } else if (account.balance < 0) {
+        if (categoryLower.includes('loan') || categoryLower.includes('mortgage')) {
+          balanceSheet.longTermLiabilities.push(item);
+        } else {
+          balanceSheet.currentLiabilities.push(item);
+        }
+      }
+    });
+    
+    // Add defaults if empty
+    if (balanceSheet.currentAssets.length === 0) {
+      balanceSheet.currentAssets.push({ name: 'Cash & Bank', amount: 0 });
+    }
+    if (balanceSheet.equity.length === 0) {
+      balanceSheet.equity.push({ name: 'Owner Equity', amount: 0 });
+    }
+    
     const reportData = {
-      businessName: req.query.businessName || 'Sample Business',
-      asOfDate: req.query.asOfDate || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
-      currentAssets: [
-        { name: 'Cash in Hand', amount: 50000 },
-        { name: 'Bank Account', amount: 385000 },
-        { name: 'Accounts Receivable', amount: 125000 },
-        { name: 'Inventory', amount: 85000 }
-      ],
-      fixedAssets: [
-        { name: 'Office Equipment', amount: 150000 },
-        { name: 'Furniture & Fixtures', amount: 75000 },
-        { name: 'Computer Systems', amount: 120000 }
-      ],
-      currentLiabilities: [
-        { name: 'Accounts Payable', amount: 45000 },
-        { name: 'Short Term Loans', amount: 25000 },
-        { name: 'Accrued Expenses', amount: 15000 }
-      ],
-      longTermLiabilities: [
-        { name: 'Long Term Loan', amount: 200000 },
-        { name: 'Equipment Loan', amount: 50000 }
-      ],
-      equity: [
-        { name: 'Owner Equity', amount: 400000 },
-        { name: 'Retained Earnings', amount: 255000 }
-      ]
+      businessName: actualBusinessName,
+      asOfDate: endDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+      currentAssets: balanceSheet.currentAssets,
+      fixedAssets: balanceSheet.fixedAssets,
+      currentLiabilities: balanceSheet.currentLiabilities,
+      longTermLiabilities: balanceSheet.longTermLiabilities,
+      equity: balanceSheet.equity
     };
     
-    // Chart data for visualization (optional - can be derived from reportData)
+    // Calculate chart data from real data
+    const totalCurrentAssets = balanceSheet.currentAssets.reduce((sum, item) => sum + item.amount, 0);
+    const totalFixedAssets = balanceSheet.fixedAssets.reduce((sum, item) => sum + item.amount, 0);
+    const totalCurrentLiabilities = balanceSheet.currentLiabilities.reduce((sum, item) => sum + item.amount, 0);
+    const totalLongTermLiabilities = balanceSheet.longTermLiabilities.reduce((sum, item) => sum + item.amount, 0);
+    const totalEquity = balanceSheet.equity.reduce((sum, item) => sum + item.amount, 0);
+    
     const chartData = {
-      totalAssets: 890000,
-      totalLiabilities: 335000,
-      totalEquity: 655000
+      totalAssets: totalCurrentAssets + totalFixedAssets,
+      totalLiabilities: totalCurrentLiabilities + totalLongTermLiabilities,
+      totalEquity: totalEquity
     };
     
-    console.log('📋 Generating Balance Sheet Excel with data:', reportData);
+    console.log('📋 Generating Balance Sheet Excel with real data:', {
+      business: actualBusinessName,
+      totalAssets: chartData.totalAssets,
+      totalLiabilities: chartData.totalLiabilities,
+      totalEquity: chartData.totalEquity
+    });
     const workbook = await generateBalanceSheetExcel(reportData, chartData);
     
     // Convert workbook to buffer
@@ -187,29 +444,115 @@ router.get('/cash-flow/pdf', async (req, res) => {
   console.log('💰 Cash Flow PDF request received');
   try {
     const { generateCashFlowPDF } = require('../utils/cashFlowPdfGenerator');
+    const Transaction = require('../models/Transaction');
+    const User = require('../models/User');
+    const Business = require('../models/Business');
     
-    // Sample Cash Flow data
-    const reportData = {
-      businessName: req.query.businessName || 'Sample Business',
-      periodEnding: req.query.periodEnding || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
-      operatingActivities: [
-        { name: 'Net Income', amount: 450000 },
-        { name: 'Depreciation', amount: 25000 },
-        { name: 'Accounts Receivable', amount: -15000 },
-        { name: 'Accounts Payable', amount: 8000 },
-        { name: 'Inventory', amount: -12000 }
-      ],
-      investingActivities: [
-        { name: 'Equipment Purchase', amount: -75000 },
-        { name: 'Investment Sale', amount: 20000 }
-      ],
-      financingActivities: [
-        { name: 'Loan Repayment', amount: -30000 },
-        { name: 'Dividend Payment', amount: -25000 }
-      ]
+    // Get query parameters
+    const { businessName, periodEnding, clientId, businessId, startDate, endDate } = req.query;
+    
+    // Determine which business to query
+    let targetBusinessId = businessId;
+    let actualBusinessName = businessName || 'Business';
+    
+    // If clientId provided, find their business
+    if (clientId) {
+      const user = await User.findById(clientId);
+      if (user) {
+        const business = await Business.findOne({ owner: user._id });
+        if (business) {
+          targetBusinessId = business._id;
+          actualBusinessName = business.name || user.name || 'Business';
+        }
+      }
+    }
+    
+    // Default to last 3 months if dates not provided
+    const end = endDate ? new Date(endDate) : new Date();
+    const start = startDate ? new Date(startDate) : new Date(end.getFullYear(), end.getMonth() - 3, 1);
+    
+    // Fetch transactions for the period
+    const query = {
+      date: { $gte: start, $lte: end }
     };
     
-    console.log('💰 Generating Cash Flow PDF with data:', reportData);
+    if (targetBusinessId) {
+      query.business = targetBusinessId;
+    }
+    
+    const transactions = await Transaction.find(query).sort({ date: 1 });
+    console.log(`Found ${transactions.length} transactions for Cash Flow PDF`);
+    
+    // Initialize activity arrays
+    const operatingActivities = [];
+    const investingActivities = [];
+    const financingActivities = [];
+    
+    // Categorize transactions
+    const operatingMap = new Map();
+    const investingMap = new Map();
+    const financingMap = new Map();
+    
+    transactions.forEach(txn => {
+      const category = txn.category || 'Uncategorized';
+      const amount = txn.amount || 0;
+      const type = txn.type || 'expense';
+      const categoryLower = category.toLowerCase();
+      
+      // Determine activity type based on category
+      if (categoryLower.includes('equipment') || categoryLower.includes('asset') || 
+          categoryLower.includes('investment') || categoryLower.includes('property')) {
+        // Investing Activities
+        const current = investingMap.get(category) || 0;
+        investingMap.set(category, current + (type === 'expense' ? -amount : amount));
+      } else if (categoryLower.includes('loan') || categoryLower.includes('debt') || 
+                 categoryLower.includes('equity') || categoryLower.includes('dividend')) {
+        // Financing Activities
+        const current = financingMap.get(category) || 0;
+        financingMap.set(category, current + (type === 'expense' ? -amount : amount));
+      } else {
+        // Operating Activities (default)
+        const current = operatingMap.get(category) || 0;
+        operatingMap.set(category, current + (type === 'expense' ? -amount : amount));
+      }
+    });
+    
+    // Convert maps to arrays
+    operatingMap.forEach((amount, name) => {
+      operatingActivities.push({ name, amount: Math.round(amount) });
+    });
+    investingMap.forEach((amount, name) => {
+      investingActivities.push({ name, amount: Math.round(amount) });
+    });
+    financingMap.forEach((amount, name) => {
+      financingActivities.push({ name, amount: Math.round(amount) });
+    });
+    
+    // Add defaults if empty
+    if (operatingActivities.length === 0) {
+      operatingActivities.push({ name: 'No Operating Activities', amount: 0 });
+    }
+    if (investingActivities.length === 0) {
+      investingActivities.push({ name: 'No Investing Activities', amount: 0 });
+    }
+    if (financingActivities.length === 0) {
+      financingActivities.push({ name: 'No Financing Activities', amount: 0 });
+    }
+    
+    const reportData = {
+      businessName: actualBusinessName,
+      periodEnding: periodEnding || end.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+      operatingActivities,
+      investingActivities,
+      financingActivities
+    };
+    
+    console.log('💰 Generating Cash Flow PDF with real data:', {
+      business: actualBusinessName,
+      operating: operatingActivities.length,
+      investing: investingActivities.length,
+      financing: financingActivities.length
+    });
     const pdf = await generateCashFlowPDF(reportData);
     console.log('✅ Cash Flow PDF generated successfully, size:', pdf.length, 'bytes');
     
@@ -231,29 +574,115 @@ router.get('/cash-flow/excel', async (req, res) => {
   console.log('💰 Cash Flow Excel request received');
   try {
     const { generateCashFlowExcel } = require('../utils/cashFlowExcelGenerator');
+    const Transaction = require('../models/Transaction');
+    const User = require('../models/User');
+    const Business = require('../models/Business');
     
-    // Sample Cash Flow data - same as PDF route
-    const reportData = {
-      businessName: req.query.businessName || 'Sample Business',
-      periodEnding: req.query.periodEnding || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
-      operatingActivities: [
-        { name: 'Net Income', amount: 450000 },
-        { name: 'Depreciation', amount: 25000 },
-        { name: 'Accounts Receivable', amount: -15000 },
-        { name: 'Accounts Payable', amount: 8000 },
-        { name: 'Inventory', amount: -12000 }
-      ],
-      investingActivities: [
-        { name: 'Equipment Purchase', amount: -75000 },
-        { name: 'Investment Sale', amount: 20000 }
-      ],
-      financingActivities: [
-        { name: 'Loan Repayment', amount: -30000 },
-        { name: 'Dividend Payment', amount: -25000 }
-      ]
+    // Get query parameters (same logic as PDF route)
+    const { businessName, periodEnding, clientId, businessId, startDate, endDate } = req.query;
+    
+    // Determine which business to query
+    let targetBusinessId = businessId;
+    let actualBusinessName = businessName || 'Business';
+    
+    // If clientId provided, find their business
+    if (clientId) {
+      const user = await User.findById(clientId);
+      if (user) {
+        const business = await Business.findOne({ owner: user._id });
+        if (business) {
+          targetBusinessId = business._id;
+          actualBusinessName = business.name || user.name || 'Business';
+        }
+      }
+    }
+    
+    // Default to last 3 months if dates not provided
+    const end = endDate ? new Date(endDate) : new Date();
+    const start = startDate ? new Date(startDate) : new Date(end.getFullYear(), end.getMonth() - 3, 1);
+    
+    // Fetch transactions for the period
+    const query = {
+      date: { $gte: start, $lte: end }
     };
     
-    console.log('💰 Generating Cash Flow Excel with data:', reportData);
+    if (targetBusinessId) {
+      query.business = targetBusinessId;
+    }
+    
+    const transactions = await Transaction.find(query).sort({ date: 1 });
+    console.log(`Found ${transactions.length} transactions for Cash Flow Excel`);
+    
+    // Initialize activity arrays
+    const operatingActivities = [];
+    const investingActivities = [];
+    const financingActivities = [];
+    
+    // Categorize transactions
+    const operatingMap = new Map();
+    const investingMap = new Map();
+    const financingMap = new Map();
+    
+    transactions.forEach(txn => {
+      const category = txn.category || 'Uncategorized';
+      const amount = txn.amount || 0;
+      const type = txn.type || 'expense';
+      const categoryLower = category.toLowerCase();
+      
+      // Determine activity type based on category
+      if (categoryLower.includes('equipment') || categoryLower.includes('asset') || 
+          categoryLower.includes('investment') || categoryLower.includes('property')) {
+        // Investing Activities
+        const current = investingMap.get(category) || 0;
+        investingMap.set(category, current + (type === 'expense' ? -amount : amount));
+      } else if (categoryLower.includes('loan') || categoryLower.includes('debt') || 
+                 categoryLower.includes('equity') || categoryLower.includes('dividend')) {
+        // Financing Activities
+        const current = financingMap.get(category) || 0;
+        financingMap.set(category, current + (type === 'expense' ? -amount : amount));
+      } else {
+        // Operating Activities (default)
+        const current = operatingMap.get(category) || 0;
+        operatingMap.set(category, current + (type === 'expense' ? -amount : amount));
+      }
+    });
+    
+    // Convert maps to arrays
+    operatingMap.forEach((amount, name) => {
+      operatingActivities.push({ name, amount: Math.round(amount) });
+    });
+    investingMap.forEach((amount, name) => {
+      investingActivities.push({ name, amount: Math.round(amount) });
+    });
+    financingMap.forEach((amount, name) => {
+      financingActivities.push({ name, amount: Math.round(amount) });
+    });
+    
+    // Add defaults if empty
+    if (operatingActivities.length === 0) {
+      operatingActivities.push({ name: 'No Operating Activities', amount: 0 });
+    }
+    if (investingActivities.length === 0) {
+      investingActivities.push({ name: 'No Investing Activities', amount: 0 });
+    }
+    if (financingActivities.length === 0) {
+      financingActivities.push({ name: 'No Financing Activities', amount: 0 });
+    }
+    
+    const reportData = {
+      businessName: actualBusinessName,
+      periodEnding: periodEnding || end.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+      operatingActivities,
+      investingActivities,
+      financingActivities
+    };
+    
+    console.log('💰 Generating Cash Flow Excel with real data:', {
+      business: actualBusinessName,
+      operating: operatingActivities.length,
+      investing: investingActivities.length,
+      financing: financingActivities.length
+    });
     const buffer = await generateCashFlowExcel(reportData);
     console.log('✅ Cash Flow Excel generated successfully, size:', buffer.length, 'bytes');
     
@@ -265,6 +694,349 @@ router.get('/cash-flow/excel', async (req, res) => {
     console.error('Stack:', error.stack);
     res.status(500).json({ 
       error: 'Failed to generate Cash Flow Excel',
+      message: error.message 
+    });
+  }
+});
+
+// ==================== BALANCE SHEET DATA ENDPOINT ====================
+
+router.get('/balance-sheet/data', auth, async (req, res) => {
+  try {
+    console.log('📊 Balance Sheet Data request received');
+    const { businessId, clientId, asOfDate } = req.query;
+    
+    const Transaction = require('../models/Transaction');
+    const User = require('../models/User');
+    const Business = require('../models/Business');
+    
+    // Determine which business to query
+    let targetBusinessId = businessId;
+    
+    // If clientId provided, find their business
+    if (clientId) {
+      const user = await User.findById(clientId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      const business = await Business.findOne({ owner: user._id });
+      if (!business) {
+        return res.status(404).json({ message: 'Business not found for user' });
+      }
+      targetBusinessId = business._id;
+    }
+    
+    // Default to current date if not provided
+    const endDate = asOfDate ? new Date(asOfDate) : new Date();
+    
+    console.log('Fetching balance sheet data for business:', targetBusinessId);
+    console.log('As of date:', endDate);
+    
+    // Fetch all transactions up to the specified date
+    const query = {
+      date: { $lte: endDate }
+    };
+    
+    if (targetBusinessId) {
+      query.business = targetBusinessId;
+    }
+    
+    const transactions = await Transaction.find(query).sort({ date: 1 });
+    
+    console.log(`Found ${transactions.length} transactions for balance sheet`);
+    
+    // Initialize balance sheet structure
+    const balanceSheet = {
+      currentAssets: [],
+      fixedAssets: [],
+      currentLiabilities: [],
+      longTermLiabilities: [],
+      equity: []
+    };
+    
+    // Group transactions by category and calculate balances
+    const accountBalances = new Map();
+    
+    transactions.forEach(txn => {
+      const category = txn.category || 'Uncategorized';
+      const amount = txn.amount || 0;
+      const type = txn.type || 'expense';
+      
+      if (!accountBalances.has(category)) {
+        accountBalances.set(category, {
+          name: category,
+          balance: 0,
+          type: type,
+          transactionCount: 0
+        });
+      }
+      
+      const account = accountBalances.get(category);
+      
+      // For income/revenue, add to balance; for expense, subtract
+      if (type === 'income') {
+        account.balance += amount;
+      } else if (type === 'expense') {
+        account.balance -= amount;
+      }
+      
+      account.transactionCount++;
+    });
+    
+    // Categorize accounts into balance sheet sections
+    // This is a simplified categorization - adjust based on your category naming
+    accountBalances.forEach((account, category) => {
+      const categoryLower = category.toLowerCase();
+      const amount = Math.abs(account.balance); // Use absolute values for display
+      
+      const item = {
+        _id: category,
+        name: category,
+        amount: amount,
+        transactionCount: account.transactionCount
+      };
+      
+      // Categorize based on transaction type and amount
+      if (account.type === 'income' && account.balance > 0) {
+        // Positive income balance could be retained earnings
+        item.type = 'equity';
+        balanceSheet.equity.push(item);
+      } else if (account.type === 'expense' && account.balance < 0) {
+        // Negative expense balance means money spent (could be assets or expenses)
+        // For balance sheet, we'll treat significant expenses as assets
+        if (categoryLower.includes('equipment') || categoryLower.includes('furniture') || 
+            categoryLower.includes('vehicle') || categoryLower.includes('building') ||
+            categoryLower.includes('property')) {
+          item.type = 'fixed-asset';
+          balanceSheet.fixedAssets.push(item);
+        } else if (categoryLower.includes('cash') || categoryLower.includes('bank') ||
+                   categoryLower.includes('receivable') || categoryLower.includes('inventory')) {
+          item.type = 'current-asset';
+          balanceSheet.currentAssets.push(item);
+        } else {
+          // Default current assets for other expenses
+          item.type = 'current-asset';
+          balanceSheet.currentAssets.push(item);
+        }
+      } else if (account.balance < 0) {
+        // Negative balances could be liabilities
+        if (categoryLower.includes('loan') || categoryLower.includes('mortgage') ||
+            categoryLower.includes('long-term')) {
+          item.type = 'long-term-liability';
+          balanceSheet.longTermLiabilities.push(item);
+        } else {
+          item.type = 'current-liability';
+          balanceSheet.currentLiabilities.push(item);
+        }
+      }
+    });
+    
+    // Add default items if categories are empty
+    if (balanceSheet.currentAssets.length === 0) {
+      balanceSheet.currentAssets.push({
+        _id: 'default-cash',
+        name: 'Cash & Bank',
+        amount: 0,
+        type: 'current-asset'
+      });
+    }
+    
+    if (balanceSheet.equity.length === 0) {
+      balanceSheet.equity.push({
+        _id: 'default-equity',
+        name: 'Owner\'s Equity',
+        amount: 0,
+        type: 'equity'
+      });
+    }
+    
+    // Flatten all items into a single array
+    const allItems = [
+      ...balanceSheet.currentAssets.map(item => ({ ...item, type: 'current-asset' })),
+      ...balanceSheet.fixedAssets.map(item => ({ ...item, type: 'fixed-asset' })),
+      ...balanceSheet.currentLiabilities.map(item => ({ ...item, type: 'current-liability' })),
+      ...balanceSheet.longTermLiabilities.map(item => ({ ...item, type: 'long-term-liability' })),
+      ...balanceSheet.equity.map(item => ({ ...item, type: 'equity' }))
+    ];
+    
+    console.log(`✅ Balance sheet calculated with ${allItems.length} line items`);
+    
+    res.json({
+      success: true,
+      data: allItems,
+      asOfDate: endDate,
+      transactionCount: transactions.length
+    });
+    
+  } catch (error) {
+    console.error('❌ Balance Sheet Data error:', error);
+    res.status(500).json({ 
+      error: 'Failed to generate balance sheet data',
+      message: error.message 
+    });
+  }
+});
+
+// ==================== CASH FLOW DATA ENDPOINT ====================
+
+router.get('/cash-flow/data', auth, async (req, res) => {
+  try {
+    console.log('💰 Cash Flow Data request received');
+    const { businessId, clientId, startDate, endDate } = req.query;
+    
+    const Transaction = require('../models/Transaction');
+    const User = require('../models/User');
+    const Business = require('../models/Business');
+    
+    // Determine which business to query
+    let targetBusinessId = businessId;
+    
+    // If clientId provided, find their business
+    if (clientId) {
+      const user = await User.findById(clientId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      const business = await Business.findOne({ owner: user._id });
+      if (!business) {
+        return res.status(404).json({ message: 'Business not found for user' });
+      }
+      targetBusinessId = business._id;
+    }
+    
+    // Default to last 3 months if dates not provided
+    const end = endDate ? new Date(endDate) : new Date();
+    const start = startDate ? new Date(startDate) : new Date(end.getFullYear(), end.getMonth() - 3, 1);
+    
+    console.log('Fetching cash flow data for business:', targetBusinessId);
+    console.log('Period:', start.toISOString(), 'to', end.toISOString());
+    
+    // Fetch transactions for the period
+    const query = {
+      date: { $gte: start, $lte: end }
+    };
+    
+    if (targetBusinessId) {
+      query.business = targetBusinessId;
+    }
+    
+    const transactions = await Transaction.find(query).sort({ date: 1 });
+    
+    console.log(`Found ${transactions.length} transactions for cash flow`);
+    
+    // Initialize cash flow categories
+    let operatingInflows = 0;
+    let operatingOutflows = 0;
+    let investingInflows = 0;
+    let investingOutflows = 0;
+    let financingInflows = 0;
+    let financingOutflows = 0;
+    
+    const categoryBreakdown = {
+      operating: [],
+      investing: [],
+      financing: []
+    };
+    
+    // Categorize transactions into cash flow activities
+    transactions.forEach(txn => {
+      const amount = txn.amount || 0;
+      const category = (txn.category || 'Uncategorized').toLowerCase();
+      const type = txn.type || 'expense';
+      
+      // Determine cash flow activity type based on category
+      if (category.includes('equipment') || category.includes('asset') || 
+          category.includes('investment') || category.includes('property')) {
+        // Investing Activities
+        if (type === 'expense') {
+          investingOutflows += amount;
+        } else {
+          investingInflows += amount;
+        }
+        categoryBreakdown.investing.push({
+          category: txn.category,
+          amount: type === 'expense' ? -amount : amount,
+          date: txn.date
+        });
+      } else if (category.includes('loan') || category.includes('debt') || 
+                 category.includes('equity') || category.includes('dividend')) {
+        // Financing Activities
+        if (type === 'expense') {
+          financingOutflows += amount;
+        } else {
+          financingInflows += amount;
+        }
+        categoryBreakdown.financing.push({
+          category: txn.category,
+          amount: type === 'expense' ? -amount : amount,
+          date: txn.date
+        });
+      } else {
+        // Operating Activities (default)
+        if (type === 'expense') {
+          operatingOutflows += amount;
+        } else {
+          operatingInflows += amount;
+        }
+        categoryBreakdown.operating.push({
+          category: txn.category,
+          amount: type === 'expense' ? -amount : amount,
+          date: txn.date
+        });
+      }
+    });
+    
+    // Calculate net cash flows
+    const operatingCashFlow = operatingInflows - operatingOutflows;
+    const investingCashFlow = investingInflows - investingOutflows;
+    const financingCashFlow = financingInflows - financingOutflows;
+    const netCashFlow = operatingCashFlow + investingCashFlow + financingCashFlow;
+    
+    // Prepare response data
+    const cashFlowData = {
+      // Operating Activities
+      operatingInflows,
+      operatingOutflows,
+      operatingCashFlow,
+      
+      // Investing Activities
+      investingInflows,
+      investingOutflows,
+      investingCashFlow,
+      
+      // Financing Activities
+      financingInflows,
+      financingOutflows,
+      financingCashFlow,
+      
+      // Net Cash Flow
+      netCashFlow,
+      
+      // Period info
+      startDate: start,
+      endDate: end,
+      transactionCount: transactions.length,
+      
+      // Breakdown by category
+      breakdown: categoryBreakdown
+    };
+    
+    console.log('✅ Cash flow calculated:', {
+      operating: operatingCashFlow,
+      investing: investingCashFlow,
+      financing: financingCashFlow,
+      net: netCashFlow
+    });
+    
+    res.json({
+      success: true,
+      data: cashFlowData
+    });
+    
+  } catch (error) {
+    console.error('❌ Cash Flow Data error:', error);
+    res.status(500).json({ 
+      error: 'Failed to generate cash flow data',
       message: error.message 
     });
   }

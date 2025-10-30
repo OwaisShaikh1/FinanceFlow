@@ -46,7 +46,6 @@ const navigationItems = [
     items: [
       { title: "Income & Expenses", href: "/dashboard/transactions", icon: TrendingUp, roles: ["Admin", "CA", "user"] },
       { title: "Chart of Accounts", href: "/dashboard/accounts", icon: Calculator, roles: ["Admin"] },
-      { title: "Bank Reconciliation", href: "/dashboard/reconciliation", icon: Banknote, roles: ["Admin"] },
     ],
   },
   {
@@ -55,7 +54,6 @@ const navigationItems = [
     items: [
       { title: "Invoices", href: "/dashboard/invoices", icon: FileText, roles: ["Admin", "user"] },
       { title: "Recurring Invoices", href: "/dashboard/recurring-invoices", icon: Calendar, roles: ["Admin"] },
-      { title: "Payments", href: "/dashboard/payments", icon: CreditCard, roles: ["Admin", "CA"] },
     ],
   },
   {
@@ -64,7 +62,6 @@ const navigationItems = [
     items: [
       { title: "GST", href: "/dashboard/gst", icon: Receipt, roles: ["Admin", "user", "CA"] },
       { title: "TDS", href: "/dashboard/tds", icon: Shield, roles: ["Admin", "user", "CA"] },
-      { title: "My Income Tax", href: "/dashboard/income-tax", icon: Calculator, roles: ["Admin", "user"] },
       { title: "Tax Management", href: "/dashboard/tax", icon: FileText, roles: ["Admin", "CA"] },
     ],
   },
@@ -88,7 +85,6 @@ const navigationItems = [
     roles: ["Admin", "CA"],
     items: [
       { title: "Clients", href: "/dashboard/clients", icon: Users, roles: ["Admin", "CA"] },
-      { title: "Organizations", href: "/dashboard/organizations", icon: Building, roles: ["Admin"] },
     ],
   },
 ]

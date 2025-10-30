@@ -194,12 +194,11 @@ export function ClientsList() {
         // Show success toast
         toast({
           title: "Client Selected",
-          description: `Now viewing data for ${clientData.name}`,
+          description: `Now viewing data for ${clientData.name}. Navigate to Dashboard to see their data.`,
           duration: 3000,
         })
 
-        // Redirect to dashboard to show client's data
-        router.push('/dashboard')
+        // Don't navigate - let user choose where to go
       } else {
         throw new Error('Invalid response data')
       }
