@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { FileText, Clock, CheckCircle, AlertCircle } from "lucide-react"
-import { useClientContext } from "@/contexts/ClientContext"
 
 interface InvoiceStats {
   total: number
@@ -28,7 +27,6 @@ export function InvoiceStats() {
     monthlyGrowth: 0
   })
   const [loading, setLoading] = useState(true)
-  const { selectedClient } = useClientContext()
 
   useEffect(() => {
     const fetchInvoiceStats = async () => {
@@ -40,12 +38,8 @@ export function InvoiceStats() {
           headers["Authorization"] = `Bearer ${token}`
         }
 
-        // Build query params for client filtering
-        const queryParams = selectedClient?.businessId 
-          ? `?business=${selectedClient.businessId}` 
-          : ''
-
-        const response = await fetch(`http://localhost:5000/api/invoice/stats${queryParams}`, {
+        // Backend filters by authenticated user automatically
+        const response = await fetch(`http://localhost:5000/api/invoice/stats`, {
           method: "GET",
           headers,
         })
@@ -65,7 +59,7 @@ export function InvoiceStats() {
     }
 
     fetchInvoiceStats()
-  }, [selectedClient]) // Re-fetch when client changes
+  }, []) // Fetch on mount
 
   const statsCards = [
     {

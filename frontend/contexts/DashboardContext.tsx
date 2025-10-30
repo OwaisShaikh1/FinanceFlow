@@ -109,18 +109,9 @@ export const useDashboard = () => {
 }
 
 export const DashboardProvider = ({ children }: { children: ReactNode }) => {
-<<<<<<< HEAD
   // Use useReducer for complex state management
   const [state, dispatch] = useReducer(dashboardReducer, initialState)
-=======
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const { selectedClient } = useClientContext()
->>>>>>> a77f7d4b8c83b43a09e733c2982d6b7eda104ca6
 
   // useCallback to memoize the fetch function
   const fetchDashboard = useCallback(async () => {
@@ -129,7 +120,11 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
     try {
       const token = localStorage.getItem("token")
 
-<<<<<<< HEAD
+      // Build query params for client filtering
+      const queryParams = selectedClient?.businessId 
+        ? `?business=${selectedClient.businessId}` 
+        : ''
+
       // Fetch stats, transactions, and chart data with memoized headers
       const headers = { 
         Authorization: `Bearer ${token}`, 
@@ -137,27 +132,9 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
       };
 
       const [statsRes, txnRes, chartRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/transactions/dashboard-stats`, { headers }),
-        fetch(`${API_BASE_URL}/api/transactions`, { headers }),
-        fetch(`${API_BASE_URL}/api/transactions/chart-data`, { headers }),
-=======
-      // Build query params for client filtering
-      const queryParams = selectedClient?.businessId 
-        ? `?business=${selectedClient.businessId}` 
-        : ''
-
-      // Fetch stats, transactions, and chart data
-      const [statsRes, txnRes, chartRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/transactions/dashboard-stats${queryParams}`, {
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        }),
-        fetch(`${API_BASE_URL}/api/transactions${queryParams}`, {
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        }),
-        fetch(`${API_BASE_URL}/api/transactions/chart-data${queryParams}`, {
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        }),
->>>>>>> a77f7d4b8c83b43a09e733c2982d6b7eda104ca6
+        fetch(`${API_BASE_URL}/api/transactions/dashboard-stats${queryParams}`, { headers }),
+        fetch(`${API_BASE_URL}/api/transactions${queryParams}`, { headers }),
+        fetch(`${API_BASE_URL}/api/transactions/chart-data${queryParams}`, { headers }),
       ])
 
       if (!statsRes.ok) throw new Error("Failed to fetch dashboard stats")
