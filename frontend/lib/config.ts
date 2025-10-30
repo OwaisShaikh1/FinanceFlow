@@ -31,16 +31,19 @@ export const ENDPOINTS = {
     PDF: (id: string) => `${API_BASE_URL}/api/invoice/${id}/pdf`,
     STATUS: (id: string) => `${API_BASE_URL}/api/invoice/${id}/status`,
   },
+  REPORTS_BASE: `${API_BASE_URL}/api/reports`,
   REPORTS: {
     BALANCE_SHEET: {
       PDF: `${API_BASE_URL}/api/reports/balance-sheet/pdf`,
       EXCEL: `${API_BASE_URL}/api/reports/balance-sheet/excel`,
       TEST: `${API_BASE_URL}/api/reports/balance-sheet/test`,
+      DATA: `${API_BASE_URL}/api/reports/balance-sheet/data`,
     },
     CASH_FLOW: {
       PDF: `${API_BASE_URL}/api/reports/cash-flow/pdf`,
       EXCEL: `${API_BASE_URL}/api/reports/cash-flow/excel`,
       TEST: `${API_BASE_URL}/api/reports/cash-flow/test`,
+      DATA: `${API_BASE_URL}/api/reports/cash-flow/data`,
     },
     PROFIT_LOSS: {
       PDF: `${API_BASE_URL}/api/reports/profit-loss/pdf`,

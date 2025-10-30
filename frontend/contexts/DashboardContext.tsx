@@ -121,9 +121,14 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
       const token = localStorage.getItem("token")
 
       // Build query params for client filtering
-      const queryParams = selectedClient?.businessId 
-        ? `?business=${selectedClient.businessId}` 
+      // Use client ID (user ID) instead of businessId - backend will find the business
+      const queryParams = selectedClient?.id 
+        ? `?clientId=${selectedClient.id}` 
         : ''
+
+      console.log('🔍 DashboardContext - Fetching with params:', queryParams)
+      console.log('🔍 Selected Client:', selectedClient)
+      console.log('🔍 Selected Client.id:', selectedClient?.id)
 
       // Fetch stats, transactions, and chart data with memoized headers
       const headers = { 
@@ -145,6 +150,9 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
       const txnData: Transaction[] = await txnRes.json()
       const chartData: MonthlyData[] = await chartRes.json()
 
+      console.log('✅ Fetched transactions count:', txnData.length)
+      console.log('✅ Stats:', statsData)
+
       dispatch({
         type: 'REFRESH_SUCCESS',
         payload: {
@@ -160,19 +168,17 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
         payload: err.message || "Failed to fetch dashboard data"
       })
     }
-  }, [])
-
-  useEffect(() => {
-    fetchDashboard()
-  }, [selectedClient]) // Re-fetch when client selection changes
+  }, [selectedClient])
 
   // useCallback for sidebar toggle to prevent re-renders
   const setSidebarCollapsed = useCallback((collapsed: boolean) => {
     dispatch({ type: 'SET_SIDEBAR_COLLAPSED', payload: collapsed })
   }, [])
 
-  // useEffect for initial data fetch
+  // useEffect for data fetch - triggers when client selection changes
   useEffect(() => {
+    console.log('🔄 DashboardContext useEffect triggered')
+    console.log('🔄 selectedClient changed:', selectedClient)
     fetchDashboard()
   }, [fetchDashboard])
 

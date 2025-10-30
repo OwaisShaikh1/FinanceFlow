@@ -2,7 +2,8 @@
 const jwt = require('jsonwebtoken');
 
 // Import the correct model
-const GenInvoice = require('../models/GenInvoice'); 
+const GenInvoice = require('../models/GenInvoice');
+const RecurringTemplate = require('../models/RecuringTemplate');
 const { generateTaxProInvoicePDF } = require('../utils/invoicePdfGenerator');
 
 const router = express.Router();
@@ -280,8 +281,29 @@ router.get('/:id/pdf', auth, async (req, res) => {
 // Get invoice statistics
 router.get('/stats', auth, async (req, res) => {
   try {
-    // Filter invoices by authenticated user
-    const invoices = await GenInvoice.find({ user: req.user.id });
+    const User = require('../models/User');
+    const Business = require('../models/Business');
+    
+    // Priority: clientId param > authenticated user
+    let userId = req.user.id;
+    let businessId = null;
+    
+    // If clientId provided, use it (for CA viewing client data)
+    if (req.query.clientId) {
+      const user = await User.findById(req.query.clientId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      userId = user._id;
+      const business = await Business.findOne({ owner: user._id });
+      if (business) {
+        businessId = business._id;
+      }
+      console.log(`Finding invoices for client ${req.query.clientId}, user: ${userId}`);
+    }
+    
+    // Filter invoices by user ID (primary) or business ID (fallback)
+    const invoices = await GenInvoice.find({ user: userId });
     
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
@@ -339,6 +361,111 @@ router.get('/stats', auth, async (req, res) => {
   } catch (error) {
     console.error('Error fetching invoice stats:', error);
     res.status(500).json({ message: 'Error fetching statistics', error: error.message });
+  }
+});
+
+// ==================== RECURRING INVOICE ROUTES ====================
+
+// GET all recurring invoice templates
+router.get('/recurring', auth, async (req, res) => {
+  try {
+    const { business } = req.query;
+    const query = business ? { business } : { business: req.user.biz };
+    
+    console.log('Fetching recurring templates with query:', query);
+    
+    const templates = await RecurringTemplate.find(query)
+      .populate('business', 'name')
+      .sort({ createdAt: -1 });
+    
+    console.log(`Found ${templates.length} recurring templates`);
+    
+    res.json(templates);
+  } catch (error) {
+    console.error('Error fetching recurring templates:', error);
+    res.status(500).json({ message: 'Error fetching recurring invoices', error: error.message });
+  }
+});
+
+// POST create new recurring invoice template
+router.post('/recurring', auth, async (req, res) => {
+  try {
+    const templateData = {
+      business: req.body.business || req.user.biz,
+      template: req.body.template,
+      everyDays: req.body.everyDays,
+      nextRun: req.body.nextRun || new Date()
+    };
+    
+    console.log('Creating recurring template:', templateData);
+    
+    const recurringTemplate = await RecurringTemplate.create(templateData);
+    
+    console.log('Recurring template created:', recurringTemplate._id);
+    
+    res.status(201).json(recurringTemplate);
+  } catch (error) {
+    console.error('Error creating recurring template:', error);
+    res.status(400).json({ message: 'Error creating recurring invoice', error: error.message });
+  }
+});
+
+// PUT update recurring invoice template
+router.put('/recurring/:id', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log(`Updating recurring template ${id}`);
+    
+    const updateData = {
+      template: req.body.template,
+      everyDays: req.body.everyDays,
+      nextRun: req.body.nextRun
+    };
+    
+    // Remove undefined fields
+    Object.keys(updateData).forEach(key => 
+      updateData[key] === undefined && delete updateData[key]
+    );
+    
+    const updatedTemplate = await RecurringTemplate.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, runValidators: true }
+    );
+    
+    if (!updatedTemplate) {
+      return res.status(404).json({ message: 'Recurring template not found' });
+    }
+    
+    console.log('Recurring template updated:', updatedTemplate._id);
+    
+    res.json(updatedTemplate);
+  } catch (error) {
+    console.error('Error updating recurring template:', error);
+    res.status(400).json({ message: 'Error updating recurring invoice', error: error.message });
+  }
+});
+
+// DELETE recurring invoice template
+router.delete('/recurring/:id', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log(`Deleting recurring template ${id}`);
+    
+    const deletedTemplate = await RecurringTemplate.findByIdAndDelete(id);
+    
+    if (!deletedTemplate) {
+      return res.status(404).json({ message: 'Recurring template not found' });
+    }
+    
+    console.log('Recurring template deleted:', id);
+    
+    res.json({ message: 'Recurring template deleted successfully', id });
+  } catch (error) {
+    console.error('Error deleting recurring template:', error);
+    res.status(500).json({ message: 'Error deleting recurring invoice', error: error.message });
   }
 });
 

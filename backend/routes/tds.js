@@ -3,6 +3,12 @@ const router = express.Router();
 const TDS = require('../models/TDS');
 const { TDSCalculator } = require('../utils/tdsCalculation');
 
+// Simple auth middleware
+const auth = (req, res, next) => {
+  req.user = { business: 'business-1' };
+  next();
+};
+
 console.log('TDS Route loaded, TDS model:', TDS ? 'OK' : 'FAILED');
 
 // 1. TDS Calculation Route
@@ -212,7 +218,7 @@ router.get('/dashboard', async (req, res) => {
 });
 
 // 4. TDS Returns Routes
-router.get('/returns', async (req, res) => {
+router.get('/returns', auth, async (req, res) => {
   try {
     console.log('Fetching TDS returns...');
     

@@ -4,10 +4,13 @@ import { TransactionsList } from "@/components/accounting/transactions-list"
 import { TransactionStats } from "@/components/accounting/transaction-stats"
 import { TransactionFilters } from "@/components/accounting/transaction-filters"
 import { Button } from "@/components/ui/button"
-import { Plus, Upload } from "lucide-react"
+import { Plus, Upload, Building2 } from "lucide-react"
 import Link from "next/link"
+import { useClientContext } from "@/contexts/ClientContext"
+import { Badge } from "@/components/ui/badge"
 
 export default function TransactionsPage() {
+  const { selectedClient, isViewingAsClient } = useClientContext()
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -15,11 +18,22 @@ export default function TransactionsPage() {
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
         <div className="flex items-center justify-between">
           <div className="space-y-2">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              Income & Expenses
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                Income & Expenses
+              </h1>
+              {isViewingAsClient && selectedClient && (
+                <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">
+                  <Building2 className="h-3 w-3 mr-1" />
+                  {selectedClient.name}
+                </Badge>
+              )}
+            </div>
             <p className="text-lg text-gray-600 max-w-2xl">
-              Track and manage all your business transactions with automated categorization and insights
+              {isViewingAsClient && selectedClient 
+                ? `Viewing transactions for ${selectedClient.businessName || selectedClient.name}`
+                : "Track and manage all your business transactions with automated categorization and insights"
+              }
             </p>
           </div>
           <div className="flex gap-3">

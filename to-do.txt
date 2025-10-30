@@ -1,0 +1,19 @@
+🔴 HIGH PRIORITY (Items 1-4, 12-13) - Fix First
+Recurring Invoices Backend - Critical broken feature
+Balance Sheet Real Data - Major report using fake data
+Cash Flow Real Data - Major report using fake data
+P&L Report Endpoints - Exports showing wrong data
+Balance Sheet PDF/Excel - Update after fixing #2
+Cash Flow PDF/Excel - Update after fixing #3
+🟡 MEDIUM PRIORITY (Items 5-9) - Fix Next
+Invoice Stats Filtering - Consistency fix
+Tasks Module Decision - Connect or remove
+Chart of Accounts Decision - Connect or remove
+GST Returns Verification - Check data accuracy
+TDS Returns Verification - Check data accuracy
+🟢 LOW PRIORITY (Items 10-11, 14-15) - Nice to Have
+Tax Calculator Persistence - Enhancement
+Tax Report Cards Connection - Minor improvement
+Remove Redundant Components - Cleanup
+Final Testing - Comprehensive verification
+The list is organized to tackle critical broken features first (recurring invoices, report data accuracy), then consistency issues, then decisions on unused features, and finally enhancements and cleanup.

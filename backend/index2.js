@@ -351,6 +351,39 @@ app.get('/api/clients/:clientId', auth, async (req, res) => {
       });
     }
 
+    console.log('📊 User found:', { 
+      id: user._id, 
+      name: user.name, 
+      business: user.business,
+      role: user.role 
+    });
+
+    // Fetch the business associated with this user
+    const business = await Business.findOne({ owner: user._id });
+    
+    console.log('📊 Business found by owner:', business ? { 
+      id: business._id, 
+      name: business.name, 
+      owner: business.owner 
+    } : 'null');
+    
+    // If not found by owner, try finding by the user's business field
+    let businessFallback = null;
+    if (!business && user.business) {
+      businessFallback = await Business.findById(user.business);
+      console.log('📊 Business found by user.business field:', businessFallback ? { 
+        id: businessFallback._id, 
+        name: businessFallback.name 
+      } : 'null');
+    }
+    
+    const finalBusiness = business || businessFallback;
+    
+    console.log('📊 Final business to use:', finalBusiness ? { 
+      id: finalBusiness._id, 
+      name: finalBusiness.name 
+    } : 'null');
+    
     // Transform user data to detailed client information
     const clientDetails = {
       id: user._id,
@@ -360,13 +393,15 @@ app.get('/api/clients/:clientId', auth, async (req, res) => {
       phone: user.phone || 'Not Available',
       
       // Business Information
-      businessName: user.businessName || 'Not Available',
-      businessType: user.businessType || 'Individual',
+      businessId: finalBusiness?._id || user.business || null,  // Add businessId field
+      business: finalBusiness || null,  // Include full business object if available
+      businessName: finalBusiness?.name || user.businessName || 'Not Available',
+      businessType: finalBusiness?.businessType || user.businessType || 'Individual',
       company: user.company || 'Not Available',
       
       // Tax Information
-      gstin: user.gstin || 'Not Available',
-      pan: user.pan || 'Not Available',
+      gstin: business?.gstin || user.gstin || 'Not Available',
+      pan: business?.pan || user.pan || 'Not Available',
       filingScheme: user.filingScheme || 'monthly',
       
       // Address Information

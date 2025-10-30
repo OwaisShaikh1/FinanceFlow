@@ -168,27 +168,37 @@ export function ClientsList() {
       if (data.success && data.client) {
         const clientData = data.client
         
+        console.log('📋 Client data received from API:', clientData)
+        console.log('📋 clientData.businessId:', clientData.businessId)
+        console.log('📋 clientData.business:', clientData.business)
+        console.log('📋 clientData.business?._id:', clientData.business?._id)
+        
+        const extractedBusinessId = clientData.businessId || clientData.business?._id || clientData.business
+        console.log('📋 Extracted businessId:', extractedBusinessId)
+        
         // Set the selected client in context
-        selectClient({
+        const clientToSelect = {
           id: clientData._id || clientData.id,
           name: clientData.name,
           email: clientData.email,
-          businessId: clientData.business?._id || clientData.business,
+          businessId: extractedBusinessId,
           businessName: clientData.businessName || clientData.company || client.name,
           gstin: clientData.gstin || client.gstin,
           pan: clientData.pan,
           businessType: clientData.businessType || client.type
-        })
+        }
+        
+        console.log('📋 Calling selectClient with:', clientToSelect)
+        selectClient(clientToSelect)
 
         // Show success toast
         toast({
           title: "Client Selected",
-          description: `Now viewing data for ${clientData.name}`,
+          description: `Now viewing data for ${clientData.name}. Navigate to Dashboard to see their data.`,
           duration: 3000,
         })
 
-        // Redirect to dashboard to show client's data
-        router.push('/dashboard')
+        // Don't navigate - let user choose where to go
       } else {
         throw new Error('Invalid response data')
       }

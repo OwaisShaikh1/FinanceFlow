@@ -5,6 +5,7 @@ import { BalanceSheetChart } from "@/components/reporting/balance-sheet-chart"
 import { ReportHeader } from "@/components/reporting/report-header"
 import { useState, useEffect } from "react"
 import { ENDPOINTS } from "@/lib/config"
+import { useClientContext } from "@/contexts/ClientContext"
 
 interface BalanceSheetItem {
   _id: string;
@@ -31,44 +32,56 @@ export default function BalanceSheetPage() {
   const [balanceSheetItems, setBalanceSheetItems] = useState<BalanceSheetItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { selectedClient } = useClientContext();
 
-  // Sample data for demo purposes - replace with actual API calls
+  // Fetch real balance sheet data from API
   const fetchBalanceSheetData = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Simulate API call - replace with actual endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate loading
+      const token = localStorage.getItem("token");
+      const headers: Record<string, string> = { 
+        "Content-Type": "application/json" 
+      };
       
-      // Sample balance sheet data
-      const sampleData: BalanceSheetItem[] = [
-        // Current Assets
-        { _id: '1', name: 'Cash in Hand', amount: 50000, type: 'current-asset' },
-        { _id: '2', name: 'Bank Account', amount: 385000, type: 'current-asset' },
-        { _id: '3', name: 'Accounts Receivable', amount: 125000, type: 'current-asset' },
-        { _id: '4', name: 'Inventory', amount: 85000, type: 'current-asset' },
-        
-        // Fixed Assets
-        { _id: '5', name: 'Office Equipment', amount: 150000, type: 'fixed-asset' },
-        { _id: '6', name: 'Furniture & Fixtures', amount: 75000, type: 'fixed-asset' },
-        { _id: '7', name: 'Computer Systems', amount: 120000, type: 'fixed-asset' },
-        
-        // Current Liabilities
-        { _id: '8', name: 'Accounts Payable', amount: 45000, type: 'current-liability' },
-        { _id: '9', name: 'Short Term Loans', amount: 25000, type: 'current-liability' },
-        { _id: '10', name: 'Accrued Expenses', amount: 15000, type: 'current-liability' },
-        
-        // Long Term Liabilities
-        { _id: '11', name: 'Long Term Loan', amount: 200000, type: 'long-term-liability' },
-        { _id: '12', name: 'Equipment Loan', amount: 50000, type: 'long-term-liability' },
-        
-        // Equity
-        { _id: '13', name: 'Owner Equity', amount: 400000, type: 'equity' },
-        { _id: '14', name: 'Retained Earnings', amount: 255000, type: 'equity' },
-      ];
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
       
-      setBalanceSheetItems(sampleData);
+      // Get current date as default "as of" date
+      const asOfDate = new Date().toISOString();
+      
+      // Add client filtering if a client is selected
+      const queryParams = selectedClient?.id 
+        ? `?clientId=${selectedClient.id}&asOfDate=${asOfDate}` 
+        : `?asOfDate=${asOfDate}`;
+      
+      console.log('Fetching balance sheet data from API...');
+      console.log('Query params:', queryParams);
+      
+      const response = await fetch(
+        `${ENDPOINTS.REPORTS_BASE}/balance-sheet/data${queryParams}`,
+        {
+          method: "GET",
+          headers,
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch balance sheet: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      console.log('Balance sheet data received:', result);
+      
+      if (result.success && result.data) {
+        setBalanceSheetItems(result.data);
+      } else {
+        throw new Error('Invalid response format');
+      }
+      
     } catch (error) {
       console.error('Error fetching balance sheet data:', error);
       setError('Failed to load balance sheet data');
@@ -79,7 +92,7 @@ export default function BalanceSheetPage() {
 
   useEffect(() => {
     fetchBalanceSheetData();
-  }, []);
+  }, [selectedClient]); // Re-fetch when client changes
 
   // Process data for reports and charts
   const processBalanceSheetData = (): BalanceSheetData => {
