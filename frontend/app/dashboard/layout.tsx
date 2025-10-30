@@ -4,7 +4,6 @@ import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { DashboardProvider, useDashboard } from "@/contexts/DashboardContext"
 import { ClientSelectorBanner } from "@/components/clients/client-selector-banner"
-import { ClientNotification } from "@/components/clients/client-notification"
 import { useClientContext } from "@/contexts/ClientContext"
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
@@ -27,8 +26,6 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
-      {/* Floating notification at bottom */}
-      <ClientNotification />
     </div>
   )
 }

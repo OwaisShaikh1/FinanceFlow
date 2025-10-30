@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
+import { ClientSelectorDropdown } from "@/components/clients/client-selector-dropdown"
 
 type UserType = {
   name: string
@@ -54,6 +55,9 @@ export function DashboardHeader() {
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Client Selector Dropdown */}
+          <ClientSelectorDropdown />
+
           {/* Search */}
           <div className="relative hidden md:block">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-600" />

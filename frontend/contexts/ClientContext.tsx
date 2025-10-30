@@ -70,10 +70,12 @@ export const ClientProvider = ({ children }: { children: ReactNode }) => {
   }, [selectedClient])
 
   const selectClient = (client: SelectedClient) => {
+    console.log('🎯 ClientContext - selectClient called with:', client)
     setSelectedClient(client)
   }
 
   const clearClient = () => {
+    console.log('🎯 ClientContext - clearClient called')
     setSelectedClient(null)
     localStorage.removeItem("selectedClient")
   }

@@ -64,9 +64,15 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
       const token = localStorage.getItem("token")
 
       // Build query params for client filtering
-      const queryParams = selectedClient?.businessId 
-        ? `?business=${selectedClient.businessId}` 
+      // Use client ID (user ID) instead of businessId - backend will find the business
+      const queryParams = selectedClient?.id 
+        ? `?clientId=${selectedClient.id}` 
         : ''
+
+      console.log('🔍 DashboardContext - Fetching with params:', queryParams)
+      console.log('🔍 Selected Client:', selectedClient)
+      console.log('🔍 Selected Client.id:', selectedClient?.id)
+      console.log('🔍 Selected Client (full):', JSON.stringify(selectedClient, null, 2))
 
       // Fetch stats, transactions, and chart data
       const [statsRes, txnRes, chartRes] = await Promise.all([
@@ -89,6 +95,9 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
       const txnData: Transaction[] = await txnRes.json()
       const chartData: MonthlyData[] = await chartRes.json() // <-- store as-is
 
+      console.log('✅ Fetched transactions count:', txnData.length)
+      console.log('✅ Stats:', statsData)
+
       setDashboardData(statsData)
       setTransactions(txnData)
       setMonthlyData(chartData)  // <-- store exact backend data
@@ -102,6 +111,8 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
   }
 
   useEffect(() => {
+    console.log('🔄 DashboardContext useEffect triggered')
+    console.log('🔄 selectedClient changed:', selectedClient)
     fetchDashboard()
   }, [selectedClient]) // Re-fetch when client selection changes
 

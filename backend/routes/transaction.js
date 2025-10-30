@@ -101,25 +101,60 @@ const tx = await Transaction.create(txData);
 
 router.get('/', auth, async (req, res) => {
   try {
-    // Support filtering by business ID (for CA viewing client data)
+    // Support filtering by clientId (user ID) or business ID (for CA viewing client data)
+    const clientId = req.query.clientId;
     const businessId = req.query.business;
     
     let query = {};
-    if (businessId) {
+    
+    if (clientId) {
+      // Client ID provided - find user's business first
+      const User = require('../models/User');
+      const Business = require('../models/Business');
+      
+      const user = await User.findById(clientId);
+      if (user) {
+        // Try to find business by owner
+        let business = await Business.findOne({ owner: user._id });
+        // Fallback to user.business field
+        if (!business && user.business) {
+          business = await Business.findById(user.business);
+        }
+        
+        if (business) {
+          query = { business: business._id };
+          console.log('📊 Found business for client:', { clientId, businessId: business._id });
+        } else {
+          console.log('📊 No business found for client:', clientId);
+          return res.json([]); // Return empty array if no business found
+        }
+      } else {
+        console.log('📊 Client not found:', clientId);
+        return res.json([]);
+      }
+    } else if (businessId) {
       // Specific business requested (CA viewing client data)
       query = { business: businessId };
     } else if (req.user.biz) {
       // Regular user with a business
       query = { business: req.user.biz };
     }
-    // If no businessId and no user.biz (CA user), return all transactions
+    // If no clientId, businessId and no user.biz (CA user), return all transactions
     
     console.log('📊 GET /api/transactions - Query params:', req.query);
+    console.log('📊 req.query.clientId:', req.query.clientId);
+    console.log('📊 req.query.business:', req.query.business);
     console.log('📊 User info:', { id: req.user.id, biz: req.user.biz, role: req.user.role });
     console.log('📊 Final query:', query);
+    console.log('📊 Query stringified:', JSON.stringify(query));
     
     const transactions = await Transaction.find(query).sort({ date: -1 });
     console.log('📊 Transactions found:', transactions.length);
+    
+    if (transactions.length > 0) {
+      console.log('📊 First transaction business ID:', transactions[0].business);
+    }
+    
     return res.json(transactions);
   } catch (e) {
     return res.status(500).json({ message: e.message });
@@ -129,18 +164,45 @@ router.get('/', auth, async (req, res) => {
 // Dashboard stats endpoint
 router.get('/dashboard-stats', auth, async (req, res) => {
   try {
-    // Support filtering by business ID (for CA viewing client data)
+    // Support filtering by clientId (user ID) or business ID (for CA viewing client data)
+    const clientId = req.query.clientId;
     const businessId = req.query.business;
     
     let query = {};
-    if (businessId) {
+    
+    if (clientId) {
+      // Client ID provided - find user's business first
+      const User = require('../models/User');
+      const Business = require('../models/Business');
+      
+      const user = await User.findById(clientId);
+      if (user) {
+        // Try to find business by owner
+        let business = await Business.findOne({ owner: user._id });
+        // Fallback to user.business field
+        if (!business && user.business) {
+          business = await Business.findById(user.business);
+        }
+        
+        if (business) {
+          query = { business: business._id };
+          console.log('📊 Stats - Found business for client:', { clientId, businessId: business._id });
+        } else {
+          console.log('📊 Stats - No business found for client:', clientId);
+          return res.json({ totalIncome: 0, totalExpenses: 0, netProfit: 0, transactionCount: 0 });
+        }
+      } else {
+        console.log('📊 Stats - Client not found:', clientId);
+        return res.json({ totalIncome: 0, totalExpenses: 0, netProfit: 0, transactionCount: 0 });
+      }
+    } else if (businessId) {
       // Specific business requested (CA viewing client data)
       query = { business: businessId };
     } else if (req.user.biz) {
       // Regular user with a business
       query = { business: req.user.biz };
     }
-    // If no businessId and no user.biz (CA user), return all transactions
+    // If no clientId, businessId and no user.biz (CA user), return all transactions
     
     console.log('📊 GET /api/transactions/dashboard-stats - Query params:', req.query);
     console.log('📊 User info:', { id: req.user.id, biz: req.user.biz, role: req.user.role });
@@ -180,11 +242,38 @@ router.get('/dashboard-stats', auth, async (req, res) => {
 // Dashboard chart data endpoint
 router.get('/chart-data', auth, async (req, res) => {
   try {
-    // Support filtering by business ID (for CA viewing client data)
+    // Support filtering by clientId (user ID) or business ID (for CA viewing client data)
+    const clientId = req.query.clientId;
     const businessId = req.query.business;
     
     let query = {};
-    if (businessId) {
+    
+    if (clientId) {
+      // Client ID provided - find user's business first
+      const User = require('../models/User');
+      const Business = require('../models/Business');
+      
+      const user = await User.findById(clientId);
+      if (user) {
+        // Try to find business by owner
+        let business = await Business.findOne({ owner: user._id });
+        // Fallback to user.business field
+        if (!business && user.business) {
+          business = await Business.findById(user.business);
+        }
+        
+        if (business) {
+          query = { business: business._id };
+          console.log('📊 Chart - Found business for client:', { clientId, businessId: business._id });
+        } else {
+          console.log('📊 Chart - No business found for client:', clientId);
+          return res.json([]);
+        }
+      } else {
+        console.log('📊 Chart - Client not found:', clientId);
+        return res.json([]);
+      }
+    } else if (businessId) {
       // Specific business requested (CA viewing client data)
       query = { business: businessId };
     } else if (req.user.biz) {
