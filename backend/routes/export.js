@@ -4,8 +4,21 @@ const pdfGenerator = require('../utils/pdfGenerator');
 const excelGenerator = require('../utils/excelGenerator');
 const router = express.Router();
 
+// JWT auth middleware
+const auth = (req, res, next) => {
+  const hdr = req.headers.authorization || '';
+  const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
+  if (!token) return res.status(401).json({ message: 'No token' });
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    next();
+  } catch {
+    return res.status(401).json({ message: 'Invalid/expired token' });
+  }
+};
+
 // Export Actions Route
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
   try {
     const { action, reportType, data } = req.body;
     console.log('Export API received:', { action, reportType, data });

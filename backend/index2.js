@@ -110,29 +110,111 @@ app.post('/auth/login', async (req, res) => {
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
 
-    // Generate JWT
-   const token = jwt.sign(
-  { id: user._id, email: user.email },
-  process.env.JWT_SECRET,
-  { expiresIn: "1h" }
-);
+    // Generate JWT with complete user info
+    const token = jwt.sign(
+      { 
+        id: user._id, 
+        email: user.email, 
+        role: user.role,
+        biz: user.business 
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
-     
     // Remove sensitive info (like password, __v, etc.)
     const safeUser = {
       id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
-      business: user.business
+      business: user.business,
+      businessName: user.businessName,
+      phone: user.phone,
+      gstin: user.gstin,
+      pan: user.pan
     };
 
-    return res.json({ token, user: safeUser });
+    return res.json({ 
+      success: true,
+      token, 
+      user: safeUser,
+      message: 'Login successful'
+    });
   } catch (e) {
     return res.status(400).json({ message: e.message });
   }
 });
 
+// Get current user data
+app.get('/auth/me', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password -__v');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const safeUser = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      business: user.business,
+      businessName: user.businessName,
+      phone: user.phone,
+      gstin: user.gstin,
+      pan: user.pan,
+      city: user.city,
+      state: user.state,
+      filingScheme: user.filingScheme
+    };
+
+    return res.json({ 
+      success: true,
+      user: safeUser 
+    });
+  } catch (e) {
+    return res.status(500).json({ message: e.message });
+  }
+});
+
+// Get user profile data (current user's own data)
+app.get('/auth/profile', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password -__v');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const userProfile = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      business: user.business,
+      businessName: user.businessName,
+      phone: user.phone,
+      gstin: user.gstin,
+      pan: user.pan,
+      city: user.city,
+      state: user.state,
+      filingScheme: user.filingScheme,
+      taxData: user.taxData || {
+        annualIncome: 0,
+        taxRegime: 'new',
+        totalTaxSaved: 0,
+        estimatedAnnualTax: 0
+      }
+    };
+
+    return res.json({ 
+      success: true,
+      user: userProfile 
+    });
+  } catch (e) {
+    return res.status(500).json({ message: e.message });
+  }
+});
 
 app.post('/auth/register', async (req, res) => {
   console.log("I got this data", req.body) // For debugging
@@ -175,58 +257,20 @@ app.use('/api/invoices', gstInvoicesRoutes); // /api/invoices → GST invoice ma
 app.use('/api/returns', gstReturnsRoutes);   // /api/returns → GST returns management
 app.use('/api/user', settingsRoutes);       // /api/user → User settings management
 
-// Clients Stats API
-app.get('/api/clients/stats', auth, async (req, res) => {
-  try {
-    console.log('📊 Fetching client statistics');
-    
-    // Only count users with role "user" as clients
-    const totalClients = await User.countDocuments({ role: 'user' });
-    const activeClients = await User.countDocuments({ 
-      role: 'user',
-      $or: [
-        { gstin: { $exists: true, $ne: null, $ne: '' } },
-        { pan: { $exists: true, $ne: null, $ne: '' } }
-      ]
-    });
-    
-    // Calculate pending tasks (users with role "user" without GST/PAN)
-    const pendingTasks = totalClients - activeClients;
-    
-    // Calculate overdue items (users with role "user" created more than 30 days ago without GST/PAN)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
-    const overdueItems = await User.countDocuments({
-      role: 'user',
-      createdAt: { $lt: thirtyDaysAgo },
-      $and: [
-        { $or: [{ gstin: { $exists: false } }, { gstin: null }, { gstin: '' }] },
-        { $or: [{ pan: { $exists: false } }, { pan: null }, { pan: '' }] }
-      ]
-    });
+// Import new organized route files
+const clientRoutes = require('./routes/clients');
+const taxDataRoutes = require('./routes/taxdata');
+const reportsRoutes = require('./routes/reports');
+const taxReportsRoutes = require('./routes/taxreports');
 
-    const stats = {
-      totalClients,
-      activeClients,
-      pendingTasks,
-      overdueItems,
-      activePercentage: totalClients > 0 ? ((activeClients / totalClients) * 100).toFixed(1) : '0'
-    };
 
-    res.json({ 
-      success: true, 
-      stats 
-    });
-  } catch (error) {
-    console.error('Error fetching client stats:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Error fetching client stats', 
-      error: error.message 
-    });
-  }
-});
+// Mount the new routes
+app.use('/api/clients', clientRoutes);           // /api/clients → Client management
+app.use('/api/taxdata', taxDataRoutes);         // /api/taxdata → Tax data management  
+app.use('/api/reports', reportsRoutes);         // /api/reports → Financial reports (P&L, Balance Sheet, Cash Flow)
+app.use('/api/reports/tax', taxReportsRoutes);  // /api/reports/tax → Tax reports (GST, TDS)
+
+// The orphaned catch block and related code have been removed to fix the syntax error.
 
 // Clients Management API
 app.get('/api/clients', auth, async (req, res) => {
@@ -1031,6 +1075,7 @@ app.get('/transactions', auth, async (req, res) => {
   return res.json(list);
 });*/
 
+
 // --------------------- Server ---------------------
 const PORT = process.env.PORT || 4000;
 app.use('/uploads', express.static('uploads'));
@@ -1040,15 +1085,3 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Server error' });
 });
 app.listen(PORT, () => console.log(`🚀 Server on http://localhost:${PORT}`));
-
-// Graceful shutdown - temporarily disabled for testing
-// process.on('SIGINT', async () => {
-//   console.log('Shutting down gracefully...');
-//   try {
-//     const pdfGenerator = require('./utils/pdfGenerator');
-//     await pdfGenerator.closeBrowser();
-//   } catch (error) {
-//     console.error('Error during shutdown:', error);
-//   }
-//   process.exit(0);
-// });

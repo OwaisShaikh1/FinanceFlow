@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback, useMemo } from "react"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/contexts/AuthContext"
 import { Bell, Settings, User, LogOut, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import {
@@ -22,27 +23,34 @@ type UserType = {
 }
 
 export function DashboardHeader() {
-  const [user, setUser] = useState<UserType | null>(null)
+  // Use Auth Context instead of local state management
+  const { user, logout, isAuthenticated } = useAuth()
+  
+  // Local state for search functionality
+  const [searchQuery, setSearchQuery] = useState("")
 
-  useEffect(() => {
-    // try to load user from localStorage
-    const storedUser = localStorage.getItem("user");
-    const user = storedUser ? JSON.parse(storedUser) : null;
-    console.log(user?.name); // will log the logged-in user's name
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser))
-      } catch (e) {
-        console.error("Invalid user in localStorage", e)
-      }
-    }
+  // useCallback for logout to prevent re-creation
+  const handleLogout = useCallback(() => {
+    logout()
+    window.location.href = "/auth/login" // redirect
+  }, [logout])
+
+  // useCallback for search to prevent re-renders
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value)
   }, [])
 
-  const handleLogout = () => {
-    localStorage.removeItem("user")
-    localStorage.removeItem("token") // if you stored JWT
-    window.location.href = "/auth/login" // redirect
-  }
+  // useMemo for user display name
+  const userDisplayName = useMemo(() => {
+    if (!user) return "User"
+    return user.businessName || user.name || "User"
+  }, [user])
+
+  // useMemo for user role badge
+  const userRole = useMemo(() => {
+    if (!user) return "user"
+    return user.role || "user"
+  }, [user])
 
   return (
     <header className="border-b border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 sticky top-0 z-50">

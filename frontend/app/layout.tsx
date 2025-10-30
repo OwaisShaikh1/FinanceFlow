@@ -2,7 +2,11 @@ import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { FilterProvider } from '@/contexts/FilterContext'
+
+import { AuthProvider } from '@/contexts/AuthContext'
+
 import { ClientProvider } from '@/contexts/ClientContext'
+
 import { Toaster } from '@/components/ui/toaster'
 import './globals.css'
 
@@ -20,11 +24,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <ClientProvider>
-          <FilterProvider>
-            {children}
-          </FilterProvider>
-        </ClientProvider>
+        <AuthProvider>
+          <ClientProvider>
+            <FilterProvider>{children}</FilterProvider>
+          </ClientProvider>
+        </AuthProvider>
         <Toaster />
       </body>
     </html>
