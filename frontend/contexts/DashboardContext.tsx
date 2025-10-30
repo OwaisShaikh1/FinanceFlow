@@ -172,21 +172,17 @@ const { selectedClient } = useClientContext()
         payload: err.message || "Failed to fetch dashboard data"
       })
     }
-  }, [])
-
-  useEffect(() => {
-    console.log('🔄 DashboardContext useEffect triggered')
-    console.log('🔄 selectedClient changed:', selectedClient)
-    fetchDashboard()
-  }, [selectedClient]) // Re-fetch when client selection changes
+  }, [selectedClient])
 
   // useCallback for sidebar toggle to prevent re-renders
   const setSidebarCollapsed = useCallback((collapsed: boolean) => {
     dispatch({ type: 'SET_SIDEBAR_COLLAPSED', payload: collapsed })
   }, [])
 
-  // useEffect for initial data fetch
+  // useEffect for data fetch - triggers when client selection changes
   useEffect(() => {
+    console.log('🔄 DashboardContext useEffect triggered')
+    console.log('🔄 selectedClient changed:', selectedClient)
     fetchDashboard()
   }, [fetchDashboard])
 
