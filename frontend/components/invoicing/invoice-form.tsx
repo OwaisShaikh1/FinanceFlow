@@ -17,6 +17,7 @@ import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { InvoiceItem } from "@/types/invoice"
 import { useAuth } from "@/contexts/AuthContext"
+import { useClientContext } from "@/contexts/ClientContext"
 
 const gstRates = [0, 5, 12, 18, 28]
 
@@ -112,6 +113,7 @@ interface InvoiceFormProps {
 
 export function InvoiceForm({ onSubmit, initialData, isEditing = false }: InvoiceFormProps) {
   const { user, token } = useAuth();
+  const { selectedClient } = useClientContext();
 
   // Use useReducer for complex invoice state management
   const [state, dispatch] = useReducer(invoiceReducer, {
@@ -143,6 +145,38 @@ export function InvoiceForm({ onSubmit, initialData, isEditing = false }: Invoic
       invoiceNumberRef.current.focus();
     }
   }, []);
+
+  // Auto-populate client data when a client is selected
+  useEffect(() => {
+    const fetchClientDetails = async () => {
+      if (selectedClient && selectedClient.id && !isEditing) {
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/clients/${selectedClient.id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (response.ok) {
+            const clientData = await response.json();
+            
+            // Auto-fill client information
+            dispatch({ type: 'UPDATE_FIELD', field: 'clientName', value: clientData.name || selectedClient.name });
+            dispatch({ type: 'UPDATE_FIELD', field: 'clientGstin', value: clientData.gstin || '' });
+            dispatch({ type: 'UPDATE_FIELD', field: 'clientAddress', value: clientData.address || '' });
+            dispatch({ type: 'UPDATE_FIELD', field: 'clientCity', value: clientData.city || '' });
+            dispatch({ type: 'UPDATE_FIELD', field: 'clientState', value: clientData.state || '' });
+            dispatch({ type: 'UPDATE_FIELD', field: 'clientPincode', value: clientData.pincode || '' });
+          }
+        } catch (error) {
+          console.error('Error fetching client details:', error);
+        }
+      }
+    };
+
+    fetchClientDetails();
+  }, [selectedClient, token, isEditing]);
 
   // Clear error when user types
   useEffect(() => {
@@ -272,7 +306,7 @@ export function InvoiceForm({ onSubmit, initialData, isEditing = false }: Invoic
          console.log("Invoice Data:", formData)
 
       // Send POST request to API
-      const response = await fetch(`http://localhost:5000/api/invoice`, {
+      const response = await fetch(`${API_BASE_URL}/api/invoice`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -281,6 +315,7 @@ export function InvoiceForm({ onSubmit, initialData, isEditing = false }: Invoic
         body: JSON.stringify({
           ...formData,
           userId: user?.id,
+          clientId: selectedClient?.id, // Include selected client ID
         })
       })
 
@@ -331,6 +366,17 @@ export function InvoiceForm({ onSubmit, initialData, isEditing = false }: Invoic
 
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+      {/* Selected Client Info */}
+      {selectedClient && (
+        <div className="p-3 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-md flex items-center justify-between">
+          <span>
+            📋 Creating invoice for: <strong>{selectedClient.name}</strong>
+            {selectedClient.businessName && ` (${selectedClient.businessName})`}
+          </span>
+          <span className="text-xs text-blue-600">Client data auto-filled below</span>
+        </div>
+      )}
+
       {/* Error Display */}
       {state.error && (
         <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">

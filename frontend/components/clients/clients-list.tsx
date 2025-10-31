@@ -12,6 +12,7 @@ import { useClientFilters } from "@/contexts/FilterContext"
 import { useClientContext } from "@/contexts/ClientContext"
 import { ClientDetailsModal } from "./client-details-modal"
 import { useToast } from "@/hooks/use-toast"
+import { API_BASE_URL } from "@/lib/config"
 
 interface Client {
   id: string
@@ -43,7 +44,7 @@ export function ClientsList() {
       try {
         setLoading(true)
         const token = localStorage.getItem("token")
-        const response = await fetch('http://localhost:5000/api/clients', {
+        const response = await fetch(`${API_BASE_URL}/api/clients`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -153,7 +154,7 @@ export function ClientsList() {
     try {
       // Fetch full client details including business info
       const token = localStorage.getItem("token")
-      const response = await fetch(`http://localhost:5000/api/clients/${client.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/clients/${client.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

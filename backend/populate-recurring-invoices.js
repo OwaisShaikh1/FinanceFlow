@@ -1,11 +1,24 @@
-const mongoose = require('mongoose');
 require('dotenv').config();
+const mongoose = require('mongoose');
 
 const RecurringTemplate = require('./models/RecuringTemplate');
 const Business = require('./models/Business');
 const User = require('./models/User');
 
-const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/financeflow';
+const connectDB = mongoose
+  .connect(process.env.MONGODB_URI, { 
+    dbName: 'Finance',
+    serverSelectionTimeoutMS: 10000,
+    socketTimeoutMS: 45000,
+  })
+  .then(() => {
+    console.log('✅ MongoDB Atlas connected');
+    return true;
+  })
+  .catch((e) => {
+    console.error('❌ MongoDB Atlas connection error:', e.message);
+    process.exit(1);
+  });
 
 // Template types with different frequencies and amounts
 const templateTypes = [
@@ -21,9 +34,8 @@ const templateTypes = [
 
 async function populateRecurringInvoices() {
   try {
-    console.log('🔗 Connecting to MongoDB...');
-    await mongoose.connect(MONGO_URI);
-    console.log('✅ Connected to MongoDB');
+    await connectDB;
+    console.log('🔗 Connected to MongoDB\n');
 
     // Get all businesses with their owners
     const businesses = await Business.find().populate('owner', 'name email').lean();
@@ -72,6 +84,7 @@ async function populateRecurringInvoices() {
         const status = Math.random() < 0.85 ? 'active' : 'paused';
 
         const template = {
+          user: business.owner?._id || business.owner, // Add user reference
           business: business._id,
           template: {
             clientName: business.name,

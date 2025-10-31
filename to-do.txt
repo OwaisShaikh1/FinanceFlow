@@ -1,19 +1,22 @@
-🔴 HIGH PRIORITY (Items 1-4, 12-13) - Fix First
-Recurring Invoices Backend - Critical broken feature
-Balance Sheet Real Data - Major report using fake data
-Cash Flow Real Data - Major report using fake data
-P&L Report Endpoints - Exports showing wrong data
-Balance Sheet PDF/Excel - Update after fixing #2
-Cash Flow PDF/Excel - Update after fixing #3
-🟡 MEDIUM PRIORITY (Items 5-9) - Fix Next
-Invoice Stats Filtering - Consistency fix
-Tasks Module Decision - Connect or remove
-Chart of Accounts Decision - Connect or remove
-GST Returns Verification - Check data accuracy
-TDS Returns Verification - Check data accuracy
-🟢 LOW PRIORITY (Items 10-11, 14-15) - Nice to Have
-Tax Calculator Persistence - Enhancement
-Tax Report Cards Connection - Minor improvement
-Remove Redundant Components - Cleanup
-Final Testing - Comprehensive verification
-The list is organized to tackle critical broken features first (recurring invoices, report data accuracy), then consistency issues, then decisions on unused features, and finally enhancements and cleanup.
+🔴 3 CRITICAL Issues (Blocking Features)
+Missing /api/clients route - Client management completely broken (404s)
+Missing /api/returns route - GST returns preparation/generation broken
+Missing /api/firebaselogin route - Firebase authentication broken
+All three routes exist in your backend but are NOT registered in server.js!
+
+🟠 3 HIGH Priority Issues
+Auth endpoints using /auth/* instead of /api/auth/* (inconsistent)
+Duplicate client stats endpoints in two different files
+SECURITY RISK: Mocked authentication in invoice and GST routes that bypasses all security
+
+🟡 4 MEDIUM Priority Issues
+Hardcoded http://localhost:5000 in 15+ components (blocks production deployment)
+Dashboard Context doesn't handle partial failures gracefully
+Inconsistent client filtering (some use clientId, others businessId)
+GST download uses relative path without base URL
+🟢 3 LOW Priority Issues
+11-13. Code quality improvements (magic numbers, duplicate helpers, etc.)
+
+The full report is saved at: DATA_FETCHING_ISSUES_REPORT.md
+
+Most urgent: Your server.js is missing 3 critical route registrations. This is why client management, GST returns, and Firebase login aren't working! 🚨

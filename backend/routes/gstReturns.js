@@ -5,12 +5,7 @@ const dayjs = require('dayjs');
 // Import models  
 const { GSTInvoice, GSTReturn } = require('../models');
 const GenInvoice = require('../models/GenInvoice'); // Use existing invoice model
-
-// Simple auth middleware
-const auth = (req, res, next) => {
-  req.user = { business: 'business-1' };
-  next();
-};
+const { auth } = require('../utils/middleware');
 
 // GET /api/returns - Get all returns
 router.get('/', auth, async (req, res) => {

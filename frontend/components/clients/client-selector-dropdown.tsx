@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { useRouter } from "next/navigation"
+import { API_BASE_URL } from "@/lib/config"
 
 type Client = {
   id: string
@@ -40,7 +41,7 @@ export function ClientSelectorDropdown() {
     try {
       setLoading(true)
       const token = localStorage.getItem("token")
-      const response = await fetch("http://localhost:5000/api/clients", {
+      const response = await fetch(`${API_BASE_URL}/api/clients`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -66,7 +67,7 @@ export function ClientSelectorDropdown() {
     try {
       // Fetch full client details
       const token = localStorage.getItem("token")
-      const response = await fetch(`http://localhost:5000/api/clients/${client.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/clients/${client.id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",

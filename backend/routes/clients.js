@@ -1,20 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-
-// JWT auth middleware
-const jwt = require('jsonwebtoken');
-const auth = (req, res, next) => {
-  const hdr = req.headers.authorization || '';
-  const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
-  if (!token) return res.status(401).json({ message: 'No token' });
-  try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET);
-    next();
-  } catch {
-    return res.status(401).json({ message: 'Invalid/expired token' });
-  }
-};
+const { auth } = require('../utils/middleware');
 
 // Helper functions for client data transformation
 function determineComplianceStatus(user) {

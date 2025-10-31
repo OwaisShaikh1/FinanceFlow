@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { FileText, Clock, CheckCircle, AlertCircle } from "lucide-react"
 import { useClientContext } from "@/contexts/ClientContext"
+import { API_BASE_URL } from "@/lib/config"
 
 interface InvoiceStats {
   total: number
@@ -45,7 +46,7 @@ export function InvoiceStats() {
           ? `?clientId=${selectedClient.id}` 
           : ''
 
-        const response = await fetch(`http://localhost:5000/api/invoice/stats${queryParams}`, {
+        const response = await fetch(`${API_BASE_URL}/api/invoice/stats${queryParams}`, {
           method: "GET",
           headers,
         })

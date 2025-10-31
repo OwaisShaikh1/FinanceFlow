@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useReducer, useEffect, ReactNode, useCallback } from 'react';
+import { API_BASE_URL } from '@/lib/config';
 
 // Types
 interface User {
@@ -142,7 +143,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const user = JSON.parse(userStr);
           
           // Verify token is still valid by making a request to the server
-          const response = await fetch('http://localhost:5000/auth/me', {
+          const response = await fetch(`${API_BASE_URL}/auth/me`, {
             headers: {
               Authorization: `Bearer ${token}`,
               'Content-Type': 'application/json',
@@ -180,7 +181,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     dispatch({ type: 'LOGIN_START' });
     
     try {
-      const response = await fetch('http://localhost:5000/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -221,7 +222,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         provider: 'google',
       };
 
-      const response = await fetch('http://localhost:5000/api/firebaselogin', {
+      const response = await fetch(`${API_BASE_URL}/api/firebaselogin`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

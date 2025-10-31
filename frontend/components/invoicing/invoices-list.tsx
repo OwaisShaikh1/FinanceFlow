@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -8,13 +8,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Eye, Edit, Download, Send, MoreHorizontal } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useInvoiceFilters } from "@/contexts/FilterContext"
+import { useClientContext } from "@/contexts/ClientContext"
 import { TableSkeleton } from "@/components/ui/skeleton-presets"
 import { useSkeletonPreview } from "@/hooks/use-skeleton-preview"
 import { API_BASE_URL } from "@/lib/config"
 import { InvoiceEditModal } from "./invoice-edit-modal"
 import { Invoice, InvoiceItem } from "@/types/invoice"
 
-export function     InvoicesList() {
+export function InvoicesList() {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -23,6 +24,7 @@ export function     InvoicesList() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null)
   const { filters } = useInvoiceFilters()
+  const { selectedClient } = useClientContext()
   const skeletonPreview = useSkeletonPreview()
 
   useEffect(() => {
@@ -39,7 +41,12 @@ export function     InvoicesList() {
           headers["Authorization"] = `Bearer ${token}`
         }
 
-        const res = await fetch(`http://localhost:5000/api/invoice`, {
+        // Build query params for client filtering
+        const queryParams = selectedClient?.id 
+          ? `?clientId=${selectedClient.id}` 
+          : ''
+
+        const res = await fetch(`${API_BASE_URL}/api/invoice${queryParams}`, {
           method: "GET",
           headers,
         })
@@ -56,7 +63,7 @@ export function     InvoicesList() {
     }
 
     fetchInvoices()
-  }, [skeletonPreview])
+  }, [skeletonPreview, selectedClient])
 
   // Update invoice status
   const updateInvoiceStatus = async (invoiceId: string, newStatus: string) => {
@@ -70,7 +77,7 @@ export function     InvoicesList() {
         headers["Authorization"] = `Bearer ${token}`
       }
 
-      const response = await fetch(`http://localhost:5000/api/invoice/${invoiceId}/status`, {
+      const response = await fetch(`${API_BASE_URL}/api/invoice/${invoiceId}/status`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify({ status: newStatus })
@@ -123,7 +130,7 @@ export function     InvoicesList() {
         headers["Authorization"] = `Bearer ${token}`
       }
 
-      const response = await fetch(`http://localhost:5000/api/invoice/${invoiceId}/pdf`, {
+      const response = await fetch(`${API_BASE_URL}/api/invoice/${invoiceId}/pdf`, {
         method: 'GET',
         headers
       })
@@ -162,21 +169,33 @@ export function     InvoicesList() {
     }
   }
 
-  // Apply filters
-  const filteredInvoices = invoices.filter((invoice) => {
-    const matchesSearch = filters.search
-      ? invoice.invoiceNumber.toLowerCase().includes(filters.search.toLowerCase()) ||
-        invoice.clientName.toLowerCase().includes(filters.search.toLowerCase())
-      : true
-    const matchesStatus = filters.status === "all" ? true : invoice.status === filters.status
-    const matchesClient = filters.client === "all" ? true : invoice.clientName.toLowerCase().includes(filters.client.toLowerCase())
+  // Apply filters with useMemo for performance
+  const filteredInvoices = useMemo(() => {
+    return invoices.filter((invoice) => {
+      // Search filter - check invoice number and customer name
+      const matchesSearch = filters.search
+        ? (invoice.number || invoice.invoiceNumber || '').toLowerCase().includes(filters.search.toLowerCase()) ||
+          (invoice.customerName || invoice.clientName || '').toLowerCase().includes(filters.search.toLowerCase())
+        : true
+      
+      // Status filter - handle both uppercase and lowercase
+      const matchesStatus = filters.status === "all" 
+        ? true 
+        : invoice.status?.toLowerCase() === filters.status.toLowerCase()
+      
+      // Client filter - search in customer name
+      const matchesClient = filters.client === "all" 
+        ? true 
+        : (invoice.customerName || invoice.clientName || '').toLowerCase().includes(filters.client.toLowerCase())
 
-    const invoiceDate = new Date(invoice.invoiceDate)
-    const matchesFrom = filters.dateFrom ? invoiceDate >= filters.dateFrom : true
-    const matchesTo = filters.dateTo ? invoiceDate <= filters.dateTo : true
+      // Date filters - use issueDate or invoiceDate
+      const invoiceDate = new Date(invoice.issueDate || invoice.invoiceDate)
+      const matchesFrom = filters.dateFrom ? invoiceDate >= filters.dateFrom : true
+      const matchesTo = filters.dateTo ? invoiceDate <= filters.dateTo : true
 
-    return matchesSearch && matchesStatus && matchesClient && matchesFrom && matchesTo
-  })
+      return matchesSearch && matchesStatus && matchesClient && matchesFrom && matchesTo
+    })
+  }, [invoices, filters])
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -216,15 +235,35 @@ export function     InvoicesList() {
     )
   }
   if (error) return <p className="p-4 text-red-500">Error: {error}</p>
+  
   if (!filteredInvoices || filteredInvoices.length === 0) {
-    return <p className="p-4">No invoices found.</p>
+    return (
+      <Card className="shadow-sm border-0 bg-gradient-to-br from-white to-blue-50">
+        <CardHeader className="border-b border-blue-100">
+          <CardTitle className="text-blue-900">Invoice List</CardTitle>
+        </CardHeader>
+        <CardContent className="p-8 text-center">
+          <p className="text-gray-500">
+            {invoices.length === 0 
+              ? "No invoices found. Create your first invoice to get started!" 
+              : "No invoices match your current filters. Try adjusting your search criteria."}
+          </p>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
     <>
       <Card className="shadow-sm border-0 bg-gradient-to-br from-white to-blue-50">
         <CardHeader className="border-b border-blue-100">
-          <CardTitle className="text-blue-900">Invoice List</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-blue-900">Invoice List</CardTitle>
+            <p className="text-sm text-gray-600">
+              Showing {filteredInvoices.length} of {invoices.length} invoices
+              {selectedClient && ` for ${selectedClient.name}`}
+            </p>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
         <Table>

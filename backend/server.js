@@ -35,16 +35,24 @@ const routes = {
   invoice: require('./routes/invoice'),
   transaction: require('./routes/transaction'),
   reports: require('./routes/reports'),
-  tax: require('./routes/tax'),
+  taxcalc: require('./routes/taxcalc'),
+  taxdata: require('./routes/taxdata'),
+  taxreports: require('./routes/taxreports'),
   gst: require('./routes/gst'),
   tds: require('./routes/tds'),
-  export: require('./routes/export')
+  export: require('./routes/export'),
+  clients: require('./routes/clients'),
+  returns: require('./routes/gstReturns'),
+  firebaselogin: require('./routes/myfirebase')
 };
 
 // Mount routes
 Object.entries(routes).forEach(([name, router]) => {
   app.use(`/api/${name}`, router);
 });
+
+// Mount auth at /auth as well for backward compatibility
+app.use('/auth', routes.auth);
 
 // Static files
 app.use('/uploads', express.static('uploads'));

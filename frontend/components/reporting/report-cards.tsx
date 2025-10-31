@@ -25,27 +25,7 @@ const reports = [
     href: "/dashboard/reports/cash-flow",
     color: "bg-purple-500",
   },
-  {
-    title: "Trial Balance",
-    description: "Account balances verification",
-    icon: Calculator,
-    href: "/dashboard/reports/trial-balance",
-    color: "bg-orange-500",
-  },
-  {
-    title: "GST Summary",
-    description: "GST collections and payments",
-    icon: FileText,
-    href: "/dashboard/tax-reports",
-    color: "bg-red-500",
-  },
-  {
-    title: "Custom Reports",
-    description: "Build your own reports",
-    icon: PieChart,
-    href: "/dashboard/reports/custom",
-    color: "bg-indigo-500",
-  },
+
 ]
 
 export function ReportCards() {

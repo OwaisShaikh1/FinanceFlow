@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Repeat, Calendar, DollarSign, Clock } from "lucide-react"
 import { useClientContext } from "@/contexts/ClientContext"
+import { API_BASE_URL } from "@/lib/config"
 
 interface RecurringInvoice {
   _id: string
@@ -26,12 +27,12 @@ export function RecurringInvoiceStats() {
         setLoading(true)
         const token = localStorage.getItem("token")
         
-        // Build query params for client filtering
-        const queryParams = selectedClient?.businessId 
-          ? `?business=${selectedClient.businessId}` 
+        // Build query params for client filtering (using clientId for consistency)
+        const queryParams = selectedClient?.id 
+          ? `?clientId=${selectedClient.id}` 
           : ''
         
-        const response = await fetch(`http://localhost:5000/api/invoice/recurring${queryParams}`, {
+        const response = await fetch(`${API_BASE_URL}/api/invoice/recurring${queryParams}`, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",

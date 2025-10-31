@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, AlertTriangle, CheckCircle, Clock, Loader2 } from "lucide-react"
+import { API_BASE_URL } from "@/lib/config"
 
 interface ClientStatsData {
   totalClients: number
@@ -26,7 +27,7 @@ export function ClientStats() {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem("token")
-        const response = await fetch('http://localhost:5000/api/clients/stats', {
+        const response = await fetch(`${API_BASE_URL}/api/clients/stats`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'

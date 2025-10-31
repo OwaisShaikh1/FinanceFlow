@@ -55,11 +55,27 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors({ origin: ["http://localhost:3000", "http://localhost:3003"], credentials: true }));
 app.use(morgan('dev'));
 
-// --------------------- MongoDB ---------------------
-mongoose
-  .connect(process.env.MONGODB_URI, { dbName: 'Finance' })
-  .then(() => console.log('✅ MongoDB Atlas connected'))
-  .catch((e) => console.error('MongoDB Atlas error ->', e.message));
+// --------------------- MongoDB Connection ---------------------
+// Store connection promise to ensure DB is ready before accepting requests
+const connectDB = mongoose
+  .connect(process.env.MONGODB_URI, { 
+    dbName: 'Finance',
+    serverSelectionTimeoutMS: 10000, // 10s timeout
+    socketTimeoutMS: 45000,
+  })
+  .then(() => {
+    console.log('✅ MongoDB Atlas connected');
+    return true;
+  })
+  .catch((e) => {
+    console.error('❌ MongoDB Atlas connection error:', e.message);
+    console.error('💡 Troubleshooting:');
+    console.error('   1. Check if your IP is whitelisted in MongoDB Atlas Network Access');
+    console.error('   2. Verify internet connection');
+    console.error('   3. Check if cluster is paused (free tier auto-pauses)');
+    console.error('   4. Visit: https://cloud.mongodb.com/');
+    process.exit(1); // Exit if DB connection fails
+  });
 
 // --------------------- Auth & Utilities ---------------------
 const ROLES = { CA: 'CA', OWNER: 'OWNER', EMPLOYEE: 'EMPLOYEE' };
@@ -263,12 +279,23 @@ const taxDataRoutes = require('./routes/taxdata');
 const reportsRoutes = require('./routes/reports');
 const taxReportsRoutes = require('./routes/taxreports');
 
-
 // Mount the new routes
 app.use('/api/clients', clientRoutes);           // /api/clients → Client management
 app.use('/api/taxdata', taxDataRoutes);         // /api/taxdata → Tax data management  
 app.use('/api/reports', reportsRoutes);         // /api/reports → Financial reports (P&L, Balance Sheet, Cash Flow)
 app.use('/api/reports/tax', taxReportsRoutes);  // /api/reports/tax → Tax reports (GST, TDS)
+
+// Mount auth at /auth for backward compatibility with frontend
+app.use('/auth', (req, res, next) => {
+  // Forward /auth/login to the auth handler above
+  if (req.path === '/login') {
+    return app._router.handle(req, res, next);
+  }
+  if (req.path === '/me') {
+    return app._router.handle(req, res, next);
+  }
+  next();
+});
 
 // The orphaned catch block and related code have been removed to fix the syntax error.
 
@@ -1084,4 +1111,15 @@ app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ message: 'Server error' });
 });
-app.listen(PORT, () => console.log(`🚀 Server on http://localhost:${PORT}`));
+
+// Start server ONLY after MongoDB connection is established
+connectDB.then(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server on http://localhost:${PORT}`);
+    console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔐 JWT Secret: ${process.env.JWT_SECRET ? '✓ Set' : '✗ Missing'}`);
+  });
+}).catch(err => {
+  console.error('❌ Failed to start server:', err.message);
+  process.exit(1);
+});

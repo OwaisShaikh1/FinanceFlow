@@ -1,16 +1,13 @@
-   const express = require('express');
+const express = require('express');
 
 // Import the correct model
+const Invoice = require('../models/Invoice');
 const GenInvoice = require('../models/GenInvoice');
 const RecurringTemplate = require('../models/RecuringTemplate');
 const { generateTaxProInvoicePDF } = require('../utils/invoicePdfGenerator');
+const { auth } = require('../utils/middleware');
 
 const router = express.Router();
-// Simulated auth middleware
-const auth = (req, res, next) => {
-  req.user = { biz: 'business-1' };
-  next();
-};
 
 // Create invoice
 router.post('/', auth, async (req, res) => {
@@ -45,40 +42,49 @@ router.post('/', auth, async (req, res) => {
 });
 router.get('/', auth, async (req, res) => {
   try {
-    const invoices = await GenInvoice.find({ business: req.user.biz });
+    // Build query based on client filtering
+    const query = {};
+    
+    // Filter by client if clientId is provided
+    if (req.query.clientId) {
+      query.user = req.query.clientId;
+    }
+    
+    // Filter by business if needed (for CA users viewing specific business)
+    if (req.query.business) {
+      query.business = req.query.business;
+    }
+    
+    console.log('Invoice query:', query);
+    
+    const invoices = await Invoice.find(query)
+      .populate('user', 'name email')
+      .populate('business', 'name')
+      .sort({ issueDate: -1 });
+    
     console.log('Found invoices:', invoices.length);
     
     const tableData = invoices.map(inv => {
-      console.log('Processing invoice:', inv.invoiceNumber, 'Items:', inv.items.length);
-      
-      // Calculate totals from items array
-      const subtotal = inv.items.reduce((sum, item) => {
-        console.log('Item amount:', item.amount);
-        return sum + (item.amount || 0);
-      }, 0);
-      
-      const totalGst = inv.items.reduce((sum, item) => {
-        console.log('Item GST:', item.gstAmount);
-        return sum + (item.gstAmount || 0);
-      }, 0);
-      
-      const grandTotal = inv.items.reduce((sum, item) => {
-        console.log('Item total:', item.total);
-        return sum + (item.total || 0);
-      }, 0);
-      
-      console.log('Calculated:', { subtotal, totalGst, grandTotal });
-      
       return {
         _id: inv._id,
-        invoiceNumber: inv.invoiceNumber,
-        invoiceDate: inv.invoiceDate,
+        number: inv.number,
+        invoiceNumber: inv.number, // For backward compatibility
+        issueDate: inv.issueDate,
+        invoiceDate: inv.issueDate, // For backward compatibility
         dueDate: inv.dueDate,
-        clientName: inv.clientName,
-        subtotal: subtotal,
-        totalGst: totalGst,
-        grandTotal: grandTotal,
-        status: inv.status
+        customerName: inv.customerName,
+        clientName: inv.customerName, // For backward compatibility
+        items: inv.items,
+        subtotal: inv.subtotal,
+        totalTax: inv.totalTax,
+        totalGst: inv.totalTax, // For backward compatibility
+        totalAmount: inv.totalAmount,
+        grandTotal: inv.totalAmount, // For backward compatibility
+        paidAmount: inv.paidAmount,
+        balanceAmount: inv.balanceAmount,
+        status: inv.status,
+        user: inv.user,
+        business: inv.business
       };
     });
     return res.json(tableData);
@@ -239,58 +245,57 @@ router.get('/stats', auth, async (req, res) => {
     const User = require('../models/User');
     const Business = require('../models/Business');
     
-    // Support filtering by clientId (for consistency with transactions)
-    let businessId = req.query.business || req.user.biz;
+    // Build query based on client filtering
+    const query = {};
     
-    // If clientId provided, find their business
+    // If clientId provided, filter by user
     if (req.query.clientId) {
-      const user = await User.findById(req.query.clientId);
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-      const business = await Business.findOne({ owner: user._id });
-      if (!business) {
-        return res.status(404).json({ message: 'Business not found for user' });
-      }
-      businessId = business._id;
-      console.log(`Finding invoices for client ${req.query.clientId}, business: ${businessId}`);
+      query.user = req.query.clientId;
+      console.log(`Finding invoices for client ${req.query.clientId}`);
     }
     
-    const invoices = await GenInvoice.find({ business: businessId });
+    // If business provided, filter by business
+    if (req.query.business) {
+      query.business = req.query.business;
+    }
+    
+    console.log('Invoice stats query:', query);
+    
+    const invoices = await Invoice.find(query);
     
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
     const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
     const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
     
-    // Calculate current month invoices
+    // Calculate current month invoices (use issueDate for Invoice model)
     const currentMonthInvoices = invoices.filter(inv => {
-      const invoiceDate = new Date(inv.invoiceDate);
+      const invoiceDate = new Date(inv.issueDate);
       return invoiceDate.getMonth() === currentMonth && invoiceDate.getFullYear() === currentYear;
     });
     
     // Calculate last month invoices for growth
     const lastMonthInvoices = invoices.filter(inv => {
-      const invoiceDate = new Date(inv.invoiceDate);
+      const invoiceDate = new Date(inv.issueDate);
       return invoiceDate.getMonth() === lastMonth && invoiceDate.getFullYear() === lastMonthYear;
     });
     
-    // Count by status
-    const paidInvoices = invoices.filter(inv => inv.status?.toLowerCase() === 'paid');
-    const pendingInvoices = invoices.filter(inv => inv.status?.toLowerCase() === 'pending');
+    // Count by status (Invoice model uses uppercase statuses)
+    const paidInvoices = invoices.filter(inv => inv.status?.toUpperCase() === 'PAID');
+    const pendingInvoices = invoices.filter(inv => ['SENT', 'PARTIAL'].includes(inv.status?.toUpperCase()));
     const overdueInvoices = invoices.filter(inv => {
       const dueDate = new Date(inv.dueDate);
       const now = new Date();
-      return inv.status?.toLowerCase() !== 'paid' && dueDate < now;
+      return inv.status?.toUpperCase() === 'OVERDUE' || (inv.status?.toUpperCase() !== 'PAID' && dueDate < now);
     });
     
-    // Calculate amounts
+    // Calculate amounts (Invoice model has totalAmount field)
     const pendingAmount = pendingInvoices.reduce((sum, inv) => {
-      return sum + (inv.items?.reduce((itemSum, item) => itemSum + (item.amount || 0), 0) || 0);
+      return sum + (inv.balanceAmount || inv.totalAmount || 0);
     }, 0);
     
     const overdueAmount = overdueInvoices.reduce((sum, inv) => {
-      return sum + (inv.items?.reduce((itemSum, item) => itemSum + (item.amount || 0), 0) || 0);
+      return sum + (inv.balanceAmount || inv.totalAmount || 0);
     }, 0);
     
     // Calculate payment rate
@@ -322,13 +327,29 @@ router.get('/stats', auth, async (req, res) => {
 // GET all recurring invoice templates
 router.get('/recurring', auth, async (req, res) => {
   try {
-    const { business } = req.query;
-    const query = business ? { business } : { business: req.user.biz };
+    const query = {};
+    
+    // Support client filtering (consistent with regular invoices)
+    if (req.query.clientId) {
+      query.user = req.query.clientId;
+      console.log(`Finding recurring invoices for client ${req.query.clientId}`);
+    }
+    
+    // Support business filtering
+    if (req.query.business) {
+      query.business = req.query.business;
+    }
+    
+    // Default to user's business if no filters provided
+    if (!req.query.clientId && !req.query.business && req.user.biz) {
+      query.business = req.user.biz;
+    }
     
     console.log('Fetching recurring templates with query:', query);
     
     const templates = await RecurringTemplate.find(query)
       .populate('business', 'name')
+      .populate('user', 'name email')
       .sort({ createdAt: -1 });
     
     console.log(`Found ${templates.length} recurring templates`);
