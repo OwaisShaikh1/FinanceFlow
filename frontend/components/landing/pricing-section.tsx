@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Check } from "lucide-react"
+import { Check, Sparkles, Zap, Crown } from "lucide-react"
 import Link from "next/link"
 
 export function PricingSection() {
@@ -8,15 +7,20 @@ export function PricingSection() {
     {
       name: "Individual",
       price: "Free",
+      period: "Forever",
       description: "Perfect for personal tax calculations",
       features: ["Income Tax Calculator", "Basic GST Calculator", "TDS Calculator", "Tax Saving Tips", "Email Support"],
       cta: "Start Free",
       href: "/self-service",
       popular: false,
+      gradient: "from-slate-500 to-slate-700",
+      icon: Sparkles,
+      bgGradient: "from-slate-50 to-slate-100"
     },
     {
       name: "Small Business",
-      price: "₹999/month",
+      price: "₹999",
+      period: "per month",
       description: "Complete accounting for small businesses",
       features: [
         "All Individual features",
@@ -29,10 +33,14 @@ export function PricingSection() {
       cta: "Start Trial",
       href: "/auth/register",
       popular: true,
+      gradient: "from-blue-500 via-indigo-500 to-purple-500",
+      icon: Zap,
+      bgGradient: "from-blue-50 to-indigo-50"
     },
     {
       name: "Enterprise",
-      price: "₹2,999/month",
+      price: "₹2,999",
+      period: "per month",
       description: "For CAs and large businesses",
       features: [
         "All Small Business features",
@@ -45,87 +53,169 @@ export function PricingSection() {
       cta: "Contact Sales",
       href: "/contact",
       popular: false,
+      gradient: "from-violet-500 to-purple-700",
+      icon: Crown,
+      bgGradient: "from-violet-50 to-purple-50"
     },
   ]
 
   return (
-    <section id="pricing" className="py-20 px-4 bg-gradient-to-b from-blue-50 to-white">
-      <div className="container mx-auto">
+    <section id="pricing" className="py-24 px-4 relative overflow-hidden bg-white">
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-blue-50"></div>
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute inset-0" style={{
+          backgroundImage: 'radial-gradient(circle, #60a5fa 0.5px, transparent 0.5px)',
+          backgroundSize: '40px 40px'
+        }}></div>
+      </div>
+      
+      {/* Floating orbs */}
+      <div className="absolute top-20 left-10 w-72 h-72 bg-blue-300 rounded-full filter blur-3xl opacity-30 animate-pulse"></div>
+      <div className="absolute bottom-20 right-10 w-72 h-72 bg-cyan-300 rounded-full filter blur-3xl opacity-30 animate-pulse delay-1000"></div>
+      
+      <div className="container mx-auto relative z-10">
+        {/* Header */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-balance mb-4 text-slate-900">
-            Choose Your <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Perfect Plan</span>
+          <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-blue-200 rounded-full px-5 py-2 mb-6 shadow-sm">
+            <Sparkles className="w-4 h-4 text-blue-600" />
+            <span className="text-sm font-semibold text-blue-900">Simple, transparent pricing</span>
+          </div>
+          
+          <h2 className="text-5xl md:text-6xl lg:text-7xl font-black mb-6 text-gray-900 leading-tight">
+            Choose Your
+            <span className="block bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 bg-clip-text text-transparent mt-2">
+              Perfect Plan
+            </span>
           </h2>
-          <p className="text-xl text-slate-600 text-pretty max-w-2xl mx-auto">
-            Start free with our tax calculators, or upgrade for complete business accounting solutions.
+          
+          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-8">
+            Start free with our tax calculators, or unlock the full power of automated accounting.
           </p>
+          
+          {/* Special offer banner */}
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-full font-semibold shadow-lg shadow-green-500/30">
+            <Sparkles className="w-4 h-4" />
+            <span>Limited Time: 3 months FREE on annual plans!</span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {plans.map((plan, index) => (
-            <Card
-              key={index}
-              className={`group relative bg-white/80 backdrop-blur-sm ${
-                plan.popular 
-                  ? "border-blue-500 shadow-2xl shadow-blue-100/50 scale-105 bg-gradient-to-br from-blue-50 to-indigo-50" 
-                  : "border-blue-200 hover:border-blue-300"
-              } hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl overflow-hidden`}
-            >
-              {plan.popular && (
-                <>
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                    <span className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-1 rounded-full text-sm font-medium shadow-lg animate-pulse-glow">
-                      🔥 Most Popular
-                    </span>
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-indigo-600/10 pointer-events-none"></div>
-                </>
-              )}
-
-              <CardHeader className="text-center relative z-10">
-                <CardTitle className="text-2xl font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
-                  {plan.name}
-                </CardTitle>
-                <div className={`text-4xl font-bold mb-2 ${
-                  plan.popular 
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"
-                    : "text-blue-600"
-                }`}>
-                  {plan.price}
-                </div>
-                {plan.name === "Small Business" && (
-                  <div className="text-sm text-green-600 font-medium mb-2">
-                    💰 Save ₹2,000 annually!
+        {/* Pricing Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-7xl mx-auto">
+          {plans.map((plan, index) => {
+            const Icon = plan.icon
+            return (
+              <div
+                key={index}
+                className={`relative group reveal reveal-delay-${index} ${
+                  plan.popular ? 'md:scale-105' : ''
+                }`}
+              >
+                {/* Popular badge */}
+                {plan.popular && (
+                  <div className="absolute -top-4 left-0 right-0 flex justify-center z-20">
+                    <div className="bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-1.5 rounded-full text-sm font-bold shadow-lg flex items-center gap-2">
+                      <Zap className="w-4 h-4" />
+                      MOST POPULAR
+                    </div>
                   </div>
                 )}
-                <CardDescription className="text-slate-600 leading-relaxed">{plan.description}</CardDescription>
-              </CardHeader>
 
-              <CardContent className="space-y-4">
-                <ul className="space-y-3">
-                  {plan.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-center">
-                      <Check className="h-5 w-5 text-blue-600 mr-3 flex-shrink-0" />
-                      <span className="text-sm text-slate-700">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+                {/* Card */}
+                <div className={`relative h-full bg-white rounded-3xl p-8 border-2 ${
+                  plan.popular 
+                    ? 'border-blue-300 shadow-2xl shadow-blue-500/20' 
+                    : 'border-gray-200'
+                } backdrop-blur-sm overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl ${
+                  plan.popular ? 'hover:shadow-blue-500/30' : 'hover:shadow-gray-300'
+                }`}>
+                  
+                  {/* Gradient overlay for popular plan */}
+                  {plan.popular && (
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-cyan-50 opacity-50"></div>
+                  )}
 
-                <Link href={plan.href} className="block">
+                  {/* Icon */}
+                  <div className={`relative mb-6 inline-flex p-4 rounded-2xl bg-gradient-to-br ${plan.gradient} shadow-lg`}>
+                    <Icon className="w-7 h-7 text-white" />
+                  </div>
+
+                  {/* Plan name */}
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+                  
+                  {/* Description */}
+                  <p className="text-gray-600 text-sm mb-6">{plan.description}</p>
+
+                  {/* Price */}
+                  <div className="mb-8">
+                    <div className="flex items-baseline gap-2">
+                      <span className={`text-5xl font-black bg-gradient-to-br ${plan.gradient} bg-clip-text text-transparent`}>
+                        {plan.price}
+                      </span>
+                    </div>
+                    <span className="text-gray-500 text-sm">{plan.period}</span>
+                    
+                    {plan.name === "Small Business" && (
+                      <div className="mt-3 inline-flex items-center gap-1 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
+                        <Sparkles className="w-3 h-3" />
+                        Save ₹2,000 annually!
+                      </div>
+                    )}
+                  </div>
+
+                  {/* CTA Button */}
                   <Button 
-                    className={`w-full transform transition-all duration-200 ${
+                    asChild
+                    className={`w-full py-6 text-base font-bold rounded-xl transition-all duration-300 mb-8 ${
                       plan.popular 
-                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl hover:scale-105" 
-                        : "hover:scale-105 hover:shadow-lg"
+                        ? `bg-gradient-to-r ${plan.gradient} hover:shadow-xl hover:shadow-blue-500/50 hover:scale-105 text-white border-0` 
+                        : `bg-gray-100 hover:bg-gray-200 text-gray-900 border-2 border-gray-200 hover:border-gray-300 hover:scale-105`
                     }`}
-                    variant={plan.popular ? "default" : "outline"} 
-                    size="lg"
+                    variant={plan.popular ? "default" : "outline"}
                   >
-                    {plan.popular ? "🚀 " : ""}{plan.cta}
+                    <Link href={plan.href}>
+                      {plan.cta}
+                      {plan.popular && <Zap className="ml-2 w-4 h-4" />}
+                    </Link>
                   </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          ))}
+
+                  {/* Features */}
+                  <ul className="space-y-4">
+                    {plan.features.map((feature, featureIndex) => (
+                      <li key={featureIndex} className="flex items-start gap-3">
+                        <div className={`mt-0.5 p-1 rounded-full bg-gradient-to-br ${plan.gradient}`}>
+                          <Check className="w-3 h-3 text-white" />
+                        </div>
+                        <span className="text-sm text-gray-700 font-medium">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* Hover effect */}
+                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-50/0 to-cyan-50/0 group-hover:from-blue-50/30 group-hover:to-cyan-50/30 transition-all duration-300 pointer-events-none"></div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Bottom CTA */}
+        <div className="text-center mt-16">
+          <p className="text-gray-600 mb-4">All plans include 14-day free trial • No credit card required</p>
+          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500">
+            <span className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-green-600" />
+              Cancel anytime
+            </span>
+            <span className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-green-600" />
+              24/7 Support
+            </span>
+            <span className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-green-600" />
+              Secure payments
+            </span>
+          </div>
         </div>
       </div>
     </section>

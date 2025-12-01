@@ -109,9 +109,9 @@ export const useDashboard = () => {
 }
 
 export const DashboardProvider = ({ children }: { children: ReactNode }) => {
-// Use useReducer for complex state management
-const [state, dispatch] = useReducer(dashboardReducer, initialState)
-const { selectedClient } = useClientContext()
+  // Use useReducer for complex state management
+  const [state, dispatch] = useReducer(dashboardReducer, initialState)
+  const { selectedClient } = useClientContext()
 
   // useCallback to memoize the fetch function
   const fetchDashboard = useCallback(async () => {
@@ -119,7 +119,6 @@ const { selectedClient } = useClientContext()
     
     try {
       const token = localStorage.getItem("token")
-
 
       // Build query params for client filtering
       // Use client ID (user ID) instead of businessId - backend will find the business
@@ -130,20 +129,17 @@ const { selectedClient } = useClientContext()
       console.log('🔍 DashboardContext - Fetching with params:', queryParams)
       console.log('🔍 Selected Client:', selectedClient)
       console.log('🔍 Selected Client.id:', selectedClient?.id)
-      console.log('🔍 Selected Client (full):', JSON.stringify(selectedClient, null, 2))
 
-      // Fetch stats, transactions, and chart data
+      // Fetch stats, transactions, and chart data with memoized headers
+      const headers = { 
+        Authorization: `Bearer ${token}`, 
+        "Content-Type": "application/json" 
+      };
+
       const [statsRes, txnRes, chartRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/transactions/dashboard-stats${queryParams}`, {
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        }),
-        fetch(`${API_BASE_URL}/api/transactions${queryParams}`, {
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        }),
-        fetch(`${API_BASE_URL}/api/transactions/chart-data${queryParams}`, {
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        }),
-
+        fetch(`${API_BASE_URL}/api/transactions/dashboard-stats${queryParams}`, { headers }),
+        fetch(`${API_BASE_URL}/api/transactions${queryParams}`, { headers }),
+        fetch(`${API_BASE_URL}/api/transactions/chart-data${queryParams}`, { headers }),
       ])
 
       if (!statsRes.ok) throw new Error("Failed to fetch dashboard stats")

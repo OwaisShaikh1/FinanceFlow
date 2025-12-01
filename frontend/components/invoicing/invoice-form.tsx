@@ -29,6 +29,7 @@ interface InvoiceState {
   invoiceDate: Date | undefined;
   dueDate: Date | undefined;
   paymentTerms: string;
+  taxType: 'CGST+SGST' | 'IGST'; // Tax Type
   
   // Client Details
   clientName: string;
@@ -62,6 +63,7 @@ const initialInvoiceState: InvoiceState = {
   invoiceDate: undefined,
   dueDate: undefined,
   paymentTerms: "",
+  taxType: "CGST+SGST",
   clientName: "",
   clientGstin: "",
   clientAddress: "",
@@ -126,10 +128,14 @@ export function InvoiceForm({ onSubmit, initialData, isEditing = false }: Invoic
     {
       id: "1",
       description: "",
+      hsnCode: "",
       quantity: 1,
       rate: 0,
       gstRate: 18,
       amount: 0,
+      cgstAmount: 0,
+      sgstAmount: 0,
+      igstAmount: 0,
       gstAmount: 0,
       total: 0,
     },
@@ -198,22 +204,39 @@ export function InvoiceForm({ onSubmit, initialData, isEditing = false }: Invoic
     dispatch({ type: 'SET_ERROR', payload: error });
   }, []);
 
-  const calculateItemTotals = useCallback((item: Partial<InvoiceItem>): InvoiceItem => {
+  const calculateItemTotals = useCallback((item: Partial<InvoiceItem>, taxType: 'CGST+SGST' | 'IGST'): InvoiceItem => {
     const quantity = item.quantity || 0
     const rate = item.rate || 0
     const gstRate = item.gstRate || 0
 
     const amount = quantity * rate
     const gstAmount = (amount * gstRate) / 100
+    
+    // Calculate CGST, SGST, IGST based on tax type
+    let cgstAmount = 0
+    let sgstAmount = 0
+    let igstAmount = 0
+
+    if (taxType === 'CGST+SGST') {
+      cgstAmount = gstAmount / 2
+      sgstAmount = gstAmount / 2
+    } else {
+      igstAmount = gstAmount
+    }
+
     const total = amount + gstAmount
 
     return {
       id: item.id || "",
       description: item.description || "",
+      hsnCode: item.hsnCode || "",
       quantity,
       rate,
       gstRate,
       amount,
+      cgstAmount,
+      sgstAmount,
+      igstAmount,
       gstAmount,
       total,
     }
@@ -237,18 +260,22 @@ export function InvoiceForm({ onSubmit, initialData, isEditing = false }: Invoic
       ...updatedItems[index],
       [field]: processedValue,
     }
-    updatedItems[index] = calculateItemTotals(updatedItems[index])
+    updatedItems[index] = calculateItemTotals(updatedItems[index], state.taxType)
     setItems(updatedItems)
-  }, [items, calculateItemTotals]);
+  }, [items, calculateItemTotals, state.taxType]);
 
   const addItem = useCallback(() => {
     const newItem: InvoiceItem = {
       id: Date.now().toString(),
       description: "",
+      hsnCode: "",
       quantity: 1,
       rate: 0,
       gstRate: 18,
       amount: 0,
+      cgstAmount: 0,
+      sgstAmount: 0,
+      igstAmount: 0,
       gstAmount: 0,
       total: 0,
     }
@@ -263,10 +290,13 @@ export function InvoiceForm({ onSubmit, initialData, isEditing = false }: Invoic
 
   const calculateTotals = useMemo(() => {
     const subtotal = items.reduce((sum, item) => sum + item.amount, 0)
-    const totalGst = items.reduce((sum, item) => sum + item.gstAmount, 0)
+    const totalCGST = items.reduce((sum, item) => sum + (item.cgstAmount || 0), 0)
+    const totalSGST = items.reduce((sum, item) => sum + (item.sgstAmount || 0), 0)
+    const totalIGST = items.reduce((sum, item) => sum + (item.igstAmount || 0), 0)
+    const totalGst = totalCGST + totalSGST + totalIGST
     const grandTotal = subtotal + totalGst
 
-    return { subtotal, totalGst, grandTotal }
+    return { subtotal, totalCGST, totalSGST, totalIGST, totalGst, grandTotal }
   }, [items]);
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
@@ -282,6 +312,7 @@ export function InvoiceForm({ onSubmit, initialData, isEditing = false }: Invoic
         invoiceDate: state.invoiceDate,
         dueDate: state.dueDate,
         paymentTerms: state.paymentTerms,
+        taxType: state.taxType,
         
         // Client Details
         clientName: state.clientName,
@@ -335,10 +366,14 @@ export function InvoiceForm({ onSubmit, initialData, isEditing = false }: Invoic
         setItems([{
           id: "1",
           description: "",
+          hsnCode: "",
           quantity: 1,
           rate: 0,
           gstRate: 18,
           amount: 0,
+          cgstAmount: 0,
+          sgstAmount: 0,
+          igstAmount: 0,
           gstAmount: 0,
           total: 0,
         }]);
@@ -353,7 +388,7 @@ export function InvoiceForm({ onSubmit, initialData, isEditing = false }: Invoic
   }, [state, items, calculateTotals, token, user?.id, onSubmit, isEditing, setLoading, setError]);
 
   // useMemo for computed values  
-  const { subtotal, totalGst, grandTotal } = calculateTotals;
+  const { subtotal, totalCGST, totalSGST, totalIGST, totalGst, grandTotal } = calculateTotals;
 
   // Form validation
   const isFormValid = useMemo(() => {
@@ -469,6 +504,32 @@ export function InvoiceForm({ onSubmit, initialData, isEditing = false }: Invoic
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="taxType">Tax Type *</Label>
+                <span className="text-xs text-muted-foreground" title="Select CGST + SGST for same-state sales; IGST for inter-state">
+                  💡
+                </span>
+              </div>
+              <Select value={state.taxType} onValueChange={(value: 'CGST+SGST' | 'IGST') => {
+                updateField('taxType', value);
+                // Recalculate all items with new tax type
+                const updatedItems = items.map(item => calculateItemTotals(item, value));
+                setItems(updatedItems);
+              }}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="CGST+SGST">CGST + SGST (Intra-State)</SelectItem>
+                  <SelectItem value="IGST">IGST (Inter-State)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                💡 Select CGST + SGST for same-state sales; IGST for inter-state
+              </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -565,99 +626,140 @@ export function InvoiceForm({ onSubmit, initialData, isEditing = false }: Invoic
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Description</TableHead>
-                <TableHead>Qty</TableHead>
-                <TableHead>Rate</TableHead>
-                <TableHead>GST %</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>GST Amount</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.map((item, index) => (
-                <TableRow key={item.id}>
-                  <TableCell>
-                    <Input
-                      value={item.description}
-                      onChange={(e) => updateItem(index, "description", e.target.value)}
-                      placeholder="Item description"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      value={item.quantity === 0 ? "" : item.quantity}
-                      onChange={(e) => updateItem(index, "quantity", e.target.value)}
-                      placeholder="1"
-                      min="0"
-                      className="w-20"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      value={item.rate === 0 ? "" : item.rate}
-                      onChange={(e) => updateItem(index, "rate", e.target.value)}
-                      placeholder="0.00"
-                      min="0"
-                      step="0.01"
-                      className="w-24"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Select
-                      value={item.gstRate.toString()}
-                      onValueChange={(value) => updateItem(index, "gstRate", Number.parseFloat(value))}
-                    >
-                      <SelectTrigger className="w-20">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {gstRates.map((rate) => (
-                          <SelectItem key={rate} value={rate.toString()}>
-                            {rate}%
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell>₹{item.amount.toFixed(2)}</TableCell>
-                  <TableCell>₹{item.gstAmount.toFixed(2)}</TableCell>
-                  <TableCell>₹{item.total.toFixed(2)}</TableCell>
-                  <TableCell>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeItem(index)}
-                      disabled={items.length === 1}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="min-w-[200px]">Item Name</TableHead>
+                  <TableHead className="min-w-[120px]">HSN Code</TableHead>
+                  <TableHead>Qty</TableHead>
+                  <TableHead>Unit Price</TableHead>
+                  <TableHead>GST %</TableHead>
+                  <TableHead>Taxable Value</TableHead>
+                  {state.taxType === 'CGST+SGST' && (
+                    <>
+                      <TableHead>CGST</TableHead>
+                      <TableHead>SGST</TableHead>
+                    </>
+                  )}
+                  {state.taxType === 'IGST' && <TableHead>IGST</TableHead>}
+                  <TableHead>Total</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {items.map((item, index) => (
+                  <TableRow key={item.id}>
+                    <TableCell>
+                      <Input
+                        value={item.description}
+                        onChange={(e) => updateItem(index, "description", e.target.value)}
+                        placeholder="Item name"
+                        className="min-w-[180px]"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        value={item.hsnCode || ""}
+                        onChange={(e) => updateItem(index, "hsnCode", e.target.value)}
+                        placeholder="HSN/SAC"
+                        className="w-[100px]"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={item.quantity === 0 ? "" : item.quantity}
+                        onChange={(e) => updateItem(index, "quantity", e.target.value)}
+                        placeholder="1"
+                        min="0"
+                        className="w-20"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={item.rate === 0 ? "" : item.rate}
+                        onChange={(e) => updateItem(index, "rate", e.target.value)}
+                        placeholder="0.00"
+                        min="0"
+                        step="0.01"
+                        className="w-24"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={item.gstRate.toString()}
+                        onValueChange={(value) => updateItem(index, "gstRate", Number.parseFloat(value))}
+                      >
+                        <SelectTrigger className="w-20">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {gstRates.map((rate) => (
+                            <SelectItem key={rate} value={rate.toString()}>
+                              {rate}%
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell className="font-medium">₹{item.amount.toFixed(2)}</TableCell>
+                    {state.taxType === 'CGST+SGST' && (
+                      <>
+                        <TableCell>₹{(item.cgstAmount || 0).toFixed(2)}</TableCell>
+                        <TableCell>₹{(item.sgstAmount || 0).toFixed(2)}</TableCell>
+                      </>
+                    )}
+                    {state.taxType === 'IGST' && (
+                      <TableCell>₹{(item.igstAmount || 0).toFixed(2)}</TableCell>
+                    )}
+                    <TableCell className="font-bold">₹{item.total.toFixed(2)}</TableCell>
+                    <TableCell>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeItem(index)}
+                        disabled={items.length === 1}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
 
-          {/* Totals */}
+          {/* Tax Summary */}
           <div className="mt-6 flex justify-end">
-            <div className="w-80 space-y-2">
-              <div className="flex justify-between">
-                <span>Subtotal:</span>
-                <span>₹{subtotal.toFixed(2)}</span>
+            <div className="w-96 space-y-3 bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <h4 className="font-semibold text-blue-900 border-b border-blue-300 pb-2">Tax Summary</h4>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-700">Subtotal:</span>
+                <span className="font-medium">₹{subtotal.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Total GST:</span>
-                <span>₹{totalGst.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between font-bold text-lg border-t pt-2">
-                <span>Grand Total:</span>
+              {state.taxType === 'CGST+SGST' && (
+                <>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-700">CGST:</span>
+                    <span className="font-medium">₹{totalCGST.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-700">SGST:</span>
+                    <span className="font-medium">₹{totalSGST.toFixed(2)}</span>
+                  </div>
+                </>
+              )}
+              {state.taxType === 'IGST' && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-700">IGST:</span>
+                  <span className="font-medium">₹{totalIGST.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between font-bold text-lg border-t border-blue-300 pt-3 text-blue-900">
+                <span>Total Invoice Value:</span>
                 <span>₹{grandTotal.toFixed(2)}</span>
               </div>
             </div>

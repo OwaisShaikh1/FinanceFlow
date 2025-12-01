@@ -3,12 +3,16 @@ const mongoose = require('mongoose');
 const InvoiceItemSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   description: { type: String, trim: true },
+  hsnCode: { type: String, trim: true }, // HSN/SAC Code
   qty: { type: Number, required: true, min: 0 },
   price: { type: Number, required: true, min: 0 },
   gstRate: { type: Number, default: 0, min: 0, max: 100 },
   discount: { type: Number, default: 0, min: 0 },
   taxableAmount: { type: Number },
-  gstAmount: { type: Number },
+  cgstAmount: { type: Number, default: 0 }, // Central GST
+  sgstAmount: { type: Number, default: 0 }, // State GST
+  igstAmount: { type: Number, default: 0 }, // Integrated GST
+  gstAmount: { type: Number }, // Total GST (CGST+SGST or IGST)
   totalAmount: { type: Number }
 }, { _id: true });
 
@@ -26,11 +30,22 @@ const InvoiceSchema = new mongoose.Schema(
     customerGSTIN: { type: String, uppercase: true, trim: true },
     customerPAN: { type: String, uppercase: true, trim: true },
     
+    // Tax Type (Intra-state or Inter-state)
+    taxType: { 
+      type: String, 
+      enum: ['CGST+SGST', 'IGST'], 
+      default: 'CGST+SGST',
+      required: true 
+    },
+    
     // Invoice Items
     items: [InvoiceItemSchema],
     
     // Financial Summary
     subtotal: { type: Number, default: 0, min: 0 },
+    totalCGST: { type: Number, default: 0, min: 0 }, // Total CGST
+    totalSGST: { type: Number, default: 0, min: 0 }, // Total SGST
+    totalIGST: { type: Number, default: 0, min: 0 }, // Total IGST
     totalTax: { type: Number, default: 0, min: 0 },
     totalDiscount: { type: Number, default: 0, min: 0 },
     totalAmount: { type: Number, required: true, min: 0 },
@@ -88,18 +103,35 @@ InvoiceSchema.virtual('isOverdue').get(function() {
 
 // Pre-save middleware to calculate totals
 InvoiceSchema.pre('save', function(next) {
-  // Calculate item totals
+  // Calculate item totals based on tax type
   this.items.forEach(item => {
     const baseAmount = item.qty * item.price;
     const discountAmount = (baseAmount * (item.discount || 0)) / 100;
     item.taxableAmount = baseAmount - discountAmount;
-    item.gstAmount = (item.taxableAmount * (item.gstRate || 0)) / 100;
+    
+    const totalGst = (item.taxableAmount * (item.gstRate || 0)) / 100;
+    
+    // Split GST based on tax type
+    if (this.taxType === 'CGST+SGST') {
+      item.cgstAmount = totalGst / 2;
+      item.sgstAmount = totalGst / 2;
+      item.igstAmount = 0;
+    } else if (this.taxType === 'IGST') {
+      item.cgstAmount = 0;
+      item.sgstAmount = 0;
+      item.igstAmount = totalGst;
+    }
+    
+    item.gstAmount = totalGst;
     item.totalAmount = item.taxableAmount + item.gstAmount;
   });
   
   // Calculate invoice totals
   this.subtotal = this.items.reduce((sum, item) => sum + (item.taxableAmount || 0), 0);
-  this.totalTax = this.items.reduce((sum, item) => sum + (item.gstAmount || 0), 0);
+  this.totalCGST = this.items.reduce((sum, item) => sum + (item.cgstAmount || 0), 0);
+  this.totalSGST = this.items.reduce((sum, item) => sum + (item.sgstAmount || 0), 0);
+  this.totalIGST = this.items.reduce((sum, item) => sum + (item.igstAmount || 0), 0);
+  this.totalTax = this.totalCGST + this.totalSGST + this.totalIGST;
   this.totalAmount = this.subtotal + this.totalTax;
   this.balanceAmount = this.totalAmount - (this.paidAmount || 0);
   

@@ -44,16 +44,16 @@ export function LandingHeader() {
         </nav>
 
         <div className="flex items-center space-x-4">
-          <Link href="/auth/login">
-            <Button variant="ghost" size="sm" className="hover:bg-blue-50 hover:text-blue-700 transition-colors">
+          <Button variant="ghost" size="sm" asChild className="hover:bg-blue-50 hover:text-blue-700 transition-colors">
+            <Link href="/auth/login">
               Sign In
-            </Button>
-          </Link>
-          <Link href="/auth/register">
-            <Button size="sm" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+            </Link>
+          </Button>
+          <Button size="sm" asChild className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+            <Link href="/auth/register">
               🚀 Get Started FREE
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
     </header>

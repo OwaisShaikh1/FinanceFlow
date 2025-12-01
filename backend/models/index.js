@@ -12,6 +12,7 @@ const TDS = require('./TDS');
 const GSTInvoice = require('./GSTInvoice');
 const GSTReturn = require('./GSTReturn');
 const Taxpayer = require('./Taxpayer');
+const Task = require('./Task');
 
 module.exports = {
   User,
@@ -28,4 +29,5 @@ module.exports = {
   GSTInvoice,
   GSTReturn,
   Taxpayer,
+  Task,
 };

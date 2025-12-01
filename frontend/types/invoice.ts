@@ -3,10 +3,14 @@
 export interface InvoiceItem {
   id: string
   description: string
+  hsnCode?: string // HSN/SAC Code
   quantity: number
   rate: number
   gstRate: number
-  amount: number
+  amount: number // Taxable Value
+  cgstAmount?: number // Central GST
+  sgstAmount?: number // State GST
+  igstAmount?: number // Integrated GST
   gstAmount: number
   total: number
 }
@@ -18,8 +22,12 @@ export interface Invoice {
   dueDate: string
   clientName: string
   clientGstin: string
+  taxType: 'CGST+SGST' | 'IGST' // Tax Type
   items: InvoiceItem[]
   subtotal: number
+  totalCGST?: number // Total CGST
+  totalSGST?: number // Total SGST
+  totalIGST?: number // Total IGST
   totalGst: number
   grandTotal: number
   status: string

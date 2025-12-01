@@ -19,24 +19,78 @@ router.post('/', auth, async (req, res) => {
       try { items = JSON.parse(items); } catch { items = []; }
     }
 
+    // Calculate GST based on tax type
+    const taxType = req.body.taxType || 'CGST+SGST';
+    let subtotal = 0;
+    let totalCGST = 0;
+    let totalSGST = 0;
+    let totalIGST = 0;
+
+    items = items.map(item => {
+      const amount = item.quantity * item.rate;
+      const gstAmount = (amount * item.gstRate) / 100;
+      
+      let cgstAmount = 0;
+      let sgstAmount = 0;
+      let igstAmount = 0;
+
+      if (taxType === 'CGST+SGST') {
+        cgstAmount = gstAmount / 2;
+        sgstAmount = gstAmount / 2;
+      } else {
+        igstAmount = gstAmount;
+      }
+
+      subtotal += amount;
+      totalCGST += cgstAmount;
+      totalSGST += sgstAmount;
+      totalIGST += igstAmount;
+
+      return {
+        ...item,
+        amount,
+        cgstAmount,
+        sgstAmount,
+        igstAmount,
+        gstAmount,
+        total: amount + gstAmount
+      };
+    });
+
     const invoiceData = {
+      user: req.user.id,
       business: req.user.biz,
       invoiceNumber: req.body.invoiceNumber,
       clientName: req.body.clientName,
       clientGstin: req.body.clientGstin,
+      clientAddress: req.body.clientAddress,
+      clientCity: req.body.clientCity,
+      clientState: req.body.clientState,
+      clientPincode: req.body.clientPincode,
+      taxType,
       items,
+      subtotal,
+      totalCGST,
+      totalSGST,
+      totalIGST,
+      totalGst: totalCGST + totalSGST + totalIGST,
+      grandTotal: subtotal + totalCGST + totalSGST + totalIGST,
       status: req.body.status || 'DRAFT',
       invoiceDate: req.body.invoiceDate,
       dueDate: req.body.dueDate,
+      paymentTerms: req.body.paymentTerms,
+      notes: req.body.notes,
+      bankDetails: req.body.bankDetails,
       pdfUrl: req.body.pdfUrl,
       ewayBillNo: req.body.ewayBillNo,
     };
 
     console.log('Invoice data to save:', invoiceData);
 
-    const invoice = await GenInvoice.create(invoiceData);
-    return res.status(201).json(invoice);
+    const invoice = await Invoice.create(invoiceData);
+    return res.status(201).json({ message: 'Invoice created successfully', invoice });
   } catch (e) {
+    console.error('Error creating invoice:', e);
     return res.status(400).json({ message: e.message });
   }
 });
@@ -89,6 +143,7 @@ router.get('/', auth, async (req, res) => {
     });
     return res.json(tableData);
   } catch (e) {
+    console.error('Error fetching invoices:', e);
     return res.status(500).json({ message: e.message });
   }
 });
@@ -107,10 +162,10 @@ router.patch('/:id/status', auth, async (req, res) => {
       return res.status(400).json({ message: 'Invalid status' });
     }
     
-    // Get current invoice to validate transition
-    const currentInvoice = await GenInvoice.findById(id);
+    // Get current invoice to validate transition and ownership
+    const currentInvoice = await Invoice.findOne({ _id: id, user: req.user.id });
     if (!currentInvoice) {
-      return res.status(404).json({ message: 'Invoice not found' });
+      return res.status(404).json({ message: 'Invoice not found or unauthorized' });
     }
     
     // Status transition validation
@@ -135,7 +190,7 @@ router.patch('/:id/status', auth, async (req, res) => {
       updateData.paidDate = new Date();
     }
     
-    const invoice = await GenInvoice.findByIdAndUpdate(
+    const invoice = await Invoice.findByIdAndUpdate(
       id, 
       updateData,
       { new: true }
@@ -154,15 +209,10 @@ router.put('/:id', auth, async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Check if invoice exists
-    const existingInvoice = await GenInvoice.findById(id);
+    // Check if invoice exists and user owns it
+    const existingInvoice = await Invoice.findOne({ _id: id, user: req.user.id });
     if (!existingInvoice) {
-      return res.status(404).json({ message: 'Invoice not found' });
-    }
-
-    // Check if user has access to this invoice
-    if (existingInvoice.business !== req.user.biz) {
-      return res.status(403).json({ message: 'Access denied' });
+      return res.status(404).json({ message: 'Invoice not found or unauthorized' });
     }
 
     // Prepare update data
@@ -181,7 +231,7 @@ router.put('/:id', auth, async (req, res) => {
 
     console.log('Updating invoice:', id, updateData);
 
-    const updatedInvoice = await GenInvoice.findByIdAndUpdate(
+    const updatedInvoice = await Invoice.findByIdAndUpdate(
       id,
       updateData,
       { new: true, runValidators: true }
@@ -202,15 +252,10 @@ router.get('/:id/pdf', auth, async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Fetch invoice data
-    const invoice = await GenInvoice.findById(id);
+    // Fetch invoice data and verify ownership
+    const invoice = await Invoice.findOne({ _id: id, user: req.user.id });
     if (!invoice) {
-      return res.status(404).json({ message: 'Invoice not found' });
-    }
-
-    // Check if user has access to this invoice
-    if (invoice.business !== req.user.biz) {
-      return res.status(403).json({ message: 'Access denied' });
+      return res.status(404).json({ message: 'Invoice not found or unauthorized' });
     }
 
     console.log('Generating PDF for invoice:', invoice.invoiceNumber);
