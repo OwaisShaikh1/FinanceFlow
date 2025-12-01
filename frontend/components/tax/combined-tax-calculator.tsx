@@ -214,7 +214,58 @@ export function CombinedTaxCalculator() {
   }
 
   const generateInvestmentPlan = () => callTaxAPI('payment-reminder', 'Investment plan generated successfully!')
-  const exportTaxSavingReport = () => callTaxAPI('export-report', 'Tax saving report exported successfully!')
+  
+  const exportTaxSavingReport = () => {
+    // Create Excel-compatible data structure
+    const taxData = [
+      ['Tax Saving Report', ''],
+      ['Generated on:', new Date().toLocaleDateString('en-IN')],
+      ['', ''],
+      ['Annual Income', `₹${annualIncome.toLocaleString()}`],
+      ['Tax Regime', regime === 'new' ? 'New Tax Regime' : 'Old Tax Regime'],
+      ['', ''],
+      ['Tax Calculation', ''],
+      ['Taxable Income', `₹${taxCalculation.taxableIncome.toLocaleString()}`],
+      ['Total Tax', `₹${Math.round(taxCalculation.totalTax).toLocaleString()}`],
+      ['Effective Tax Rate', `${taxCalculation.effectiveRate.toFixed(2)}%`],
+      ['', ''],
+      ['Investments & Deductions', ''],
+      ['Section 80C', `₹${section80C.toLocaleString()}`],
+      ['Section 80D', `₹${section80D.toLocaleString()}`],
+      ['Section 80G', `₹${section80G.toLocaleString()}`],
+      ['Section 80E', `₹${section80E.toLocaleString()}`],
+      ['Section 80EE', `₹${section80EE.toLocaleString()}`],
+      ['Section 80CCD2', `₹${section80GGC.toLocaleString()}`],
+      ['Total Investments', `₹${totalInvested.toLocaleString()}`],
+      ['', ''],
+      ['Tax Savings', ''],
+      ['Tax Saved through Investments', `₹${totalTaxSaved.toLocaleString()}`],
+      ['Advance Tax Paid', `₹${advanceTaxPaid.toLocaleString()}`],
+      ['', ''],
+      ['Advance Tax Schedule', ''],
+      ['Q1 - Due 15th June', `₹${Math.round(taxCalculation.totalTax * 0.15).toLocaleString()}`],
+      ['Q2 - Due 15th September', `₹${Math.round(taxCalculation.totalTax * 0.30).toLocaleString()}`],
+      ['Q3 - Due 15th December', `₹${Math.round(taxCalculation.totalTax * 0.45).toLocaleString()}`],
+      ['Q4 - Due 15th March', `₹${Math.round(taxCalculation.totalTax).toLocaleString()}`],
+    ]
+
+    // Convert to CSV format
+    const csvContent = taxData.map(row => row.join(',')).join('\n')
+    
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `Tax_Saving_Report_${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    alert('Tax saving report exported successfully!')
+  }
+  
   const setPaymentReminders = () => callTaxAPI('payment-reminder', 'Payment reminders set successfully!')
 
   // Memoized calculations
@@ -518,11 +569,11 @@ export function CombinedTaxCalculator() {
                   const progressPercentage = section.limit > 0 ? Math.min((section.invested / section.limit) * 100, 100) : 0
                   
                   return (
-                    <div key={section.code} className="bg-white border border-gray-300 rounded-sm">
-                      <div className="bg-gray-50 px-3 py-2 border-b border-gray-200 flex justify-between items-center">
+                    <div className="bg-white border border-gray-300 rounded-lg shadow-sm">
+                      <div className="bg-gradient-to-r from-slate-50 to-blue-50 px-3 py-2 border-b border-gray-200 flex justify-between items-center">
                         <div>
-                          <h6 className="text-sm font-medium text-gray-900">Section {section.code}</h6>
-                          <p className="text-xs text-gray-600">{section.description}</p>
+                          <h6 className="text-sm font-semibold text-gray-900">Section {section.code}</h6>
+                          <p className="text-xs text-gray-700">{section.description}</p>
                         </div>
                         {section.limit > 0 && (
                           <div className="text-sm font-medium text-gray-700">
@@ -547,16 +598,16 @@ export function CombinedTaxCalculator() {
                         
                         {section.limit > 0 && (
                           <div className="relative">
-                            <div className="w-full bg-gray-100 border border-gray-200 h-6 rounded-sm relative overflow-hidden">
+                            <div className="w-full bg-gray-200 border border-gray-300 h-7 rounded-md relative overflow-hidden">
                               <div 
-                                className="bg-gradient-to-r from-blue-400 to-blue-500 h-full transition-all duration-300"
+                                className="bg-gradient-to-r from-blue-500 to-blue-600 h-full transition-all duration-300"
                                 style={{ width: `${progressPercentage}%` }}
                               />
                               <div className="absolute inset-0 flex items-center justify-between px-2">
-                                <span className="text-xs font-medium text-gray-800">
+                                <span className="text-xs font-bold text-gray-900 drop-shadow-sm">
                                   ₹{section.invested.toLocaleString()}
                                 </span>
-                                <span className="text-xs font-medium text-gray-600">
+                                <span className="text-xs font-bold text-gray-900 drop-shadow-sm">
                                   ₹{section.limit.toLocaleString()}
                                 </span>
                               </div>
@@ -571,10 +622,10 @@ export function CombinedTaxCalculator() {
                                 key={percent}
                                 type="button"
                                 onClick={() => section.setInvested(section.limit * percent)}
-                                className={`px-2 py-1 text-xs border rounded transition-colors ${
+                                className={`px-2 py-1 text-xs border rounded-md transition-colors font-medium ${
                                   percent === 1 
-                                    ? 'bg-blue-100 hover:bg-blue-200 border-blue-300 text-blue-700 font-medium'
-                                    : 'bg-gray-100 hover:bg-gray-200 border-gray-300 text-gray-700'
+                                    ? 'bg-blue-600 hover:bg-blue-700 border-blue-700 text-white shadow-sm'
+                                    : 'bg-white hover:bg-gray-50 border-gray-300 text-gray-800'
                                 }`}
                               >
                                 {percent === 1 ? 'Max' : `${percent * 100}%`}
@@ -630,19 +681,43 @@ export function CombinedTaxCalculator() {
 
       {/* All buttons at the end as requested */}
       <div className="flex gap-3 pt-4">
-        <Button onClick={generateInvestmentPlan} className="flex-1">
-          Generate Investment Plan
-        </Button>
-        <Button onClick={exportTaxSavingReport} variant="outline" className="flex-1">
+        <Button 
+          onClick={exportTaxSavingReport} 
+          variant="outline" 
+          className="flex-1 bg-green-50 border-green-300 text-green-700 hover:bg-green-100 hover:text-green-800 font-medium"
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
           Export Tax Saving Report
         </Button>
-        <Button onClick={setPaymentReminders} className="flex-1">
+        <Button 
+          onClick={setPaymentReminders} 
+          className="flex-1 bg-blue-600 hover:bg-blue-700 font-medium"
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
           Set Payment Reminders
         </Button>
-        <Button onClick={loadPreviousData} variant="secondary" className="flex-1">
+        <Button 
+          onClick={loadPreviousData} 
+          variant="secondary" 
+          className="flex-1 bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100 hover:text-amber-800 font-medium"
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
           Load Previous Data
         </Button>
-        <Button onClick={resetAllFields} variant="destructive" className="flex-1">
+        <Button 
+          onClick={resetAllFields} 
+          variant="destructive" 
+          className="flex-1 bg-red-600 hover:bg-red-700 font-medium"
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
           Reset All Fields
         </Button>
       </div>

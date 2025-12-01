@@ -34,7 +34,7 @@ import { cn } from "@/lib/utils"
 // Add roles to control visibility
 const navigationItems = [
   {
-    title: "Overview",
+    title: "",
     roles: ["Admin", "user", "CA"],
     items: [
       { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["Admin", "user", "CA"] },
@@ -70,7 +70,6 @@ const navigationItems = [
     roles: ["Admin", "user"],
     items: [
       { title: "Financial Reports", href: "/dashboard/reports", icon: BarChart3, roles: ["Admin","user"] },
-      { title: "Tax Reports", href: "/dashboard/tax-reports", icon: PieChart, roles: ["Admin", "user"] },
     ],
   },
   {
@@ -156,7 +155,7 @@ export function DashboardSidebar() {
           </div>
         </ScrollArea>
 
-        {/* Settings button at the bottom */}
+        {/* Settings button at the bottom
         <div className="p-3 border-t border-blue-200">
           <Link href="/dashboard/settings">
             <Button
@@ -170,7 +169,7 @@ export function DashboardSidebar() {
               {!sidebarCollapsed && <span className="ml-3">Settings</span>}
             </Button>
           </Link>
-        </div>
+        </div> */}
       </div>
     </div>
 

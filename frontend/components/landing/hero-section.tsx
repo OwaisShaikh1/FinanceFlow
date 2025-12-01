@@ -31,7 +31,7 @@ export function HeroSection() {
 
             {/* Main Heading */}
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-white leading-tight mb-6 animate-fade-in-up">
-              AUTOMATIC ANSWERS TO YOUR TOUGHEST QUESTIONS
+              AUTOMATED TAX & FINANCE INSIGHTS
             </h1>
             
             {/* Description */}
@@ -117,10 +117,7 @@ export function HeroSection() {
                     </div>
                   </div>
                   
-                  {/* Data points */}
-                  <div className="absolute top-1/4 -left-8 text-xs text-white bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full leading-tight">
-                    USER WHO TAKE <br/>3 DAILY ACTIONS<br/>ARE RETAINED<br/>10x MORE
-                  </div>
+                  
                 </div>
               </div>
             </div>

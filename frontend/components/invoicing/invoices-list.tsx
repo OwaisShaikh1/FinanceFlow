@@ -174,8 +174,8 @@ export function InvoicesList() {
     return invoices.filter((invoice) => {
       // Search filter - check invoice number and customer name
       const matchesSearch = filters.search
-        ? (invoice.number || invoice.invoiceNumber || '').toLowerCase().includes(filters.search.toLowerCase()) ||
-          (invoice.customerName || invoice.clientName || '').toLowerCase().includes(filters.search.toLowerCase())
+        ? invoice.invoiceNumber.toLowerCase().includes(filters.search.toLowerCase()) ||
+          invoice.clientName.toLowerCase().includes(filters.search.toLowerCase())
         : true
       
       // Status filter - handle both uppercase and lowercase
@@ -186,10 +186,10 @@ export function InvoicesList() {
       // Client filter - search in customer name
       const matchesClient = filters.client === "all" 
         ? true 
-        : (invoice.customerName || invoice.clientName || '').toLowerCase().includes(filters.client.toLowerCase())
+        : invoice.clientName.toLowerCase().includes(filters.client.toLowerCase())
 
-      // Date filters - use issueDate or invoiceDate
-      const invoiceDate = new Date(invoice.issueDate || invoice.invoiceDate)
+      // Date filters - use invoiceDate
+      const invoiceDate = new Date(invoice.invoiceDate)
       const matchesFrom = filters.dateFrom ? invoiceDate >= filters.dateFrom : true
       const matchesTo = filters.dateTo ? invoiceDate <= filters.dateTo : true
 

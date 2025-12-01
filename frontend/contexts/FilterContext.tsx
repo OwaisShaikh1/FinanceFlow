@@ -34,6 +34,8 @@ export interface TaskFilters extends BaseFilters {
   priority: string
   assignee: string
   status: string
+  taskType: string
+  dueDate: string
 }
 
 // Context type
@@ -103,6 +105,8 @@ const defaultTaskFilters: TaskFilters = {
   priority: 'all',
   assignee: 'all',
   status: 'all',
+  taskType: 'all',
+  dueDate: 'all',
   dateFrom: undefined,
   dateTo: undefined
 }
@@ -181,5 +185,8 @@ export function useReportFilters() {
 
 export function useTaskFilters() {
   const { taskFilters, setTaskFilters, clearTaskFilters } = useFilters()
-  return { filters: taskFilters, setFilters: setTaskFilters, clearFilters: clearTaskFilters }
+  const updateFilters = (updates: Partial<TaskFilters>) => {
+    setTaskFilters((prev) => ({ ...prev, ...updates }))
+  }
+  return { filters: taskFilters, setFilters: setTaskFilters, updateFilters, clearFilters: clearTaskFilters }
 }

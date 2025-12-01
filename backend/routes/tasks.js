@@ -3,6 +3,8 @@ const router = express.Router();
 const { Task, User } = require('../models');
 const jwt = require('jsonwebtoken');
 
+console.log('✅ Tasks route loaded, Task model:', Task ? 'OK' : 'MISSING');
+
 // Auth middleware
 const auth = (req, res, next) => {
   const hdr = req.headers.authorization || '';
